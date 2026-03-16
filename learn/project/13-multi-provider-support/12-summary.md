@@ -24,25 +24,22 @@ The provider system has four layers:
 
 **Layer 4 -- The Configuration** ties everything together. TOML config files, environment variables, and CLI arguments merge into a single `ProviderConfig` that constructs the entire provider stack. A single call to `build_fallback_chain()` produces a resilient, cost-aware provider ready for the agent to use.
 
-## What You Built, by File
+## What You Built, by Concept
 
-Here is a summary of the modules and their responsibilities:
+The code snapshot keeps everything in a single `main.rs` for clarity -- you can see the entire provider system at a glance. Here is how the logical sections map to what a production codebase would look like as separate modules:
 
-```
-src/provider/
-  mod.rs           Provider trait, ProviderError, module re-exports
-  types.rs         Message, ContentBlock, StreamEvent, TokenUsage,
-                   ProviderResponse, StopReason, ToolDefinition
-  anthropic.rs     AnthropicProvider: Messages API adapter with SSE streaming
-  openai.rs        OpenAIProvider: Chat Completions adapter with delta streaming
-  ollama.rs        OllamaProvider: Local model adapter with availability checking
-  capabilities.rs  ModelCapabilities, CapabilityRegistry with query methods
-  fallback.rs      FallbackChain (implements Provider), CircuitBreaker
-  cost.rs          CostTracker, CostRecord, budget enforcement
-  config.rs        ProviderConfig, multi-source loading, provider construction
-```
+| Section in `main.rs` | Production module | Responsibility |
+|---|---|---|
+| Provider trait + ProviderError | `provider/mod.rs` | Contract and error types |
+| Message, ContentBlock, StreamEvent | `provider/types.rs` | Provider-neutral data types |
+| AnthropicProvider | `provider/anthropic.rs` | Messages API adapter with SSE |
+| OpenAIProvider | `provider/openai.rs` | Chat Completions adapter |
+| ModelCapabilities, CapabilityRegistry | `provider/capabilities.rs` | Per-model feature queries |
+| FallbackChain, CircuitBreaker | `provider/fallback.rs` | Resilient provider wrapping |
+| CostTracker, CostRecord | `provider/cost.rs` | Usage tracking and budget enforcement |
+| ProviderConfig | `provider/config.rs` | Multi-source configuration loading |
 
-Each module has a clear boundary and a single responsibility. The adapter modules depend only on the types in `mod.rs` and `types.rs`. The runtime modules (`fallback.rs`, `cost.rs`) depend on the trait but not on any specific adapter. This means you can add a new provider by writing one file -- the adapter -- without touching any existing code.
+Each logical section has a clear boundary and a single responsibility. The adapter sections depend only on the shared types. The runtime sections (fallback, cost tracking) depend on the trait but not on any specific adapter. This means you can add a new provider by writing one adapter -- without touching any existing code.
 
 ## The Design Principles
 
@@ -87,7 +84,7 @@ The practical result: when you add a new method to the `Provider` trait, the com
 
 The architecture makes it straightforward to add support for new providers. Here is the checklist:
 
-1. **Create the adapter file** (`src/provider/newprovider.rs`). Implement the `Provider` trait, translating between your generic types and the new provider's API format.
+1. **Create the adapter.** Implement the `Provider` trait for your new provider, translating between your generic types and the new provider's API format. In a multi-file project, this would be `src/provider/newprovider.rs`.
 
 2. **Add to the capabilities registry.** Register the new provider's models with their capabilities in `register_defaults()` or through configuration.
 

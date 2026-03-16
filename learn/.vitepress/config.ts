@@ -1,4 +1,6 @@
 import { defineConfig } from 'vitepress'
+import container from 'markdown-it-container'
+import type Token from 'markdown-it/lib/token.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -61,7 +63,26 @@ export default defineConfig({
   ],
 
   markdown: {
-    theme: 'catppuccin-mocha'
+    theme: 'catppuccin-mocha',
+    config: (md) => {
+      // Register custom containers: ::: python and ::: wild
+      // VitePress only handles built-in types (tip, warning, danger, info, details).
+      // Custom types need explicit registration to render as styled callout boxes.
+      for (const [type, defaultTitle] of [
+        ['python', 'Coming from Python'],
+        ['wild', 'In the Wild'],
+      ] as const) {
+        md.use(container, type, {
+          render(tokens: Token[], idx: number) {
+            if (tokens[idx].nesting === 1) {
+              const title = tokens[idx].info.trim().slice(type.length).trim() || defaultTitle
+              return `<div class="custom-block ${type}"><p class="custom-block-title">${title}</p>\n`
+            }
+            return '</div>\n'
+          },
+        })
+      }
+    },
   },
 
   themeConfig: {

@@ -21,10 +21,10 @@ kodai/
   Cargo.toml              # Project manifest with clap and rustyline
   Cargo.lock              # Pinned dependency versions
   src/
-    main.rs               # Entry point: CLI parsing + REPL loop
-    lib.rs                # Library root (re-exports modules)
-    commands.rs            # Built-in command handlers
+    main.rs               # CLI parsing, REPL loop, and command handlers
 ```
+
+The code snapshot keeps everything in a single `main.rs` for clarity -- you can see the entire program at a glance. In a production codebase, you would split this into modules (`lib.rs`, `commands.rs`, etc.), but for learning, one file makes it easier to follow the flow from CLI parsing through command dispatch to user interaction.
 
 This program:
 
