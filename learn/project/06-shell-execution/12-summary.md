@@ -1,0 +1,171 @@
+---
+title: Summary
+description: Review the complete shell execution tool implementation and reflect on the safety-first design principles applied throughout the chapter.
+---
+
+# Summary
+
+> **What you'll learn:**
+> - How all the shell execution components fit together into a cohesive tool
+> - Which safety layers are essential versus optional for different deployment contexts
+> - What patterns from this chapter carry forward to building other system-interaction tools
+
+You have built a complete shell execution tool for your coding agent. Let's step back and see how all the pieces fit together, review the design decisions you made, and identify the patterns that will recur throughout the rest of this project.
+
+## The Complete Architecture
+
+Here is the full execution pipeline, from the LLM's tool call to the result sent back:
+
+```
+LLM Tool Call: { "command": "cargo test", "working_dir": "/project" }
+        |
+        v
+  ┌─────────────────────────────┐
+  │  1. Parse & Build Command   │  ShellCommand::new("cargo test")
+  │     (Command Builder)       │     .working_dir("/project")
+  └─────────────┬───────────────┘     .timeout(30s)
+                │
+                v
+  ┌─────────────────────────────┐
+  │  2. Dangerous Command Check │  DangerDetector::analyze()
+  │     (Safety Layer 1)        │  → Block if Critical
+  └─────────────┬───────────────┘  → Warn if High
+                │
+                v
+  ┌─────────────────────────────┐
+  │  3. Command Policy Check    │  CommandPolicy::check()
+  │     (Safety Layer 2)        │  → Allow/deny list
+  └─────────────┬───────────────┘
+                │
+                v
+  ┌─────────────────────────────┐
+  │  4. Environment Setup       │  EnvPolicy::apply()
+  │     (Isolation)             │  → Strip API keys
+  └─────────────┬───────────────┘  → Inject CI=true, NO_COLOR=1
+                │
+                v
+  ┌─────────────────────────────┐
+  │  5. Process Spawn           │  tokio::process::Command
+  │     (Execution)             │  → Piped stdout/stderr
+  └─────────────┬───────────────┘  → Process group isolation
+                │
+                v
+  ┌─────────────────────────────┐
+  │  6. Timeout + Signal        │  tokio::time::timeout
+  │     (Enforcement)           │  → SIGTERM → wait → SIGKILL
+  └─────────────┬───────────────┘
+                │
+                v
+  ┌─────────────────────────────┐
+  │  7. Output Capture          │  tokio::join! on stdout/stderr
+  │     (Collection)            │  → Concurrent pipe reading
+  └─────────────┬───────────────┘
+                │
+                v
+  ┌─────────────────────────────┐
+  │  8. Output Truncation       │  TruncationConfig::truncate()
+  │     (Context Management)    │  → Middle truncation
+  └─────────────┬───────────────┘  → Size metadata
+                │
+                v
+  ┌─────────────────────────────┐
+  │  9. Format Result           │  ShellOutput::to_tool_result()
+  │     (Serialization)         │  → Structured text for LLM
+  └─────────────────────────────┘
+                │
+                v
+    Tool Result → back to LLM
+```
+
+Each layer is independent and testable. You can swap out the truncation strategy without touching the timeout logic. You can add new dangerous patterns without changing the command builder. This separation of concerns is what makes the tool maintainable.
+
+## What You Built
+
+Let's recap every component and its role:
+
+### Process Spawning (Subchapter 1)
+You learned the foundations: `std::process::Command` for synchronous execution and `tokio::process::Command` for async. The async version integrates with Tokio's event loop so your agent can handle concurrent operations while a command runs.
+
+### Stdout/Stderr Capture (Subchapter 2)
+You configured piped streams and learned about the deadlock trap when reading stdout and stderr sequentially. The solution: `tokio::join!` for concurrent reading. You built a `ShellOutput` struct to hold the structured result.
+
+### Command Builder (Subchapter 3)
+You designed a `ShellCommand` builder that separates configuration from execution. This created a clean boundary for safety checks, logging, and testing. The builder supports both shell mode (`sh -c "..."`) and direct exec mode.
+
+### Timeouts (Subchapter 4)
+You wrapped process execution in `tokio::time::timeout` to prevent runaway commands. The `timed_out` flag in `ShellOutput` tells the LLM what happened so it can decide whether to retry.
+
+### Signal Handling (Subchapter 5)
+You implemented a SIGTERM-then-SIGKILL escalation strategy for graceful process termination. Process groups ensure that all descendant processes (not just the direct child) are cleaned up.
+
+### Environment Variables (Subchapter 6)
+You built an `EnvPolicy` that strips sensitive variables (API keys, tokens) from the child environment and injects useful variables like `NO_COLOR=1` for clean output.
+
+### Working Directory (Subchapter 7)
+You created a `WorkingDirManager` that tracks the agent's current directory across tool calls and validates paths to prevent directory traversal.
+
+### Sandboxing Basics (Subchapter 8)
+You implemented command allow/deny lists and filesystem path policies. You learned about OS-level sandboxing with macOS `sandbox-exec` and Linux bubblewrap for stronger isolation.
+
+### Output Truncation (Subchapter 9)
+You built head, tail, and middle truncation strategies with configurable byte and line limits. Truncation metadata tells the LLM how much output was cut and suggests more targeted commands.
+
+### Dangerous Command Detection (Subchapter 10)
+You built a pattern-based detector with regex matching and risk levels. Critical commands are blocked, high-risk commands trigger warnings, and the system is extensible with new patterns.
+
+### Testing (Subchapter 11)
+You wrote unit tests for the builder, detector, and truncation logic, plus integration tests that spawn real processes to verify timeouts, environment handling, and working directory behavior.
+
+## Safety Layer Summary
+
+Here is a quick reference for which safety layers to implement depending on your deployment context:
+
+| Layer | Development | Staging | Production |
+|---|---|---|---|
+| Dangerous command detection | Required | Required | Required |
+| Command allow/deny lists | Optional | Required | Required |
+| Environment variable stripping | Required | Required | Required |
+| Path validation | Optional | Required | Required |
+| OS-level sandbox | Optional | Recommended | Required |
+| User confirmation flow | Optional | Optional | Required |
+| Output truncation | Required | Required | Required |
+
+Even in development, you want dangerous command detection and environment variable stripping. These cost almost nothing in complexity and prevent accidental damage.
+
+## Patterns That Carry Forward
+
+Several patterns from this chapter will reappear as you build more tools:
+
+### The Builder Pattern
+The `ShellCommand` builder pattern works for any tool that needs complex configuration: file operations, git commands, HTTP requests. Accumulate configuration, validate, then execute.
+
+### Defense in Depth
+Multiple overlapping safety layers is not just for shell commands. File write operations need similar treatment: path validation, permission checks, content scanning, and user confirmation.
+
+### Output Management
+LLM context windows are finite. Every tool that produces output (file reads, search results, git diffs) needs truncation and metadata. The `TruncationConfig` pattern applies to all of them.
+
+### Timeout Enforcement
+Any tool that interacts with external systems (network, filesystem, processes) needs a timeout. The `tokio::time::timeout` wrapper pattern is universal.
+
+::: tip Coming from Python
+If you have built similar tools in Python, you may have noticed that Rust requires more upfront structure -- builders, enums, explicit error handling. But this structure pays for itself: the compiler catches type errors, exhaustive matches on enums ensure you handle all cases, and the ownership system prevents the data races that plague concurrent Python code. The extra boilerplate is not busywork; it is the compiler helping you write correct code.
+:::
+
+## What Comes Next
+
+In Chapter 7, you will add **streaming responses** to your agent. Instead of waiting for the LLM to finish its entire response before displaying it, you will stream tokens to the terminal as they arrive. This creates a more responsive user experience and enables the agent to start processing tool calls before the full response is complete.
+
+The shell tool you built in this chapter will be a critical part of streaming: as the LLM generates a shell command, you will parse it from the stream, execute it, and feed the result back -- all while the streaming connection is still open.
+
+::: info In the Wild
+Production agents like Claude Code and Codex execute the full pipeline described in this chapter for every shell command, often in under 100 milliseconds for the overhead (excluding the command execution itself). The safety checks, environment setup, and output processing add negligible latency compared to the actual command execution. This demonstrates that safety does not have to come at the cost of performance -- well-designed safety layers are fast.
+:::
+
+## Key Takeaways
+
+- A production shell tool is a **pipeline** of discrete, testable stages: parse, validate, configure, spawn, wait, capture, truncate, format.
+- Safety is not a single feature but a **layered strategy**. Each layer catches different threats, and no single layer is sufficient on its own.
+- The patterns you learned -- builder, timeout wrapper, defense in depth, output management -- are universal building blocks for all system-interaction tools.
+- Rust's type system and ownership model provide safety guarantees at compile time that would require careful discipline (and often still fail) in Python.
+- Start with application-level safety (it works everywhere and is easy to test), then add OS-level sandboxing for production deployments.
