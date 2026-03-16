@@ -64,7 +64,7 @@ fn main() {
 
 That is a 240x reduction in files to search. The `ignore` crate achieves this by reading `.gitignore` at each directory level during the walk, pruning entire subtrees (like `target/`) before descending into them.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python has no built-in gitignore-aware walker. You would typically use `pathspec` or `gitignore-parser`:
 ```python
 import pathspec
@@ -296,7 +296,7 @@ third_party/
 fixtures/large/
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code respects a `.claudeignore` file that uses gitignore syntax. This lets developers exclude files from the agent's view -- build outputs, secrets, or large data files that would overwhelm the context window. OpenCode has a similar concept through its configuration file. Supporting a custom ignore file is a small feature with outsized impact on agent usability.
 :::
 

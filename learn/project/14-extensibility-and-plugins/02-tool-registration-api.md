@@ -232,7 +232,7 @@ impl ToolRegistry {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might register tool functions with a simple decorator:
 ```python
 tool_registry = {}
@@ -416,7 +416,7 @@ impl ToolRegistry {
 
 The `Namespace` strategy is the safest for large plugin ecosystems -- it prevents collisions by prefixing tool names with the plugin name. The `ReplaceExisting` strategy is useful during hot-reloading, which we will cover in a later section.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code takes the static approach -- all tools are compiled in and dispatched through a known set. MCP tools are the exception: they are discovered at runtime from configured MCP servers and merged into the tool list dynamically. OpenCode similarly uses a static tool registry for built-in tools but allows MCP servers to contribute additional tools that are namespaced by server name (e.g., `mcp__memory__store`).
 :::
 

@@ -10,6 +10,10 @@ description: Implement exponential backoff and retry logic to handle rate limits
 > - How to implement exponential backoff with jitter for retrying failed requests
 > - How to set a maximum retry count and total timeout to prevent infinite retry loops
 
+::: warning Pricing and Limits Change Frequently
+The specific rate limit numbers and pricing in this chapter reflect values at the time of writing. Check each provider's current documentation for up-to-date figures.
+:::
+
 In the previous subchapter, you classified errors as retryable or terminal. Now you are going to build the retry logic that automatically handles transient failures. A well-behaved API client does not hammer the server after getting a 429 -- it backs off, waits, and tries again with increasing patience. This is exponential backoff, and every production API integration needs it.
 
 ## Rate Limit Headers

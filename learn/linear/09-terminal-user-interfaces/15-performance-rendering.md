@@ -104,7 +104,7 @@ fn main() {
 
 The diff algorithm also optimizes the cursor movement between changed cells. Instead of positioning the cursor for every changed cell, Ratatui detects consecutive changes on the same line and writes them in sequence, avoiding redundant cursor-move sequences.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's Rich uses a similar strategy with its `Live` display. Rich computes the difference between the previous and current rendered output and writes only the changed portions. Textual goes further with its "dirty widget" tracking -- it knows which widgets changed and only re-renders those subtrees. Ratatui's approach is simpler (full-frame diff at the cell level) but effective because the diff is very fast compared to the I/O cost.
 :::
 

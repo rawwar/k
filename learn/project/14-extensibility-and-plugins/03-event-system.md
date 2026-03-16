@@ -118,7 +118,7 @@ impl AgentEvent {
 
 The `Custom` variant is crucial -- it lets plugins define their own events without modifying the core enum. Plugins can emit events that other plugins consume, enabling plugin-to-plugin communication.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, event systems often use string-based event names with flexible payloads:
 ```python
 from typing import Callable, Any
@@ -446,7 +446,7 @@ impl Plugin for MetricsPlugin {
 
 This plugin silently records tool usage stats. You could extend it to expose a `/metrics` command that prints a summary, or to emit a warning when a tool's average execution time exceeds a threshold.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's hook system emits events at specific lifecycle points: `PreToolUse`, `PostToolUse`, `Notification`, and `Stop`. Each hook can run arbitrary shell commands, making it effectively an event-to-shell bridge. The events carry context about what tool is being called, its input, and its output. This design keeps the core agent simple -- it just emits events at the right moments, and external scripts decide how to react.
 :::
 

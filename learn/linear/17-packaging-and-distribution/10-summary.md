@@ -192,6 +192,24 @@ Over the course of this chapter, you have assembled a complete distribution syst
 
 This is the full picture. Your coding agent is no longer a project that "works on my machine." It is a distributable product that installs cleanly, updates itself, respects user preferences, and runs on every major platform. That transformation -- from development artifact to production software -- is what this chapter is about, and it is where Rust's single-binary, no-runtime model pays its biggest dividends.
 
+## Exercises
+
+### Exercise 1: Cross-Compilation Strategy for a New Target (Easy)
+
+Your agent needs to support Linux on ARM64 (aarch64) for deployment on AWS Graviton instances. Walk through the decisions you need to make: which Rust target triple to use, whether to use `cross`, `cargo-zigbuild`, or a native ARM64 runner, how to handle the OpenSSL dependency (vendored `rustls` vs. cross-compiled OpenSSL), and how to verify the resulting binary works. What would you add to your CI matrix, and how would you test the binary if you only have x86_64 CI runners?
+
+### Exercise 2: Binary Size Optimization Analysis (Medium)
+
+Your agent's release binary is 45MB, and you want to get it under 20MB for faster downloads and auto-updates. List every optimization technique from this chapter (LTO, codegen-units, panic=abort, strip, opt-level) and estimate the size reduction each provides. Beyond compiler settings, identify three architectural changes that could reduce binary size: removing unused features via Cargo features, replacing heavy dependencies with lighter alternatives, and using `UPX` compression. For each approach, discuss the trade-off -- what do you lose in exchange for the smaller binary? At what binary size is further optimization not worth the effort?
+
+### Exercise 3: Update Mechanism Design (Hard)
+
+Design a self-update mechanism for your agent that handles: (a) checking for updates without blocking startup (background check), (b) downloading the new binary while the current session continues, (c) atomically replacing the running binary (write-to-temp-then-rename), (d) verifying the new binary's integrity (SHA256 checksum), and (e) rolling back if the new version crashes on first launch. Consider platform-specific challenges: on Windows, you cannot replace a running binary; on macOS, Gatekeeper may quarantine the downloaded binary. How do you handle the case where the user installed via Homebrew -- should your self-update mechanism defer to `brew upgrade`?
+
+### Exercise 4: Installation UX Audit (Medium)
+
+Evaluate the first-run experience for three installation methods: `brew install`, the shell install script (`curl | sh`), and `cargo install`. For each method, document: how long installation takes on a fresh machine, what prerequisites the user needs (Xcode CLI tools, Rust toolchain, nothing), what error messages the user sees if something goes wrong, and how the user discovers that the tool was installed successfully. Design an ideal first-run experience that detects the user's shell, installs completions, presents a brief getting-started guide, and runs a diagnostic check. What information should `my-agent doctor` verify?
+
 ## Key Takeaways
 
 - The distribution pipeline flows through eight stages: build, cross-compile, verify, package, publish, install, run, and update -- each stage builds on the previous chapter topics.

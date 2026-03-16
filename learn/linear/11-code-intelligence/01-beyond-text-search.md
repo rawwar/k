@@ -136,7 +136,7 @@ A well-designed coding agent uses all three levels, picking the right tool for e
 | Extract function signatures | tree-sitter | Structural query on function nodes |
 | Find the type of a variable | LSP | Requires type inference |
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a layered approach to code search. Its Grep tool does fast text-level search using ripgrep under the hood, and it respects `.gitignore` rules to avoid searching generated files and dependencies. For structural understanding, it relies on the LLM's own ability to parse code from the text it reads — but this comes at the cost of context window tokens. Production agents increasingly integrate tree-sitter to get structural information without consuming prompt tokens on raw source code.
 :::
 

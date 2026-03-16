@@ -227,6 +227,57 @@ With the safety layer in place, your agent has the foundation to be trustworthy.
 - **Chapter 14: Extensibility and Plugins** — When users add custom tools via plugins, those tools go through the same safety pipeline. The permission registry needs an API for plugins to register their required permission levels.
 - **Chapter 15: Production Polish** — Production deployment adds operational concerns: log rotation for audit logs, monitoring for safety violations, and alerting when the agent encounters repeated blocks.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the permission and safety system you created in this chapter.
+
+### Exercise 1: Add a /permissions Status Command (Easy)
+
+Implement a `/permissions` REPL command that displays the current permission level, lists all active allowlist and denylist rules, and shows the number of operations approved, denied, and pending in the current session. Format it as a readable safety dashboard.
+
+- Read the current `PermissionLevel` and format it as a string
+- Iterate through `CommandFilter` rules and display them grouped by allow/deny
+- Track approval counts with simple counters incremented in the approval handler
+
+### Exercise 2: Implement Path-Based Write Protection (Easy)
+
+Add a `ProtectedPaths` struct that maintains a list of glob patterns for paths that should never be written to (e.g., `.env`, `*.key`, `.git/`). Integrate it into the safety pipeline so that any `WriteFile` or `EditFile` tool call targeting a protected path is blocked with a descriptive error message.
+
+- Store patterns as `Vec<String>` and use the `glob` crate for matching
+- Check the target path against all patterns in a `is_protected(&self, path: &Path) -> bool` method
+- Return a `ToolResult` with `is_error: true` and a message explaining which protection rule matched
+
+### Exercise 3: Add Session-Scoped Auto-Approval Rules (Medium)
+
+Implement an "approve once" and "approve for session" flow. When the user approves a tool call, give them the option to approve all similar operations for the rest of the session. Store session-scoped rules in a `SessionApprovals` struct that the approval system checks before prompting.
+
+**Hints:**
+- Define "similar" as same tool name and same path prefix (e.g., approving a write to `src/main.rs` auto-approves writes to `src/`)
+- Store approvals as a `HashMap<String, Vec<PathBuf>>` mapping tool names to approved path prefixes
+- Check `SessionApprovals` before calling the interactive approval prompt
+- Add a `/approvals` command that lists all session-scoped auto-approval rules and a `/revoke` command to remove them
+
+### Exercise 4: Implement a Command Allowlist Configuration File (Medium)
+
+Add support for loading command allowlists from a `.kodai/allowed-commands.toml` file in the project root. The file should support patterns with wildcards (e.g., `cargo *`, `npm run *`) and categories (e.g., `[build]`, `[test]`). Reload the file when it changes without restarting the agent.
+
+**Hints:**
+- Define a TOML schema with `[commands]` sections containing `allow = ["pattern1", "pattern2"]`
+- Convert patterns to regex: replace `*` with `.*` and anchor with `^` and `$`
+- Use `notify` or `std::fs::metadata` polling to detect file changes
+- Merge file-based rules with built-in rules, with file-based rules taking priority
+
+### Exercise 5: Build an Audit Log with Rollback Support (Hard)
+
+Extend the audit logger to record enough information for any file modification to be rolled back. Each audit entry for a write or edit operation should capture the file path, the original content hash, a patch (diff) of the change, and a timestamp. Implement a `/undo` command that reverts the last N file modifications by applying patches in reverse.
+
+**Hints:**
+- Store file content snapshots using `sha256` hashes as keys in a content-addressable store (a directory of files named by hash)
+- Use the `similar` or `diffy` crate to generate unified diffs, and apply them in reverse for undo
+- Record operations in a `Vec<AuditEntry>` with fields for `path`, `before_hash`, `after_hash`, `patch`, and `timestamp`
+- The `/undo` command should apply patches in reverse chronological order and verify that the current file hash matches `after_hash` before reverting (to avoid reverting files the user modified manually)
+- Write tests that perform a sequence of edits, undo them all, and verify the files return to their original state
+
 ## Key Takeaways
 
 - Defense in depth means layering independent safety mechanisms (permissions, filters, approval, checkpoints, sandboxing, audit logging) so that no single failure leads to catastrophe.

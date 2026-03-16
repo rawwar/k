@@ -54,7 +54,7 @@ fn default_context() -> usize {
 
 Notice how each field has a clear purpose and sensible defaults. The `path` defaults to the current directory, `context_lines` defaults to 2, and `case_insensitive` defaults to false. This means the LLM can invoke the tool with just a `pattern` string and get useful results.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might search files using `subprocess.run(["grep", "-r", pattern, path])` or build something with `pathlib` and `re`:
 ```python
 import re
@@ -314,7 +314,7 @@ impl Tool for GrepTool {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's grep tool is built on top of ripgrep (`rg`) for maximum performance, spawning it as a subprocess rather than reimplementing search from scratch. This gives it access to ripgrep's highly optimized SIMD-accelerated search engine and `.gitignore`-aware file filtering. Our implementation builds the logic in Rust directly, which gives us more control over output formatting and result ranking, but for a production agent you might consider wrapping ripgrep as well.
 :::
 

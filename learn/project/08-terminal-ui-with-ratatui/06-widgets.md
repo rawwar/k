@@ -159,7 +159,7 @@ fn build_styled_text() -> Text<'static> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 This is similar to how `rich` builds styled text in Python:
 ```python
 from rich.text import Text
@@ -342,7 +342,7 @@ let styled = Paragraph::new("text")
     .scroll((5, 0));
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code renders different tool invocations (file reads, shell commands, search results) with distinct visual treatments -- each tool type has its own rendering style with appropriate colors and formatting. Building custom widgets in Ratatui follows the same principle: you create a widget type for each distinct visual pattern in your application, keeping rendering logic encapsulated and reusable.
 :::
 

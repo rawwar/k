@@ -53,7 +53,7 @@ pub struct LoadedSkill {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might think of skills as something like namespace packages or Django apps -- self-contained bundles of related functionality:
 ```python
 # A Python "skill" might be a package with a manifest
@@ -437,7 +437,7 @@ type = "string"
 description = "Arguments to pass to pytest (e.g., '-v', 'tests/test_foo.py')"
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code implements a concept similar to skills through its slash commands and CLAUDE.md project files. When you open a project that contains a `CLAUDE.md` file, that file's contents are injected into the system prompt -- effectively a project-specific skill. The `/init` command generates this file based on project analysis. This lightweight approach achieves context-aware behavior without a formal skill system: the project file is the skill.
 :::
 

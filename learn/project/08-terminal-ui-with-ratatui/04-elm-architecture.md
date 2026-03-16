@@ -209,7 +209,7 @@ impl App {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `textual` framework uses a similar message-passing architecture. In textual, you define `on_button_pressed` or `on_key` handlers that receive message objects. The difference is that textual binds handlers to widget classes in a retained-mode DOM, while the Elm architecture routes all messages through a single update function with a single state struct. The Elm approach is simpler to reason about because there is exactly one place where state changes happen.
 
 If you have used Redux in JavaScript, the Elm architecture is the same pattern: a store (Model), actions (Messages), and a reducer (Update).
@@ -364,7 +364,7 @@ mod tests {
 
 No terminal needed. No UI setup. Just construct a state, send messages, and assert on the result.
 
-::: tip In the Wild
+::: wild In the Wild
 The Go TUI framework Bubble Tea, used by OpenCode, is built entirely around the Elm architecture. Every Bubble Tea component implements `Init()`, `Update(msg)`, and `View()` methods. Ratatui does not enforce this pattern at the framework level -- it gives you a raw `draw()` closure -- but adopting it voluntarily gives you the same architectural benefits. The pattern scales well: OpenCode has dozens of components all following the same Model-Update-View cycle.
 :::
 

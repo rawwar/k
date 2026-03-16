@@ -127,7 +127,7 @@ fn process_block(block: &ContentBlock) {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 The language choices of real agents reflect their priorities. Claude Code chose TypeScript for ecosystem and SDK access. OpenCode chose Go for simplicity and binary distribution. Pi chose Rust for type safety and performance. There's no wrong answer — but each choice produces a different set of trade-offs. Our choice of Rust means we get the strongest compile-time guarantees and the best performance, at the cost of a steeper learning curve and more verbose code.
 :::
 

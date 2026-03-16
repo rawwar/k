@@ -163,7 +163,7 @@ mod danger_tests {
 
 Notice the pattern: test safe commands as a batch (all should be Low risk) and dangerous commands individually (each should trigger specific risk levels). The assertion messages include the command string so you can immediately see which command failed.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `pytest` would look similar:
 ```python
 def test_safe_commands():
@@ -425,7 +425,7 @@ fn test_tool_result_no_output() {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code maintains an extensive test suite for its shell execution tool that covers edge cases like commands that produce output on both stdout and stderr simultaneously, commands that exit with signal codes instead of normal exit codes, and commands whose output contains non-UTF-8 bytes. Testing the interaction between timeout enforcement and output capture is particularly important -- you need to verify that partial output is still available when a command times out.
 :::
 

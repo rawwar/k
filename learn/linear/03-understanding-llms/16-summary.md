@@ -160,6 +160,45 @@ Every concept from this chapter -- token management, message formatting, tool us
 Every production coding agent -- Claude Code, OpenCode, Codex, and others -- implements the concepts covered in this chapter. They all manage conversation history, define tools with JSON Schema, parse tool calls from model responses, handle streaming, implement retry logic, and tune their system prompts iteratively. The differences between agents are in the details: which tools they provide, how they manage context, what safety constraints they enforce, and how they present results to the user. The fundamentals are universal, and they are what you now understand.
 :::
 
+## Exercises
+
+These exercises focus on building practical intuition about LLM behavior, token economics, and prompt design for agent systems. They are analytical rather than implementation-focused.
+
+### Exercise 1: Token Estimation Challenge (Easy)
+
+Estimate the token count for each of these inputs without using a tokenizer, then check your estimates against a real tokenizer (such as the Anthropic or OpenAI tokenizer playground):
+
+1. A 50-line Python function with docstrings and type hints
+2. A JSON object with 10 key-value pairs (string keys, mixed value types)
+3. A tool definition with name, description (3 sentences), and a schema with 4 parameters
+4. A 200-word natural language paragraph explaining a bug
+
+**Deliverable:** Your estimates, the actual counts, and a paragraph reflecting on which inputs you over/underestimated and why.
+
+### Exercise 2: Tool Description A/B Test (Medium)
+
+Write two versions of a tool description for a `search_code` tool -- one minimal (1-2 sentences) and one comprehensive (following the five-area template from this chapter: what, returns, when, when-not, edge cases). Then design three test scenarios where you predict the LLM would make different tool selection decisions based on which description it received.
+
+**What to consider:** Think about ambiguous scenarios where the model might confuse `search_code` with `read_file` or `run_command grep`. Consider what happens when the user asks to "find all uses of this function" -- does the model search or read? How does description quality affect this decision?
+
+**Deliverable:** Both descriptions, three test scenarios with predicted behavior differences, and an analysis of why description quality matters for agent reliability.
+
+### Exercise 3: Cost Calculation for a Real Task (Medium)
+
+Calculate the total API cost for a coding agent completing this task: "Add input validation to the user registration endpoint." Assume the agent needs to (1) read 3 files to understand the codebase, (2) reason about what validation to add, (3) edit 2 files, (4) run the test suite, and (5) fix one test failure. Estimate token counts for each API call (system prompt, conversation history growth, tool results, model output) and compute costs using current Anthropic pricing.
+
+**What to consider:** Remember that conversation history grows with each turn -- the fifth API call includes all previous messages. Factor in the system prompt and tool definitions being resent on every call. Consider how prompt caching affects the total cost.
+
+**Deliverable:** A breakdown table showing each API call's input tokens, output tokens, cost, and cumulative conversation size. Include a total cost and a comparison showing the cost with and without prompt caching.
+
+### Exercise 4: Provider Abstraction Design (Hard)
+
+Using the provider differences table from this chapter, design the type signatures (not implementations) for a provider abstraction layer. Define: a unified `Message` type, a `ToolCall` type, a `ToolResult` type, and a `Provider` trait with methods for sending messages and parsing responses. Then identify the three hardest provider differences to abstract over and explain your strategy for each.
+
+**What to consider:** Some differences are structural (system prompt as a field vs. a message), some are semantic (parsed JSON vs. JSON string for tool arguments), and some are in streaming behavior. Your abstraction needs to handle all three categories without leaking provider details into the agent loop.
+
+**Deliverable:** Rust type signatures for the unified types and the Provider trait, plus a written analysis of the three hardest abstraction challenges and your solutions.
+
 ## Key Takeaways
 
 - The LLM is a stateless text-processing function -- your agent provides all context on every call and manages state, execution, and safety around it

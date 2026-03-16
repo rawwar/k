@@ -20,7 +20,7 @@ The single most important thing to know about Rust's `regex` crate is that it gu
 
 This is not an academic concern. In Python, crafted "evil" regex patterns can cause catastrophic backtracking:
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `re` module uses a backtracking NFA engine. This means certain patterns can take exponential time:
 ```python
 import re

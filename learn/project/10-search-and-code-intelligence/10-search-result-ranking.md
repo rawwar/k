@@ -24,7 +24,7 @@ Consider a grep search for `config` in a medium-sized Rust project. You might ge
 
 Without ranking, these arrive in filesystem walk order -- typically alphabetical by path. The most important result (the struct definition in `config.rs`) might appear third in a list of 78. With ranking, it appears first.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers working with search might use a simple sort:
 ```python
 results.sort(key=lambda r: r.relevance_score, reverse=True)
@@ -391,7 +391,7 @@ pub fn format_ranked_results(
 
 The truncation message is important: it tells the LLM that more results exist and suggests refining the search. This is a cue the LLM can act on -- it might narrow the search path, add a file type filter, or use a more specific pattern.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's search tools include a result limit and report how many results were truncated. This pattern appears across coding agents: showing a bounded number of results with a "N more matches" indicator lets the LLM decide whether the current results are sufficient or whether it needs to refine the search. The key insight is that truncation should be *informative* -- the agent needs to know that important results might have been cut off.
 :::
 

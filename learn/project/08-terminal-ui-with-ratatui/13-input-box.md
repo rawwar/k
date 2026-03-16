@@ -123,7 +123,7 @@ impl InputState {
 
 Note the careful use of `char_indices()` and `len_utf8()` throughout. Rust strings are UTF-8, so a character can be 1 to 4 bytes. You cannot just do `cursor -= 1` -- you need to find the previous character boundary. This is a common pitfall for Python developers, where `string[n]` just works because Python strings index by code point.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, strings are sequences of Unicode code points, so cursor movement is simple:
 ```python
 text = "hello"
@@ -430,7 +430,7 @@ mod tests {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code features a sophisticated input box with multi-line editing, syntax awareness, and command history. OpenCode's input similarly supports multi-line input with special handling for Shift+Enter versus Enter. The pattern of saving the in-progress input before entering history mode (so it is restored when the user navigates back) is standard across shell-like interfaces and coding agents alike.
 :::
 

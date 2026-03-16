@@ -128,7 +128,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python agents often implement similar validation with regex:
 ```python
 import re
@@ -477,7 +477,7 @@ async fn main() {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code implements a multi-layered security model. Before execution, commands are checked against deny patterns. Some commands require explicit user approval through a permission prompt. The agent maintains an audit log of all executed commands. Codex goes further by executing everything inside a sandboxed Docker container with network disabled, so even commands that pass validation cannot do permanent damage to the host system. Both approaches reflect the principle that no single security layer is sufficient.
 :::
 

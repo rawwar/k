@@ -53,7 +53,7 @@ proptest! {
 
 The `"\\PC*"` is a regex strategy that generates random strings of printable characters. Proptest generates hundreds of test cases, and if any fail, it shrinks the input to the minimal failing case.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python has `hypothesis`, which works similarly:
 ```python
 from hypothesis import given
@@ -310,7 +310,7 @@ fn truncate_safe(text: &str, limit: usize) -> &str {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents face a constant stream of unexpected inputs from the LLM. Models sometimes produce malformed JSON, Unicode control characters in file paths, or tool arguments with missing fields. Property-based testing is especially valuable here because it exercises exactly these kinds of edge cases that a developer might not think to test manually. The proptest library's shrinking capability makes it practical to debug the failures it finds.
 :::
 

@@ -235,7 +235,7 @@ impl HookHandler<ToolExecutionHookData> for DangerousCommandBlocker {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a hook system for its "hooks" feature, which lets users define pre and post hooks for tool execution in their project configuration. For example, you can define a hook that runs a linter after every file write, or a hook that asks for confirmation before shell commands matching certain patterns. The hooks are defined in `.claude/hooks.json` and execute as shell commands, giving users extensibility without writing Rust code. This config-driven approach complements the programmatic hook API we are building here.
 :::
 

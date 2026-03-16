@@ -25,7 +25,7 @@ A **process** is the OS's abstraction for a running program. Each process has:
 
 When your coding agent process spawns `cargo test`, the kernel creates a new process with its own PID, its own copy of file descriptors, and its own memory space. The agent process becomes the **parent**, and `cargo test` becomes the **child**.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you rarely think about processes at this level. When you call `subprocess.run(["cargo", "test"])`, Python hides fork/exec behind a friendly API. Rust's `std::process::Command` does the same abstraction, but understanding what happens underneath helps you reason about pipe deadlocks, zombie processes, and signal delivery -- problems that surface more often when you are building a long-running agent rather than a one-shot script.
 :::
 
@@ -133,7 +133,7 @@ fn main() {
 
 Even though Rust's API is high-level, every call to `.output()` triggers the full fork/exec/pipe/wait sequence under the hood. Understanding this helps you reason about what can go wrong -- a pipe that fills up and blocks, a child that never exits, a file descriptor that leaks to a grandchild.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code and Codex both spawn shell commands as child processes of the agent. Claude Code routes all commands through a sandboxed executor that creates dedicated process groups for each command, ensuring that timeouts can kill the entire tree of descendant processes rather than just the top-level shell. This prevents orphaned processes from accumulating during long agent sessions.
 :::
 

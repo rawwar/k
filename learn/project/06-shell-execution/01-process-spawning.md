@@ -82,7 +82,7 @@ fn main() {
 - **`status()`** runs the command with inherited stdio (output goes directly to the terminal). Useful for interactive commands but not for agent tools.
 - **`spawn()`** returns a `Child` handle immediately without waiting. This is the foundation for implementing timeouts, which we will cover in a later subchapter.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python you would run a subprocess with `subprocess.run()`:
 ```python
 import subprocess
@@ -222,7 +222,7 @@ async fn main() -> Result<()> {
 
 This `execute_command` function will grow throughout this chapter as you add timeouts, environment control, output truncation, and safety checks. But even in this minimal form, it handles both failure modes: it propagates OS-level errors via `?` and captures non-zero exit codes in the `ShellOutput` struct.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code spawns all shell commands through `tokio::process::Command` wrapped in a timeout. The async approach is essential because Claude Code can handle multiple tool calls in parallel -- while one command runs, another can be starting. OpenCode takes the same approach in Go, using `exec.CommandContext` which is Go's equivalent of combining `Command` with a timeout context.
 :::
 

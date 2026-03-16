@@ -38,7 +38,7 @@ Consider this sequence of events:
 
 This is called a **partial write**, and it is the most common form of data corruption in file operations. The window of vulnerability is the gap between truncation (step 1) and completion (step 2). During that window, the file is incomplete.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `Path("file.txt").write_text(content)` and `open("file.txt", "w").write(content)` have exactly the same problem. The file is truncated before writing begins. If the write is interrupted, you get a partial file. Python does not provide built-in atomic write facilities -- you have to build them yourself, just as in Rust.
 :::
 
@@ -238,7 +238,7 @@ fn write_file_validated(
 
 This catches rare edge cases like filesystem encoding issues or disk corruption. The cost is an extra read, which is negligible for source code files.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers often use `pathlib.Path.write_text()` without a second thought about atomicity. For a scripting context that is fine. But when building a tool that modifies someone's codebase autonomously, the extra care of atomic writes, permission preservation, and validation is worth the effort. The `atomicwrites` PyPI package provides similar functionality in Python if you ever need it there.
 :::
 

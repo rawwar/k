@@ -373,7 +373,7 @@ pub fn validate_config(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a layered configuration system with global settings (`~/.claude/settings.json`), project settings (`.claude/settings.json`), and MCP configuration (`~/.claude/mcp.json` and `.claude/mcp.json`). The project-level config can add MCP servers, define hooks, and set permissions that are specific to the codebase. This pattern lets teams share agent configuration through version control -- everyone working on the project gets the same MCP servers and hooks without individual setup.
 :::
 

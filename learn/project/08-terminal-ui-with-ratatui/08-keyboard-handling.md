@@ -162,7 +162,7 @@ fn handle_editing_mode(key: KeyEvent) -> Option<Message> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python's `curses`, you read keys with `stdscr.getch()` and compare against constants:
 ```python
 import curses
@@ -340,7 +340,7 @@ fn handle_editing_mode(key: KeyEvent) -> Option<Message> {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode implements vim-like keybindings in its normal mode, with `j`/`k` for scrolling and `i` to enter insert mode. Claude Code takes a simpler approach with fewer modes -- the input is always active and special actions use Ctrl-key combinations. Both approaches are valid. The mode-based approach gives power users more efficiency, while the always-editing approach has a lower learning curve. You will want to decide which model fits your target audience and document your keybindings clearly.
 :::
 

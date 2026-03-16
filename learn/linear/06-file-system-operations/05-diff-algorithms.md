@@ -87,7 +87,7 @@ The algorithm finds the path from the top-left corner to the bottom-right corner
 
 Myers uses a clever breadth-first search that expands the frontier one edit at a time. It's O(ND) in complexity, where N is the total length and D is the number of differences. For files that are mostly similar (the common case for code edits), D is small and the algorithm is fast.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `difflib` module provides `unified_diff` and `SequenceMatcher` based on a variation of the Ratcliff/Obershelp algorithm. It works, but it's slower than Myers for large files and sometimes produces less intuitive diffs. Rust's `similar` crate is inspired by Python's `difflib` API design but uses the faster Myers algorithm under the hood. If you've used `difflib.unified_diff()`, the `similar` API will feel familiar.
 :::
 

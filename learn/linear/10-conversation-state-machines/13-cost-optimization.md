@@ -10,6 +10,10 @@ description: Strategies for reducing LLM API costs including prompt caching, mod
 > - Model routing strategies that use cheaper models for simple tasks and reserve expensive models for complex reasoning
 > - Building usage tracking and budget controls that alert users to spending and enforce per-session or per-day limits
 
+::: warning Pricing and Limits Change Frequently
+The specific prices, token limits, and cost estimates in this chapter reflect values at the time of writing. Check each provider's current pricing page for up-to-date figures before making cost decisions.
+:::
+
 Every LLM API call costs money, and coding agent sessions can involve dozens or hundreds of calls. A single intensive session with Claude Sonnet can easily cost $5-20 in API fees if context management is careless. The techniques in this subchapter can reduce that cost by 60-80% while maintaining the same output quality. This isn't about cutting corners -- it's about not paying for the same tokens multiple times.
 
 ## Understanding the Cost Equation
@@ -183,7 +187,7 @@ impl CacheOptimizer {
 
 The cache breakpoint placement matters. You want to cache the portion of the conversation that won't change between turns: the system prompt (always cache this) and the older messages (they're fixed). Only the most recent messages and the new user input are "fresh" tokens that pay full price.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code makes extensive use of prompt caching. The system prompt, tool definitions, and earlier conversation turns are cached, which means that on a typical multi-turn session, 80-90% of input tokens are cached at the 90% discount rate. This makes the effective cost of long conversations dramatically lower than the nominal per-token pricing suggests. The cache has a 5-minute TTL, which aligns well with the pace of interactive coding -- users rarely pause for more than 5 minutes between turns.
 :::
 

@@ -228,7 +228,7 @@ impl ReadFileTool {
 
 These definitions are constant and can be assembled into the tool list without any runtime computation.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code optimizes perceived latency by showing a "thinking" indicator immediately when the user submits a prompt, before the first API response arrives. It also displays tool call names and arguments as they stream in, so the user sees "Reading src/parser.rs..." before the file contents are fully loaded. OpenCode uses its TUI to show real-time metrics (tokens used, elapsed time, model name) in a status bar, giving users confidence that the agent is working even during long operations.
 :::
 

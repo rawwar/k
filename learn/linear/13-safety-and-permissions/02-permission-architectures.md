@@ -393,7 +393,7 @@ Most production agents define two or three permission tiers that users can choos
 | **Standard** | Project only | `src/` only | Allowlisted commands | LLM API only | Normal development |
 | **Full Access** | Anywhere | Anywhere + approval | Any + approval for dangerous | Open | Advanced users, CI/CD |
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a tiered system with three levels: operations that are always allowed (reading files in the project), operations that require one-time approval per session (writing files, running safe commands), and operations that always require approval (running potentially dangerous commands). Users can also configure "allowlisted" commands and paths that permanently skip approval. Codex uses a different model with three tiers: Suggest (plan only, no execution), Auto Edit (can write files but not run commands), and Full Auto (can write files and run commands with network disabled).
 :::
 

@@ -48,7 +48,7 @@ When you build your own agent, you can tailor it to your specific needs:
 
 **Custom safety policies.** Your organization might have specific requirements about what files the agent can modify, what commands it can run, or what external services it can contact. Rather than hoping a general agent's permission system covers your needs, you can build exactly the safety policy your organization requires.
 
-::: tip In the Wild
+::: wild In the Wild
 Custom agents are already common in industry, even if they're not publicly visible. Teams build internal agents tuned to their specific tech stacks, deployment pipelines, and code conventions. A fintech company might build an agent that understands their regulatory requirements and automatically checks code changes against compliance rules. A game studio might build an agent that knows how to navigate their engine's scripting system. The generic agents get you 80% of the way; the customized agent gets you to 98%.
 :::
 

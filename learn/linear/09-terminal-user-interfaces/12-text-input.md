@@ -72,7 +72,7 @@ fn main() {
 
 We store text as `Vec<char>` rather than `String` because Rust's `String` is a `Vec<u8>` encoded as UTF-8, which means operations at a character position require O(n) scanning. `Vec<char>` gives us O(1) indexing at the cost of using 4 bytes per character.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, strings are sequences of Unicode code points, and you can index them directly with `s[i]`. In Rust, `String` is UTF-8 encoded, so `s[i]` is not available (it would be byte indexing, which could land in the middle of a multi-byte character). Using `Vec<char>` gives us the Python-like indexing behavior where position `i` is always the i-th character.
 :::
 

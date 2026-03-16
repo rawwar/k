@@ -150,7 +150,7 @@ impl Highlighter {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `pygments` library serves the same role as `syntect`:
 ```python
 from pygments import highlight
@@ -332,7 +332,7 @@ impl CachedMessage {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code renders syntax-highlighted code blocks in real time as tokens stream in. The highlighting updates incrementally, so users see colored code appearing token by token. OpenCode similarly highlights code blocks using its Go-based syntax highlighting libraries. Both agents support dozens of programming languages, matching the language from the markdown fence annotation. The experience of watching highlighted code appear in real time is one of the features that makes a coding agent feel premium.
 :::
 

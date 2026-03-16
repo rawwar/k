@@ -74,7 +74,7 @@ The structure matches our state machine model exactly: Processing (LLM call) -> 
 
 **Tool result formatting.** File contents are returned with line numbers. Command output includes exit codes and separates stdout from stderr. Large outputs are truncated with clear markers indicating how much was omitted. Error messages include hints about what the model should try instead.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's permission system remembers approvals within a session. If you approve `cargo test` once, subsequent `cargo test` calls execute without asking. But a different command like `cargo build` requires separate approval. This session memory significantly reduces the friction of working with an agent that makes many tool calls, while still catching unexpected or dangerous commands.
 :::
 

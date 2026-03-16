@@ -51,7 +51,7 @@ fn use_anonymous_temp() -> Result<(), std::io::Error> {
 
 Anonymous temp files are created using `O_TMPFILE` on Linux (the file exists only as a file descriptor with no directory entry) or with a random name that is immediately unlinked. They are perfect for scratch data that no other process needs to access.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `tempfile.TemporaryFile()` creates the same kind of anonymous temp file. The context manager pattern (`with tempfile.TemporaryFile() as f:`) maps to Rust's drop semantics -- when the variable goes out of scope (or the `with` block exits), the file is cleaned up. The key difference is that Rust's cleanup is deterministic via `Drop`, while Python's cleanup depends on the garbage collector (though the `with` statement makes it deterministic in practice).
 :::
 
@@ -170,7 +170,7 @@ fn use_temp_dir() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `tempfile.TemporaryDirectory()` is the direct equivalent. You'd write `with tempfile.TemporaryDirectory() as tmpdir:` and the directory is recursively deleted when the block exits. Rust's `TempDir` works identically, with drop serving as the automatic cleanup mechanism.
 :::
 

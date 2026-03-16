@@ -58,7 +58,7 @@ fn spawn_chrooted(root: &str, program: &str, args: &[&str]) -> std::io::Result<s
 
 The `pre_exec` hook runs in the child process after fork but before exec -- exactly where Unix expects you to configure the child's environment. Note the `unsafe` block: `pre_exec` is unsafe because the closure runs in a forked process where many things (like memory allocators) may not be in a consistent state.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python does not have a built-in `pre_exec` equivalent. The closest option is `subprocess.Popen`'s `preexec_fn` parameter, which has similar semantics and similar caveats about safety in forked processes. Python's documentation warns that `preexec_fn` is "not safe to use in the presence of threads," and Rust's `pre_exec` carries comparable warnings about async-signal-safety.
 :::
 
@@ -231,7 +231,7 @@ The sandbox profile is a Scheme-like DSL. The `(deny default)` line blocks every
 
 Note: Apple has deprecated `sandbox-exec` as a public API, but it continues to work on current macOS versions and is used internally by Apple's own tools. For production use, consider the App Sandbox or the newer `EndpointSecurity` framework.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses macOS sandbox-exec profiles to restrict file system access for shell commands. The profile allows reads everywhere (the agent needs to read source code) but restricts writes to the project directory and temporary files. On Linux, it leverages a combination of namespace isolation and process group management. Codex runs commands inside a Docker container with a restricted filesystem, providing stronger isolation at the cost of startup overhead.
 :::
 

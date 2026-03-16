@@ -44,7 +44,7 @@ This unidirectional data flow makes the UI predictable and testable. When the ag
 
 For a coding agent, the UI is more important than you might think. The agent generates a lot of output — streaming text, tool call notifications, command outputs, status updates. A well-designed UI presents this information clearly without overwhelming the user. OpenCode's Bubble Tea interface handles scrolling, wrapping, and formatting in ways that a raw terminal print loop cannot.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode's choice of Bubble Tea for its UI is reflected in many Go-based terminal applications. The framework has become the de facto standard for rich terminal interfaces in the Go ecosystem. When we build our agent in Rust, we'll use Ratatui — the Rust equivalent that serves a similar role. Both frameworks follow the same core principle: separate state management from rendering, and let the framework handle the terminal-level details.
 :::
 

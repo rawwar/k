@@ -224,7 +224,7 @@ fn build_right_section(status: &StatusInfo) -> Line<'static> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `rich` library has a built-in `Status` spinner:
 ```python
 from rich.console import Console
@@ -296,7 +296,7 @@ pub fn view(frame: &mut Frame, app: &App) {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's status bar displays the active model, token usage, and cost estimate in real time. OpenCode shows similar information plus the current git branch and working directory. Both agents use the status bar as a persistent information display that never obscures the conversation. The density of information in a single row is what makes the status bar valuable -- users can glance at it without switching context from the conversation pane.
 :::
 

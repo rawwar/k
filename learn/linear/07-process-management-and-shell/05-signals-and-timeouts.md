@@ -136,7 +136,7 @@ async fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.Popen` has `terminate()` (sends SIGTERM) and `kill()` (sends SIGKILL). A common Python pattern is:
 ```python
 import subprocess, signal
@@ -346,7 +346,7 @@ async fn main() {
 
 The `.process_group(0)` call tells the OS to place the child in a new process group (with the child as group leader). Then `killpg` sends SIGKILL to every process in that group -- the shell, `sleep`, and any other descendants.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code creates a new process group for every shell command it executes. When a command exceeds its timeout, the agent kills the entire group to ensure no orphan processes linger. This is especially important during long agent sessions where dozens of commands may be executed -- leaked processes would accumulate and consume system resources.
 :::
 

@@ -341,7 +341,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code provides an `/undo` command that reverts all file changes from the agent's last turn. Internally, it tracks which files were modified and uses git to restore them. If the agent made git commits as part of its work, those commits are also reverted. The key design insight is that undo operates on the user's mental model of "turns" (one user message, one agent response), not on individual tool calls. Codex takes a similar approach -- since it runs in a sandboxed environment, rolling back means simply discarding the worktree changes if the user rejects the proposed modifications.
 :::
 

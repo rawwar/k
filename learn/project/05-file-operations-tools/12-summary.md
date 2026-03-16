@@ -58,7 +58,7 @@ With these tools registered in your tool system from Chapter 4, the agent can no
 
 This is exactly how a human developer works: find the file, read it, understand it, change it, verify the change. The difference is that the agent does it through structured tool calls rather than keyboard strokes.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Python's `pathlib` for file operations, you have seen most of these patterns:
 ```python
 # The Python equivalent of our tool suite
@@ -132,7 +132,7 @@ Several patterns from this chapter apply to every tool you will build:
 
 **Thorough testing.** TempDir-based tests with both return-value and filesystem-state verification. This pattern scales to any tool that has side effects.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code, OpenCode, and Codex all implement these same three core file tools (read, write, edit) with remarkably similar designs. The string-replacement edit tool with strict uniqueness checking has proven to be the most reliable approach across all production coding agents. The main variations between agents are in their safety systems: Claude Code uses a permission model with user approval, OpenCode uses a stricter blocklist, and Codex relies on Docker-level sandboxing. Our implementation provides a solid middle ground that you can extend in either direction.
 :::
 

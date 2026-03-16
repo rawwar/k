@@ -218,7 +218,7 @@ Not every threat deserves equal attention. A risk matrix combines likelihood and
 
 The threats with the highest priority score become the focus of your safety engineering. This chapter addresses each of these through specific mechanisms: permissions (Chapter 13.2), approval flows (13.3), sandboxing (13.7), and rate limiting (13.10).
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's threat model prioritizes preventing arbitrary command execution and file system access outside the project directory. It implements a layered defense: commands are validated against a denylist before execution, file operations are scoped to the working directory, and network access is restricted. Codex (OpenAI's CLI agent) takes an even more aggressive approach in its default mode, running in a fully sandboxed environment with no network access, treating the agent as untrusted by default.
 :::
 

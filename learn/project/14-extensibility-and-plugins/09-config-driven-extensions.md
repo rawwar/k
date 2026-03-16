@@ -204,7 +204,7 @@ timeout_secs = 5
 skills = ["rust-dev"]
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers are accustomed to configuration files like `pyproject.toml`, `setup.cfg`, or `.flake8`. The concept here is the same -- declare behavior in configuration rather than code:
 ```toml
 # pyproject.toml
@@ -550,7 +550,7 @@ fn remove_unresolved_placeholders(command: &str) -> String {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's configuration hierarchy mirrors what we have built here. Settings can be defined at the user level (`~/.claude/settings.json`), project level (`.claude/settings.json`), and even per-directory. Project settings override user settings. The hooks system in Claude Code is entirely config-driven -- you define shell commands in the settings file and they run at the appropriate lifecycle points. This layered configuration approach means teams can share project-level settings via version control while individual developers keep their personal preferences in their home directory.
 :::
 

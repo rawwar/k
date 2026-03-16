@@ -175,7 +175,7 @@ This format is easy for the model to parse when it needs to reference specific l
 
 **Bounds checking uses `min` and `saturating_sub`.** Rather than returning an error for out-of-range offsets, we clamp to valid ranges. If the model asks to start at line 1000 in a 50-line file, it gets an empty result with the metadata header showing "0 of 50 lines." This is more useful than an error -- the model learns the file is shorter than expected.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would read a file and add line numbers like this:
 ```python
 def read_file(path: str, offset: int = 1, limit: int | None = None) -> str:
@@ -277,7 +277,7 @@ mod tests {
 
 These tests demonstrate the pattern you will use throughout this chapter: create a `TempDir`, set up files, call the tool with JSON input, and verify the output. The `tempfile` crate ensures each test gets its own clean directory that is automatically deleted when the `TempDir` value is dropped.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Read tool returns file contents with line numbers in a `{line_number}\t{content}` format -- the same pattern we use here. This is deliberate: the line numbers serve as coordinates that the model references when making subsequent edits. When the model says "replace lines 15-20", it is using the numbers it saw in the read output. OpenCode takes a similar approach but uses a slightly different format with a pipe separator.
 :::
 

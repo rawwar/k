@@ -56,7 +56,7 @@ The open-source agent ecosystem is where you find the greatest variety and the m
 
 **Goose** (by Block) is another open-source agent focused on extensibility through a modular tool system. It supports custom tool providers, allowing you to extend the agent with domain-specific capabilities.
 
-::: tip In the Wild
+::: wild In the Wild
 The open-source agents are the richest learning resources for aspiring agent builders. OpenCode's Go codebase shows clean separation between the UI layer (Bubble Tea), the agent core (provider-agnostic LLM interface), and the tool system (file operations, shell execution). Pi's Rust codebase demonstrates how to use Rust's trait system and enums to build a type-safe tool dispatch layer. When you build your own agent in this tutorial, you'll draw on patterns from both.
 :::
 

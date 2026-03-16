@@ -228,7 +228,7 @@ fn run_agent_turn(state: &mut AgentContext) -> Result<String, AgentError> {
 
 Every arm of the `match` produces the next state. The compiler ensures you handle every variant. If you add a new state to the enum, every `match` in your code will demand a new arm. This is the state machine pattern in Rust: the `enum` defines the states, the `match` defines the transitions, and the compiler enforces completeness.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode explicitly models its agent loop as a state machine in Go. Its `agent.go` file contains a `for` loop with a `switch` on the response type, transitioning between "calling the model," "executing tools," and "returning results." Claude Code takes a similar approach in TypeScript, using a loop that checks `response.stop_reason` to decide whether to continue tool execution or return to the user. The state machine is implicit in both implementations, but the pattern is identical to what we have described here.
 :::
 

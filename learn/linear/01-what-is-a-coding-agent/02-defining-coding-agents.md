@@ -36,7 +36,7 @@ The language model at the center of the agent is the reasoning engine. It takes 
 
 This is where the magic of large language models comes in. The model isn't executing a fixed algorithm or following a decision tree. It's applying the patterns it learned during training across billions of lines of code to reason about the specific situation in front of it. It can recognize that a `NullPointerException` in Java often means a missing null check, that a failing import in Python usually means a missing dependency, that a type error in Rust often means you need to convert between `&str` and `String`.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's reasoning is particularly visible in its "extended thinking" mode, where the model explicitly works through its chain of thought before acting. You can watch it reason: "The user wants pagination. Let me check the existing route handlers to understand the pattern. I see they use an `offset` and `limit` parameter in the database queries. I'll follow the same pattern." This externalized reasoning makes the agent's decision-making transparent and debuggable.
 :::
 
@@ -97,7 +97,7 @@ Let's distill the definition into a checklist. A system qualifies as a coding ag
 
 If a system lacks any one of these, it's something other than a coding agent. It might be an excellent tool — Copilot is incredibly useful — but it occupies a different category.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode demonstrates these five characteristics clearly. Its LLM core can be swapped between providers (Anthropic, OpenAI, or local models). Its tool system gives the model access to file reading, file writing, shell execution, and LSP-powered code navigation. Its main loop runs tool calls until the model produces a response with no tool invocations, signaling task completion. And it operates autonomously — you ask it to do something, and it works through the steps until it's done.
 :::
 

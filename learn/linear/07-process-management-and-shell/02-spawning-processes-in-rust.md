@@ -57,7 +57,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, `subprocess.run(["cargo", "test", "--release"])` takes a list of arguments in the constructor. Rust's builder pattern achieves the same thing but separates the program name (`Command::new`) from the arguments (`.arg()` / `.args()`). Both languages strongly recommend the list form over passing a single string to a shell -- Rust makes the safe choice the default, while Python requires you to avoid `shell=True` by discipline.
 :::
 
@@ -243,7 +243,7 @@ async fn main() {
 
 This is the pattern your agent will use to execute tools and stream results back to the user in real time. The `await` points let Tokio interleave this work with other async tasks.
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents like Claude Code and OpenCode use async process spawning exclusively. The agent needs to remain responsive to user cancellation, LLM streaming updates, and multiple concurrent tool executions. Blocking on a synchronous `output()` call would freeze the entire agent until the command finishes -- unacceptable for a tool that might run `cargo build` for minutes.
 :::
 

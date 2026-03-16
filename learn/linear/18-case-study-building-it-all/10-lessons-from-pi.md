@@ -187,7 +187,7 @@ impl Sandbox {
 
 The lesson is that sandboxing gives users confidence. When the agent proposes changes to fifteen files across your project, you want to see every modification before it happens. You want to spot the one file where the agent made an incorrect assumption. The sandbox pattern makes this review workflow natural.
 
-::: tip In the Wild
+::: wild In the Wild
 Pi presents changes as color-coded diffs in the terminal, with additions in green and deletions in red — the same format developers see in `git diff`. Users can apply all changes at once, apply them selectively (file by file), or reject the entire batch and ask the agent to try again. This workflow mirrors the code review process that developers already know, making it intuitive even for first-time users.
 :::
 

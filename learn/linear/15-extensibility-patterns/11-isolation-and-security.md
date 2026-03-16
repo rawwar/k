@@ -313,7 +313,7 @@ impl WasmPluginHost {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 The Extism project provides a production-ready WASM plugin framework for Rust that handles the complexity of host-guest communication, memory management, and capability restriction. It lets you write plugins in any language that compiles to WASM (Rust, Go, C, AssemblyScript, and others) and run them with fine-grained capability control. For a coding agent, WASM sandboxing is ideal for user-defined content transformers and validators that should not have access to the filesystem or network.
 :::
 

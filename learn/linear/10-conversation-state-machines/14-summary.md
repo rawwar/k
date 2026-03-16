@@ -87,7 +87,7 @@ The memory hierarchy provides three tiers of recall:
 
 The key-value memory store with `remember` and `recall` tools lets the agent explicitly manage its knowledge. Episodic memory records structured session summaries that help the agent recall relevant past work.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code combines many of the patterns from this chapter into a cohesive system. It uses prompt caching to reduce costs on repeated context, JSONL-based session persistence for crash recovery, `CLAUDE.md` files for cross-session memory, auto-compaction with summarization when approaching context limits, and dynamic system prompts that incorporate project context. The key architectural insight from Claude Code is that these systems don't operate independently -- compaction triggers cache invalidation, memory informs the system prompt, and budget tracking gates compaction strategy selection.
 :::
 
@@ -111,6 +111,24 @@ Chapter 11 (Code Intelligence) builds directly on the conversation state managem
 - **Memory** to recall file relationships, past refactoring decisions, and project conventions
 
 The conversation state machine you built in this chapter is the runtime engine that makes all of those features possible. Every code intelligence query is a conversation turn, every file analysis is a tool call, and every insight stored is a memory entry.
+
+## Exercises
+
+### Exercise 1: Design a State Machine for Nested Tool Calls (Medium)
+
+Some coding tasks require a tool call that triggers another tool call (e.g., a search tool discovers files that need reading). Design a state machine that supports nested tool execution while preventing re-entrant compaction. Sketch the states, transitions, and the events that drive them. Identify which transitions should be illegal and explain why each constraint exists. Consider how your design handles a tool call that times out while a nested call is in progress.
+
+### Exercise 2: Context Pruning Strategy Comparison (Easy)
+
+Compare the four compaction strategies from this chapter (semantic deduplication, importance scoring, summarization, sliding window) across three dimensions: information loss, latency cost, and API cost. Create a table ranking each strategy along these dimensions. For a session where the user is iteratively debugging a single function over 40 turns, which strategy ordering would you choose and why?
+
+### Exercise 3: Cost Optimization Analysis (Hard)
+
+An agent session has 120 turns with an average of 800 tokens per message. The model charges $3/M input tokens and $15/M output tokens. Prompt caching gives a 90% discount on cached tokens, compaction reduces repeated context by 40%, and model routing sends 30% of turns to a cheaper model at $0.25/M input. Calculate the cost of the session with no optimization, then with each optimization applied individually, then with all three combined. What is the effective per-turn cost in each scenario? Discuss why the combined savings are not simply additive.
+
+### Exercise 4: Session Persistence Trade-offs (Medium)
+
+You need to choose a persistence strategy for an agent that (a) runs on unreliable network connections where crashes are common, (b) needs to support searching across past sessions for relevant context, and (c) must start up in under 200ms. Evaluate JSON Lines, SQLite, and MessagePack against these three requirements. Which would you choose as the primary format, and would you use a secondary format for any specific need? Justify your architecture with concrete reasoning about failure modes and query patterns.
 
 ## Key Takeaways
 

@@ -316,7 +316,7 @@ fn heuristic_resolve(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Production language servers like rust-analyzer and TypeScript's tsserver implement full module resolution including path remapping, conditional exports, and workspace configurations. A coding agent does not need this level of completeness. Claude Code relies on the LLM's understanding of import paths combined with file search to navigate between modules. When more precision is needed, the agent can invoke a language server for definitive resolution. The heuristic approach handles the common cases quickly and saves the expensive LSP call for ambiguous situations.
 :::
 

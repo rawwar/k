@@ -427,7 +427,7 @@ pub fn summarize_changes(diff_files: &[DiffFile]) -> String {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses `git diff` output as context for generating commit messages. When it creates a commit, it runs `git diff --cached` to capture the staged changes, summarizes them, and feeds that summary to the LLM to produce a descriptive commit message. This pattern of using structured diff data as LLM context is one of the most practical Git integrations in any coding agent -- it turns raw changes into human-readable descriptions without requiring the agent to re-read every modified file.
 :::
 

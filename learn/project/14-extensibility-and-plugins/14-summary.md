@@ -105,13 +105,13 @@ Not all extension mechanisms are equally complex or useful. Here they are ordere
 
 9. **Extension marketplace** -- Discovery and distribution infrastructure. Essential at scale, but only worth building after you have an active plugin community.
 
-::: tip Coming from Python
+::: python Coming from Python
 This spectrum mirrors the Python ecosystem's evolution. Python started with simple script-based extensions (like config-driven tools), grew to support entry-point-based plugins (like the Plugin trait), and eventually built PyPI for distribution (like the marketplace). The lesson: start simple and add complexity only when the simpler approaches are insufficient. Most users will never need the full Plugin trait -- config-driven tools and MCP servers cover 90% of real-world needs.
 :::
 
 ## How Production Agents Approach Extensibility
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents take pragmatic approaches to extensibility:
 
 **Claude Code** focuses on three mechanisms: MCP servers for tool extensibility, hooks (shell commands at lifecycle points) for behavior modification, and CLAUDE.md files for project-specific prompting. This covers the high-value, low-effort quadrant. There is no formal plugin API or marketplace -- the focus is on mechanisms that non-developers can use.
@@ -150,6 +150,58 @@ As your agent grows, the extension system will evolve. Here is a practical roadm
 In [Chapter 15: Production Polish](/project/15-production-polish/), you will take everything you have built -- from the basic REPL in Chapter 1 through the extensible platform in this chapter -- and prepare it for real-world use. You will add logging, error reporting, performance profiling, graceful shutdown, and the polish that separates a prototype from a production tool.
 
 The extension system you built here is what makes that production transition worthwhile. A polished agent that only does what you built is useful. A polished agent that anyone can extend is a platform.
+
+## Exercises
+
+Practice each concept with these exercises. They build on the extensibility and plugin system you created in this chapter.
+
+### Exercise 1: Create a Config-Driven Tool (Easy)
+
+Define a new tool entirely in TOML configuration (no Rust code). Create a `git-status` tool that runs `git status --short` in the project root and returns the output. Add it to your `.kodai/tools.toml` file, reload the config, and verify it appears in the tool registry and can be invoked by the LLM.
+
+- Define the tool in TOML with `name`, `description`, `command`, and `working_dir` fields
+- Set the `input_schema` to accept an optional `path` parameter for checking status of a subdirectory
+- Test by sending a message like "What files have changed?" and verifying the agent uses your tool
+
+### Exercise 2: Add a /plugins Status Command (Easy)
+
+Implement a `/plugins` REPL command that lists all loaded plugins with their name, version, status (active/disabled/errored), and the number of tools, hooks, and commands each one registered. Include MCP servers as a separate section showing their connection status.
+
+- Iterate through `PluginManager`'s loaded plugins and format each entry
+- For MCP servers, show the transport type (stdio/HTTP) and connection state
+- Display a summary line at the bottom: `[4 plugins active, 12 tools, 3 hooks, 2 MCP servers]`
+
+### Exercise 3: Implement a Pre-Execution Hook (Medium)
+
+Add a hook that runs before every shell command execution. The hook receives the command string and working directory, and can modify the command, allow it unchanged, or block it. Implement a concrete hook that prepends `time` to every command so the LLM can see execution duration.
+
+**Hints:**
+- Define the hook point as `HookPoint::PreShellExec` in the `HookRegistry`
+- The hook function signature should be `fn(command: &str, cwd: &Path) -> HookAction` where `HookAction` is `Allow(String)`, `PassThrough`, or `Block(String)`
+- Register the timing hook: it transforms `"cargo test"` into `"time cargo test"` by returning `HookAction::Allow(format!("time {}", command))`
+- Test that blocked hooks return the block reason as a tool error
+
+### Exercise 4: Build an MCP Server Connector (Medium)
+
+Implement a function that connects to an MCP server via stdio transport, performs the initialization handshake, queries the server's tool list, and registers those tools in your agent's `ToolRegistry`. Test it against a simple MCP server that provides one tool (you can use an existing MCP server or write a minimal one as a script).
+
+**Hints:**
+- Spawn the MCP server process with `tokio::process::Command` and piped stdin/stdout
+- Send the `initialize` JSON-RPC message and parse the response to get server capabilities
+- Send `tools/list` to get available tools, then create `McpToolBridge` instances for each
+- Each bridged tool should forward `execute()` calls as `tools/call` JSON-RPC messages to the server
+- Handle server disconnection gracefully by removing bridged tools from the registry
+
+### Exercise 5: Build a Complete Plugin with Lifecycle Management (Hard)
+
+Create a full plugin that implements the `Plugin` trait, registers two custom tools (e.g., `http-get` for fetching URLs and `json-query` for extracting values from JSON using a path expression), subscribes to the `ToolExecuted` event for logging, and supports hot-reloading its configuration. Package it as a separate module that can be loaded at startup.
+
+**Hints:**
+- Implement all `Plugin` lifecycle methods: `init()`, `on_load()`, `on_unload()`, `name()`, `version()`
+- In `on_load()`, register your tools with `context.tool_registry.register()` and subscribe to events with `context.event_bus.subscribe()`
+- The `http-get` tool should use `reqwest::blocking::get()` with a timeout; the `json-query` tool should accept a JSON string and a dot-separated path like `"data.users[0].name"`
+- For hot-reloading, watch a config file and call `on_unload()` then `on_load()` when it changes, re-registering tools with updated configuration
+- Write tests using `PluginTestHarness` that verify tool registration, execution, event handling, and reload behavior
 
 ## Key Takeaways
 

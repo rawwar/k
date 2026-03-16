@@ -234,7 +234,7 @@ impl StdioTransport {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might communicate with a subprocess using `asyncio`:
 ```python
 import asyncio
@@ -553,7 +553,7 @@ impl McpToolBridge {
 
 The namespacing scheme (`mcp__servername__toolname`) prevents collisions between tools from different MCP servers and between MCP tools and built-in tools.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code namespaces MCP tools with a double-underscore convention like `mcp__memory__store` and `mcp__memory__retrieve`. This makes it clear to both the LLM and the user where a tool comes from. During tool dispatch, Claude Code checks if the tool name starts with `mcp__`, and if so, routes it through the MCP client instead of the built-in tool handler. The LLM sees all tools as a flat list -- it does not need to understand the MCP abstraction.
 :::
 

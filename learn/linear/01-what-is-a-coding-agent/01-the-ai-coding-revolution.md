@@ -52,7 +52,7 @@ The convergence of these capabilities created a new category of tool. In 2024 an
 
 What makes this moment different from previous waves of AI hype is the feedback loop. Earlier tools could suggest code, but they couldn't verify it. A coding agent can write code, compile it, run the tests, read the error messages, and fix the problems — all without human intervention. This tight loop of action and observation is what turns a language model from a fancy autocomplete into something that resembles a junior developer.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code exemplifies this shift. When you give it a task like "add pagination to the user list endpoint," it doesn't just generate code and hope for the best. It reads your existing route handlers, examines your database models, writes the implementation, runs your test suite, reads any failures, and iterates until the tests pass. The entire cycle might involve a dozen tool calls — reading files, writing files, executing shell commands — orchestrated by the model without human intervention between steps.
 :::
 

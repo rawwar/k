@@ -123,7 +123,7 @@ async fn main() {
 
 `tokio::join!` runs both read futures concurrently on the same task. As the child writes to either stream, Tokio reads from whichever pipe has data available. No deadlock possible.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, `subprocess.run(capture_output=True)` handles this concurrency for you internally -- it uses threads to drain both pipes simultaneously. You never see the deadlock risk. In Rust, `.output()` also handles it internally (it uses `tokio::join!` under the hood in the async version), but when you use `spawn()` and read pipes manually, the concurrency is your responsibility.
 ```python
 # Python hides the complexity -- two threads drain stdout and stderr
@@ -269,7 +269,7 @@ fn is_likely_binary(data: &[u8]) -> bool {
 
 You could use this to provide a helpful message like `[binary output, 45,231 bytes]` instead of sending garbled replacement characters to the LLM.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code formats tool results with clear labels for stdout and stderr. When a command produces both streams, they are sent separately so the LLM can distinguish between normal output and error messages. Codex takes a similar approach, prefixing stderr with a marker to avoid confusion in the LLM's context.
 :::
 

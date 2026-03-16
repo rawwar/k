@@ -70,7 +70,7 @@ async fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.Popen` provides `terminate()` for SIGTERM and `kill()` for SIGKILL:
 ```python
 import subprocess, signal
@@ -234,7 +234,7 @@ fn kill_process_group(pid: u32, sig: Signal) -> Result<(), nix::Error> {
 
 This ensures that when you terminate a timed-out `cargo build`, all the compiler processes it spawned are also terminated.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code creates a new process group for every shell command execution. When a timeout fires, it sends SIGTERM to the entire process group, waits briefly, then escalates to SIGKILL. This prevents orphaned compiler or test processes from consuming system resources after the agent moves on. Codex CLI takes a similar approach, using process groups and a SIGTERM-then-SIGKILL escalation pattern.
 :::
 

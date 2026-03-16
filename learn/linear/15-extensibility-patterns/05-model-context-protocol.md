@@ -260,7 +260,7 @@ pub struct McpPromptArgument {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code is one of the primary consumers of MCP servers. It supports both stdio and HTTP+SSE transports, configured through its settings file. Users can add MCP servers for database access, API documentation, project-specific tools, and more. The MCP ecosystem is growing rapidly -- there are MCP servers for PostgreSQL, GitHub, Slack, Google Drive, web browsing, and dozens of other integrations. By implementing MCP client support, your agent immediately gains access to this entire ecosystem.
 :::
 

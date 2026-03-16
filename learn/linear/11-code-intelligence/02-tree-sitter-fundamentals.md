@@ -172,7 +172,7 @@ fn show_cst_detail() {
 
 Running this on `let x: i32 = 5;` reveals every token as a node — the `let` keyword, the `:` separator, the `=` operator, the `;` terminator. This level of detail is what enables tree-sitter to support precise code transformations.
 
-::: tip In the Wild
+::: wild In the Wild
 Neovim, Helix, Zed, and GitHub's code navigation all use tree-sitter for syntax-aware features. GitHub uses tree-sitter to power the "jump to definition" feature in the code browser and to generate the symbol outlines you see in the file header. When a coding agent like Claude Code reads a file and needs to understand its structure, tree-sitter provides the same quality of parsing that powers your editor's syntax highlighting.
 :::
 

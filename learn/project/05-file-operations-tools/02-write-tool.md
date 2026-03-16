@@ -140,7 +140,7 @@ Let's examine the important decisions.
 
 **`fs::write` replaces the entire file.** This function creates the file if it does not exist, or truncates and overwrites it if it does. There is no append mode -- the write tool always replaces the full content. This makes the tool's behavior predictable: the file will contain exactly what you passed as `content`, nothing more.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python you would write a file like this:
 ```python
 from pathlib import Path
@@ -277,7 +277,7 @@ mod tests {
 
 These tests cover the core behaviors: creating a new file, creating parent directories, overwriting an existing file, and handling missing parameters. Notice the pattern: each test creates its own `TempDir`, performs operations through the tool's JSON interface, and verifies both the return message and the actual file system state.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Write tool requires the model to provide the complete file content -- there is no "append" mode. This is a deliberate design choice: it keeps the tool simple and predictable. If the model needs to add content to a file, it reads the current content first, then writes the combined result. OpenCode follows the same pattern. The alternative -- supporting append, prepend, and insert-at-line modes -- adds complexity that makes the tool harder for the model to use correctly.
 :::
 

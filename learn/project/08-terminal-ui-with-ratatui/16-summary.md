@@ -108,7 +108,7 @@ Computing the layout into a struct of `Rect`s each frame, then passing those rec
 
 Passing the `Theme` struct to rendering functions instead of hardcoding colors meant that adding a light theme required zero changes to rendering logic. The theme struct acts as an indirection layer between "what should this look like" (semantic role) and "what color should it be" (specific RGB value).
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have worked with Python's MVC frameworks (Django, Flask) or state management libraries (Redux via JavaScript), the Elm architecture should feel familiar. The key difference in Rust is that ownership and borrowing enforce the separation naturally. You *cannot* accidentally mutate state inside a view function because the view receives `&App` (immutable reference). In Python, discipline is needed to avoid mutating state in a renderer -- in Rust, the compiler enforces it.
 :::
 
@@ -130,7 +130,7 @@ In the next chapter, you will tackle **conversation context management** -- trac
 
 The TUI is also where you will integrate the **permission system** from Chapter 12. When the agent requests permission to execute a tool, a focused confirmation dialog will appear in the conversation pane, and the keyboard handling will temporarily switch to a confirmation mode.
 
-::: tip In the Wild
+::: wild In the Wild
 Production coding agents continuously evolve their UIs. Claude Code has gone through multiple iterations of its terminal interface, refining the layout, adding features like collapsible tool output sections, and improving the streaming rendering. OpenCode similarly iterates on its Bubble Tea-based UI. The architecture you have built -- with its clean separation of state, events, and rendering -- is designed to support this kind of iterative improvement. Adding a new pane, a new keybinding, or a new visual element follows the same pattern every time: add state to the Model, add a Message variant, handle it in Update, and render it in View.
 :::
 

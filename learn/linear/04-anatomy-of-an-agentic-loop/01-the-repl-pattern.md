@@ -178,7 +178,7 @@ The outer REPL gives the user control: they can interrupt, ask follow-ups, or ch
 
 This two-loop architecture is universal across coding agents. Claude Code, OpenCode, Cursor, Aider -- they all have an outer REPL where the user types messages and an inner loop where the agent works autonomously.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's outer loop is its main REPL that accepts user input at the `>` prompt. When you type a message, the inner agentic loop takes over -- potentially reading files, running commands, editing code, and making multiple LLM calls -- before returning control to the prompt. OpenCode follows the same pattern with its TUI (terminal UI) input box serving as the Read step and its `agent.Run()` method implementing the inner loop.
 :::
 

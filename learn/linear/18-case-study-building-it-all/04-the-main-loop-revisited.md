@@ -249,7 +249,7 @@ If tool results push the conversation past the token limit mid-turn, the context
 
 If the streaming call to the provider fails (network error, rate limit, invalid request), the error propagates up via `?`. The caller can choose to retry or report the error to the user. The loop itself does not retry — that responsibility belongs to the provider or a retry wrapper around it.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code handles the iteration limit with a graduated approach: after a configurable number of iterations, it pauses and asks the user "I've been working for a while. Should I continue?" rather than hard-stopping. This gives the user control over long-running tasks without an arbitrary cutoff. OpenCode tracks token usage per turn and warns the user when a turn is consuming an unusually large portion of the context budget, giving them the option to interrupt before context gets compacted.
 :::
 

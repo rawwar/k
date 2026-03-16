@@ -114,6 +114,24 @@ The provider abstraction is a foundation. Several extensions build naturally on 
 
 Each of these is a new module or decorator, not a modification to existing code. That is the hallmark of a well-designed abstraction: it grows by addition, not by surgery.
 
+## Exercises
+
+### Exercise 1: Provider Capability Matrix (Easy)
+
+Create a capability matrix comparing Anthropic Claude, OpenAI GPT-4, and a local Ollama model across these dimensions: streaming support, tool/function calling, vision/image input, system prompt handling (message vs. parameter), max context window, prompt caching, and response format constraints (JSON mode). For each capability gap, describe how your canonical types would represent the difference using `Option` fields or the `extensions` map. Which capabilities are essential for a coding agent versus nice-to-have?
+
+### Exercise 2: Response Normalization Challenges (Medium)
+
+Anthropic returns tool calls as `content` blocks inline with text, while OpenAI returns them as a separate `tool_calls` array. A local model returns tool calls as raw JSON embedded in the text response. Design the normalization logic that converts all three formats into your canonical `ChatResponse` type. For each provider, identify the edge cases that make normalization tricky: partial tool calls in streaming, multiple tool calls in a single response, tool calls interleaved with reasoning text, and malformed JSON from local models. How would you handle a response that is ambiguous -- is it text or a malformed tool call?
+
+### Exercise 3: Fallback Strategy Design (Hard)
+
+Design a fallback strategy for an agent that has access to three providers: Claude (primary, expensive, best quality), GPT-4o (secondary, moderate cost), and a local Ollama model (tertiary, free, lower quality). Your strategy must handle: (a) rate limit errors (retry same provider after backoff), (b) server errors (failover to next provider), (c) authentication failures (skip provider entirely), and (d) capability mismatches (the current task requires tool calling but the fallback model does not support it). Draw a decision flowchart showing the path from initial request to final response or user-facing error. Consider what happens to conversation history when you switch providers mid-session -- does the context need re-translation?
+
+### Exercise 4: Designing for a New Provider (Medium)
+
+A new LLM provider launches with these differences from existing providers: responses are delivered via Server-Sent Events with a different event schema, tool definitions use XML Schema instead of JSON Schema, and the API uses gRPC instead of REST. Without writing code, outline the adapter module you would create. List the specific translation functions needed, identify which parts of your existing canonical types would need `Option` fields or extension points, and estimate the effort compared to adding an OpenAI-compatible provider. What does this exercise reveal about the flexibility of your abstraction layer's design?
+
 ## Key Takeaways
 
 - The complete provider abstraction is five layers: trait and types, concrete adapters, model registry, decorator stack (retry, fallback, tracking), and runtime switching.

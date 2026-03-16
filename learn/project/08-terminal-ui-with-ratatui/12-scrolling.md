@@ -187,7 +187,7 @@ fn render_conversation(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In `curses`, you handle scrolling manually by maintaining a `pad` (a virtual screen larger than the terminal) and calling `pad.refresh()` with the visible region coordinates:
 ```python
 import curses
@@ -310,7 +310,7 @@ fn pre_wrap_lines(lines: &[Line<'static>], width: u16) -> Vec<Line<'static>> {
 
 For your coding agent, the standard `Paragraph::scroll()` with `Wrap` is usually sufficient. Reserve pre-wrapping for cases where smooth scrolling through long lines is critical.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements smart auto-scrolling that stays pinned to the bottom during streaming but immediately pauses when the user scrolls up. It also shows a "scroll to bottom" indicator when the user is not at the bottom of the conversation, making it easy to jump back. This auto-scroll with manual override pattern is the standard approach across production agents and the one you have implemented here with the `auto_scroll` flag.
 :::
 

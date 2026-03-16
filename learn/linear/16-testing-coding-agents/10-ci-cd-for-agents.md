@@ -110,7 +110,7 @@ jobs:
           path: benchmark-results/
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python CI pipelines use tox or nox for multi-environment testing:
 ```yaml
 # Python equivalent
@@ -332,7 +332,7 @@ pub fn save_ci_report(report: &CiReport) -> std::io::Result<()> {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's CI pipeline runs unit and safety tests on every push, integration tests on every PR, and a full evaluation suite on a nightly schedule. The evaluation results are tracked in a dashboard that shows pass rates, token usage trends, and performance metrics over time. When a benchmark regression is detected, it triggers an alert for the team to investigate before the next release.
 :::
 

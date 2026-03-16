@@ -306,7 +306,7 @@ Key elements of an effective approval prompt:
 3. **Why it matters**: The risk classification and specific concern ("This will publish your crate publicly and cannot be undone")
 4. **What changes**: For file writes, show a diff preview. For commands, show the full command with arguments.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code presents approval prompts with full context: for file edits, it shows a syntax-highlighted diff of the proposed changes. For shell commands, it displays the complete command string. Users can type "y" to approve once, or the agent remembers the tool pattern for the session. Claude Code also supports a `--dangerously-skip-permissions` flag for CI/CD environments where a human cannot be in the loop, but this requires explicit opt-in. Codex takes a similar approach, showing diffs for file changes and full commands for shell operations, with the ability to approve or reject each action.
 :::
 

@@ -165,7 +165,7 @@ Every error message is designed to help the LLM recover. Instead of generic "ope
 
 These messages are part of the tool's interface, not afterthoughts. The quality of error messages directly affects how well the LLM can self-correct.
 
-::: tip Coming from Python
+::: python Coming from Python
 The safety patterns in this chapter -- atomic writes, validation, descriptive errors -- apply equally to Python agents. The difference is that Rust's type system enforces some of these patterns at compile time (you can't accidentally use a `String` where an `OsStr` is expected), while Python relies on runtime discipline. The core principles are language-agnostic: never corrupt the user's files, validate before acting, and give clear feedback on failure.
 :::
 
@@ -206,6 +206,40 @@ With file operations in place, the next chapter covers [Process Management and S
 ::: wild In the Wild
 Production agents like Claude Code, Codex CLI, and OpenCode all implement variants of these three tools (read, write, edit) as their foundational file operations. The specific implementations differ in details -- line number formatting, size limits, error messages -- but the core design is remarkably consistent across agents. String-replacement editing, atomic writes, and paginated reads are established patterns. The real differentiation between agents comes from how well the tools communicate with the LLM through their descriptions and error messages, not from the file I/O mechanics themselves.
 :::
+
+## Exercises
+
+These exercises focus on reasoning about file operation design decisions, safety properties, and edge cases that arise in real agent usage.
+
+### Exercise 1: Atomic Write Failure Modes (Easy)
+
+The chapter describes the temp-file-then-rename strategy for atomic writes. Identify three scenarios where this strategy could still result in data loss or corruption, and propose a mitigation for each. Consider: filesystem boundaries, disk space exhaustion, and permission changes between the temp write and the rename.
+
+**Deliverable:** Three failure scenarios, each with an explanation of why the atomic write fails and a concrete mitigation strategy.
+
+### Exercise 2: Diff Algorithm Comparison (Medium)
+
+Compare the Myers diff algorithm (used by `git diff`) with the patience diff algorithm across these scenarios: (a) a function that was moved from one location to another in the same file, (b) two similar but distinct blocks of code where the diff should not match them, and (c) a file where only whitespace changed. For each scenario, describe what output each algorithm produces and which gives the more useful result for an LLM trying to understand what changed.
+
+**What to consider:** The LLM uses diff output to verify its edits and decide what to do next. A confusing diff can lead the model to make incorrect follow-up decisions. Think about what makes a diff "LLM-friendly" vs. "human-friendly" -- are they the same?
+
+**Deliverable:** A comparison of outputs for all three scenarios, an analysis of which algorithm is better for LLM consumption, and a recommendation for which to use in a coding agent.
+
+### Exercise 3: Path Traversal Prevention Design (Medium)
+
+Design a path validation function that prevents directory traversal attacks in the file read, write, and edit tools. Your design must handle: relative paths (`../../../etc/passwd`), symlinks that point outside the project directory, path components with embedded null bytes, Unicode normalization tricks (e.g., different representations of `/`), and race conditions between validation and access (TOCTOU).
+
+**What to consider:** Canonicalization resolves `..` and symlinks but introduces TOCTOU issues -- the symlink could change between when you resolve it and when you open the file. Consider whether you should resolve symlinks at all, or reject them. Think about how the error message should guide the LLM to use a valid path.
+
+**Deliverable:** Pseudocode for the validation function, an explanation of how each attack vector is handled, a discussion of the TOCTOU trade-off, and the error messages returned for each rejection case.
+
+### Exercise 4: File Watching Architecture for Agent Awareness (Hard)
+
+Design a file watching system that notifies the agent when files it has read or edited are modified externally (e.g., by the user's editor or a build tool). The system should: track which files the agent has "seen," detect external modifications, decide whether to notify the model or handle silently, and avoid overwhelming the model with notifications during build processes that modify many files.
+
+**What to consider:** Debouncing is essential -- a `cargo build` might touch dozens of files in rapid succession. Think about which files the agent actually cares about (ones it recently read or edited) versus all files in the project. Consider how you would represent "the agent's knowledge is stale" in the conversation state. Should the agent re-read stale files automatically, or tell the model that its information might be outdated?
+
+**Deliverable:** An architecture diagram or description showing the file watcher, the filter/debounce layer, the notification mechanism, and the integration with the agent's conversation state. Include a strategy for handling the burst of changes during build operations.
 
 ## Key Takeaways
 

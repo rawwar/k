@@ -388,7 +388,7 @@ pub fn recover_from_reflog(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code relies on Git's built-in undo mechanisms rather than implementing a custom undo system. When users want to revert changes Claude Code made, they can use standard Git commands. This design choice is intentional: rather than building a parallel undo system that might diverge from Git's state, Claude Code ensures every modification it makes is a standard Git operation that can be undone with standard Git tools. The reflog serves as the ultimate fallback -- even if a user accidentally runs `git reset --hard`, the previous state is recoverable through the reflog for at least 30 days.
 :::
 

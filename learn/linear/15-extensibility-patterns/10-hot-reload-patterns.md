@@ -320,7 +320,7 @@ pub async fn reload_dynamic_plugin(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Most production Rust projects avoid dynamic library hot reload entirely. Instead, they focus on hot reloading configuration and subprocess-based extensions. The `hot-lib-reloader` crate exists for development-time hot reload of Rust libraries, but it is explicitly not recommended for production use. The practical approach is: use hot reload for config and MCP servers (which are easy and safe), and accept a restart for changes to the core binary.
 :::
 

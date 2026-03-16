@@ -397,7 +397,7 @@ fn run(config: Config) {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Production coding agents use scoped queries heavily. When a user asks "what variables are used in this function?", the agent first locates the function node in the tree, then runs a query scoped to that function. This avoids returning variables from other functions in the same file — a common source of confusion when using flat text search. GitHub's code navigation uses this same technique to scope symbol resolution within function boundaries.
 :::
 

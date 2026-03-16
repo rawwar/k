@@ -344,7 +344,7 @@ struct DuplicateGroup {
 
 When duplicates are found, you replace the group with only the most recent occurrence, optionally prefixing it with "[This content appeared N times during the conversation]". The token savings can be enormous -- in a file-editing workflow, the same 200-line file might appear 5 times in tool results, consuming 5,000+ tokens that could be reduced to 1,000.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a multi-strategy approach to compaction. It first removes tool outputs that are exact or near-exact duplicates (like reading the same file multiple times), then applies summarization to older conversation segments. The system is careful to preserve the "chain of thought" -- user requests and the decisions made in response -- even when tool outputs are aggressively compacted. Codex takes a different approach, using its sandbox architecture to maintain a smaller context window since it can always re-read files from the sandbox filesystem rather than relying on conversation history.
 :::
 

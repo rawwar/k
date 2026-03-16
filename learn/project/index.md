@@ -35,6 +35,28 @@ This track is ideal if you learn best by doing. Every concept is introduced in t
 14. [Extensibility and Plugins](/project/14-extensibility-and-plugins/) — MCP, hooks, and plugins
 15. [Production Polish](/project/15-production-polish/) — Shipping a real tool
 
+## Cross-Reference: Linear Track
+
+Each project chapter has a corresponding linear track chapter that covers the same concepts from a theory-first perspective.
+
+| Project Chapter | Linear Chapter |
+|----------------|---------------|
+| 1. Hello, Rust CLI | 2. Rust for Python Developers |
+| 2. First LLM Call | 3. Understanding LLMs |
+| 3. The Agentic Loop | 4. Anatomy of an Agentic Loop |
+| 4. Building a Tool System | 5. Tool Systems Deep Dive |
+| 5. File Operations Tools | 6. File System Operations |
+| 6. Shell Execution | 7. Process Management and Shell |
+| 7. Streaming Responses | 8. Streaming and Realtime |
+| 8. Terminal UI with Ratatui | 9. Terminal User Interfaces |
+| 9. Conversation Context Management | 10. Conversation State Machines |
+| 10. Search and Code Intelligence | 11. Code Intelligence |
+| 11. Git Integration | 12. Version Control Integration |
+| 12. Permission and Safety | 13. Safety and Permissions |
+| 13. Multi-Provider Support | 14. Provider Abstraction |
+| 14. Extensibility and Plugins | 15. Extensibility Patterns |
+| 15. Production Polish | 16–18. Testing, Packaging, Case Study |
+
 ## Prerequisites
 
 - Basic programming experience (Python is perfect)

@@ -97,7 +97,7 @@ The chatbot-agent distinction has concrete implications for system architecture.
 
 Each of these differences drives engineering decisions. The message format means you need a structured representation that can hold tool use blocks alongside text. The loop structure means you need a dispatcher that can route tool calls and collect results. The context growth means you need compaction or summarization strategies. The side effects mean you need a permission system.
 
-::: tip In the Wild
+::: wild In the Wild
 The architectural consequences of the chatbot-agent distinction are visible in how the tools handle errors. When ChatGPT generates code with a bug, it tells you "here's the code" and you discover the bug when you run it. When Claude Code generates code with a bug, it discovers the bug itself — because it runs the code, sees the error, and fixes it. The feedback loop between action and observation is what transforms error handling from a user problem into a system capability.
 :::
 

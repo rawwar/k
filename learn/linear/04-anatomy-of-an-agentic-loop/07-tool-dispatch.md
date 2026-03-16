@@ -357,7 +357,7 @@ impl PermissionHandler for DefaultPermissionHandler {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a tiered permission system. Read-only operations (reading files, listing directories) are always allowed. Write operations (editing files, running commands) require user approval on first use, with options to allow specific patterns for the rest of the session. When you approve a command like `cargo test`, Claude Code remembers this and does not ask again for similar commands. OpenCode takes a different approach with an explicit permission configuration file where users pre-approve specific tool patterns before starting a session.
 :::
 

@@ -204,7 +204,7 @@ impl Conversation {
 
 You call `validate_invariants()` after every state transition during development and testing. In production, you might only validate on session save or when debugging unexpected behavior -- it's your safety net.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code models its conversation as a series of turns with strict ordering rules. The system prompt is assembled fresh for each API call from a template plus dynamic context, and tool results must always reference a valid `tool_use` block from the immediately preceding assistant message. OpenCode takes a similar approach in its Go implementation, using a `messages` slice with role-based validation before each API call. Both agents treat an invalid message sequence as a hard error rather than trying to fix it -- the principle is that corrupted conversation state should fail loudly rather than produce subtly wrong LLM responses.
 :::
 

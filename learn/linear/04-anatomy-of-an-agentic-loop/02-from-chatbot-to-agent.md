@@ -231,7 +231,7 @@ Notice what did *not* change: the model itself. You can use the exact same Claud
 
 This is a crucial insight. Agency is not a property of the model. It is a property of the system you build around the model. A capable model makes a better agent, but the architecture is what makes it an agent at all.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses the exact same Claude model that powers the chat interface at claude.ai. The difference is that Claude Code wraps the model in an agentic loop with tools for file reading, file writing, shell execution, and web search. The model's ability to use these tools comes from the tool definitions passed in the API call and the inner loop that executes them -- not from any special model capability.
 :::
 

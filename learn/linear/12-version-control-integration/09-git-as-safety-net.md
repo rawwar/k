@@ -346,7 +346,7 @@ pub struct SessionSafety {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a safety model where it can restore files to their previous state after modifications. Before editing files, Claude Code tracks the original state so that if the user is unhappy with the changes or if a tool execution fails, the working tree can be reverted. This checkpoint-and-restore pattern is fundamental to building user trust -- it transforms the agent from a potentially destructive tool into a safe collaborator. The key design decision is making safety automatic rather than opt-in: every modification is reversible by default.
 :::
 

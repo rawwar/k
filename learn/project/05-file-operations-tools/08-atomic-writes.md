@@ -88,7 +88,7 @@ pub fn atomic_write(path: &Path, content: &str) -> Result<(), String> {
 
 The `tempfile` crate's `NamedTempFile` handles the details: it creates a file with a unique name in the specified directory, and `persist()` performs the atomic rename. If anything goes wrong before `persist()` is called, the temporary file is automatically deleted when `NamedTempFile` is dropped.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would use `tempfile.NamedTemporaryFile` for the same pattern:
 ```python
 import tempfile
@@ -320,7 +320,7 @@ mod tests {
 
 The last test demonstrates the safety guarantee: if the temp file is dropped without `persist()`, the original file remains untouched and the temp file is cleaned up automatically.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses atomic writes for all file modifications. The write-temp-rename pattern is so fundamental to file safety that it appears in virtually every production tool. Databases use the same technique (write-ahead logging followed by atomic commit), and Git itself uses temporary files with atomic renames when updating refs. Our implementation follows the same well-proven pattern.
 :::
 

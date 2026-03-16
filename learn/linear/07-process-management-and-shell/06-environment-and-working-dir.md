@@ -79,7 +79,7 @@ fn main() {
 
 This is the foundation of environment sandboxing. By clearing the environment and adding back only essential variables, you prevent the child from accessing sensitive information like API keys, database credentials, or authentication tokens that might be in the agent's environment.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run()` accepts an `env` parameter that replaces the entire environment:
 ```python
 import subprocess
@@ -272,7 +272,7 @@ async fn main() {
 
 This `ExecutionContext` struct becomes a reusable configuration object that your agent applies to every command execution. Different tools or security levels can have different contexts.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code carefully manages environment variables when spawning child processes. It ensures that tools like `cargo` and `git` are available by preserving PATH, while being cautious about what other environment variables are passed through. Some agents use a clean environment approach with an explicit allowlist of variables that are safe to inherit -- this prevents accidental leakage of API keys or tokens into child process environments.
 :::
 

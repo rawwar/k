@@ -29,7 +29,7 @@ fn read_file(path: &Path) -> Result<String, std::io::Error> {
 
 This reads the entire file into memory as a UTF-8 string. If the file contains invalid UTF-8 bytes, it returns an error. For most source code files -- Rust, Python, JavaScript, TOML, JSON -- this works perfectly.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python you would write `Path("file.txt").read_text()` or use `open("file.txt").read()`. Rust's `fs::read_to_string` is the direct equivalent. The key difference: Python's `open()` defaults to the platform encoding (often UTF-8 on modern systems but historically locale-dependent), while Rust's `read_to_string` strictly requires valid UTF-8 and returns an error otherwise. There is no silent encoding fallback.
 :::
 
@@ -145,7 +145,7 @@ fn read_file_streaming(
 
 `BufReader` wraps the file handle with an internal 8 KB buffer. It reads 8 KB at a time from the OS, then yields individual lines from that buffer. This means you never hold more than 8 KB of file data plus the output string in memory at once. The `max_lines` cap prevents a runaway read from consuming your entire context window budget.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `open()` returns a file object that you can iterate line by line: `for line in open("file.txt"):`. This is buffered by default and conceptually identical to Rust's `BufReader`. The difference is that Rust forces you to be explicit about buffering -- `File::open` returns an unbuffered handle, and you wrap it in `BufReader` yourself.
 :::
 

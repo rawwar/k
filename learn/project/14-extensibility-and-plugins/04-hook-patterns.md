@@ -78,7 +78,7 @@ pub enum HookAction {
 
 The `HookAction` enum is the key design element. `Continue` passes (possibly modified) data to the next hook in the chain. `Skip` short-circuits the entire operation -- useful for caching or blocking. `Abort` stops execution with an error.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python frameworks often implement hooks as middleware chains. In Django, for example:
 ```python
 class SecurityMiddleware:
@@ -408,7 +408,7 @@ fn create_cache_hook(
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code defines hooks in settings files with a straightforward structure:
 ```json
 {

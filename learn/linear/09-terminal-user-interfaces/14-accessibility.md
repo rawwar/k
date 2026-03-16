@@ -151,7 +151,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's Rich library respects `NO_COLOR` automatically. When `NO_COLOR` is set, `Console()` disables all color output. Rich also detects when output is being piped (`not sys.stdout.isatty()`) and strips formatting. In Rust, you need to implement these checks yourself. The `supports-color` crate provides detection, and crossterm respects `NO_COLOR` in its styling functions, but your application logic must also adapt (for example, using text-based status indicators instead of colored symbols).
 :::
 

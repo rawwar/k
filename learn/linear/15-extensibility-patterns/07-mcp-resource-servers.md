@@ -363,7 +363,7 @@ pub fn build_system_prompt_with_resources(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses MCP resources to provide project-specific context to the LLM. For example, an MCP server for your project might expose your API documentation, database schema, and coding style guide as resources. When you start a conversation, Claude Code loads these resources into context so the LLM understands your project's conventions without you having to explain them every time. This pattern turns static documentation into live, always-current context that evolves with your project.
 :::
 

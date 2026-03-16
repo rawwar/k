@@ -311,7 +311,7 @@ impl AppendLogPersister {
 
 The JSON Lines format (`.jsonl`) is perfect for append logs: each line is a self-contained JSON object. If the process crashes mid-write, at worst you lose one incomplete line. The loader skips corrupt lines and recovers everything else. This is a huge advantage over a single JSON file, where a missing closing bracket corrupts the entire file.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code persists session data to `~/.claude/projects/<project-hash>/` using a JSONL-based approach. Each session has a metadata file and a messages log. When resuming a session, Claude Code validates the message sequence (checking role alternation and tool call pairing) and repairs any inconsistencies from interrupted writes. OpenCode stores sessions in its config directory with separate files for metadata and message history, using JSON for the metadata and a binary format for message content to reduce disk usage.
 :::
 

@@ -265,7 +265,7 @@ impl CachedTokenizer {
 
 This uses a hash of the text content as the cache key. Since messages are immutable once added to the history (a deliberate design choice from the previous subchapter), cache entries never go stale. The `RwLock` allows concurrent reads -- multiple threads checking token counts won't block each other, and writes only happen on cache misses.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code tracks token usage per-turn and uses the API response's `usage` field to get exact counts after each call. This gives perfect accuracy for the messages the API has already processed. For pre-call estimation (to decide whether compaction is needed before sending), it uses a fast approximation based on character count with a safety margin. The actual vs. estimated counts are compared over time to calibrate the estimation factor. OpenCode takes a simpler approach, using the `tiktoken-go` library for all counting.
 :::
 

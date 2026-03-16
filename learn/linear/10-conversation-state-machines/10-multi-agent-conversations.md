@@ -310,7 +310,7 @@ impl MultiAgentBudget {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a single-agent architecture with tool-based dispatch rather than multi-agent coordination. When it needs to perform specialized tasks (like searching code, reading files, or running commands), it uses tools rather than delegating to separate agents. This keeps the context management simple -- one conversation, one context window. However, Claude Code's sub-agent pattern uses inner LLM calls for specific tasks (like generating commit messages or summarizing changes), which is architecturally similar to the orchestrator pattern. The sub-agent calls receive focused context rather than the full conversation.
 :::
 

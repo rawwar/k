@@ -454,7 +454,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code does not have a formal "plan mode" toggle, but its approval flow serves a similar purpose -- for every file write or command execution, the user sees exactly what will happen and can approve or reject it. Codex offers an explicit "Suggest" mode that is a pure plan mode: the agent analyzes the codebase and proposes changes, but does not execute any of them until the user explicitly applies the suggestions. This maps directly to the dual-mode architecture described above.
 :::
 

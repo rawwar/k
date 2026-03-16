@@ -183,7 +183,7 @@ Here is how the patterns compare:
 | Isolation | Can sandbox plugins | Filters share memory | Everything shares memory |
 | Complexity | High (lifecycle, versioning) | Medium (ordering) | Low (it is just Rust modules) |
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a modular monolith approach internally -- its tools (Bash, Read, Write, Edit, etc.) are compiled into the binary. However, it extends outward through MCP, treating external MCP servers as process-level plugins. This hybrid gives it compile-time safety for core features and runtime extensibility for the ecosystem. OpenCode takes a similar approach, with built-in tools compiled into the Go binary and MCP providing the extension surface.
 :::
 

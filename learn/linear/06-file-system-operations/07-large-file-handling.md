@@ -122,7 +122,7 @@ pub fn read_large_file_preview(
 
 This tells the LLM how large the file is and shows the beginning. The model can then use the offset parameter to navigate to specific sections.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python you might use `itertools.islice(open("file.txt"), 100)` to read the first 100 lines without loading the whole file. Rust's `BufReader` + `lines()` gives you the same lazy iteration. The difference is that Rust makes the buffering explicit -- you choose the buffer strategy rather than relying on Python's implicit buffering.
 :::
 

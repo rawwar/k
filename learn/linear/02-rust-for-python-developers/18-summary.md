@@ -203,6 +203,69 @@ When you encounter unfamiliar Rust concepts in the implementation chapters, come
 - [Comprehensive Rust](https://google.github.io/comprehensive-rust/) (Google's Rust course)
 - [Tokio Tutorial](https://tokio.rs/tokio/tutorial) (in-depth async Rust with tokio)
 
+## Exercises
+
+These exercises focus on deepening your understanding of the conceptual differences between Python and Rust. They emphasize reasoning about language design trade-offs rather than writing complete programs.
+
+### Exercise 1: Ownership Mental Model Diagram (Easy)
+
+Draw a diagram (or describe in text) showing what happens in memory for these three Python lines and the equivalent Rust lines:
+
+```python
+a = [1, 2, 3]
+b = a
+a.append(4)
+```
+
+Show: where the data lives, what `a` and `b` point to, and what happens at each step. Then do the same for the Rust equivalent using `Vec<i32>`, showing the move semantics. Explain why the Rust version prevents the shared mutable state that Python allows.
+
+**Deliverable:** Two annotated diagrams (Python and Rust) and a one-paragraph explanation of the trade-off between Python's flexibility and Rust's safety.
+
+### Exercise 2: Error Handling Comparison (Easy)
+
+Take this Python function and translate its error handling approach to Rust. Do not write the full implementation -- instead, write only the function signature and the error type, and explain how each Python error scenario maps to a Rust `Result` variant:
+
+```python
+def parse_config(path: str) -> dict:
+    with open(path) as f:           # FileNotFoundError, PermissionError
+        text = f.read()             # UnicodeDecodeError
+    config = json.loads(text)       # JSONDecodeError
+    if "name" not in config:
+        raise ValueError("missing 'name' field")
+    return config
+```
+
+**Deliverable:** A Rust function signature, a custom error enum with variants for each failure, and a paragraph explaining why Rust's approach catches more bugs at compile time.
+
+### Exercise 3: Trait vs. Duck Typing Design Analysis (Medium)
+
+In Python, you can write `for item in collection` for any object that implements `__iter__`. In Rust, you implement the `Iterator` trait. Compare these two approaches by designing a "Searchable" abstraction -- something that can be searched with a query string and returns results.
+
+**What to consider:** How would you define the interface in Python (using duck typing, `abc.ABC`, or `Protocol`)? How would you define it in Rust (using a trait)? What happens when someone passes an object that does not support the interface? When does each approach catch the error? What are the implications for a coding agent that dispatches tool calls based on tool names?
+
+**Deliverable:** The Python and Rust interface definitions side by side, with analysis of the compile-time vs. runtime trade-offs for tool dispatch.
+
+### Exercise 4: Translating Python Patterns to Rust (Medium)
+
+For each of these common Python patterns, describe how you would express the same intent in Rust. Do not write full implementations -- write the type signatures and explain the key differences:
+
+1. A dictionary with default values (`collections.defaultdict`)
+2. A context manager (`with open(...) as f:`)
+3. A generator function (`yield` keyword)
+4. Multiple inheritance with mixins
+
+**What to consider:** Some patterns translate directly, some require rethinking the approach entirely. For each, explain whether Rust offers a direct equivalent, a different mechanism that achieves the same goal, or a fundamentally different approach.
+
+**Deliverable:** Four short descriptions with Rust type signatures and explanations of how each pattern maps (or does not map) across languages.
+
+### Exercise 5: Designing a Bilingual Code Review Checklist (Hard)
+
+Create a code review checklist for a team where some developers write Python and others write Rust, and both contribute to the same agent project. The checklist should identify: (a) common mistakes Python developers make in Rust, (b) common mistakes Rust developers make when designing Python-interop boundaries, and (c) patterns that look correct in one language but are subtly wrong in the other.
+
+**What to consider:** Think about string handling (`str` vs `String`/`&str`), error propagation (exceptions vs `Result`), null safety (`None` vs `Option`), mutability defaults, and concurrency models. Reference specific examples from the cheat sheets in this chapter.
+
+**Deliverable:** A structured checklist with at least 3 items per category, each with a concrete example and an explanation of why the mistake is easy to make.
+
 ## Key Takeaways
 
 - The three critical mental shifts from Python to Rust: ownership replaces garbage collection, errors are values instead of exceptions, and types are enforced by the compiler instead of hinted

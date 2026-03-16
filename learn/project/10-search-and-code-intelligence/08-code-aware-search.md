@@ -239,7 +239,7 @@ fn get_enclosing_context(source: &str, node: Node) -> Vec<String> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `ast` module lets you do similar context-restricted analysis:
 ```python
 import ast
@@ -404,7 +404,7 @@ pub fn find_in_scope(
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses a combination of grep and structural understanding to answer questions about code. When you ask "where is this variable used?", it combines text search with context analysis to filter out false positives in comments and strings. The code-aware search approach in this chapter achieves similar results by using tree-sitter to understand the syntactic context of each match, providing the precision that makes agent-suggested edits reliable.
 :::
 

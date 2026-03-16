@@ -51,7 +51,7 @@ fn describe_permissions(path: &std::path::Path) -> Result<String, String> {
 
 The `mode()` method returns the full Unix mode bits. We mask with `0o777` to get just the permission bits (owner/group/other read/write/execute). The `readonly()` method is a platform-independent check for whether the file can be written.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you check permissions with `os.access()` or by inspecting `os.stat()`:
 ```python
 import os
@@ -300,7 +300,7 @@ let content = fs::read_to_string(&path)
 
 The specific error messages help the model (and the user) understand what went wrong and how to fix it.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code checks file permissions before editing and provides detailed error messages when operations fail. It also detects binary files and refuses to display them as text, showing metadata instead. Codex takes a different approach: it attempts the operation first and interprets the OS error, arguing that pre-checks add latency and can be unreliable on certain filesystems. Both approaches are valid -- our implementation does pre-checks for better error messages but also handles post-operation errors as a fallback.
 :::
 

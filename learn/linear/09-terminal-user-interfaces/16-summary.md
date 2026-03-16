@@ -74,7 +74,7 @@ Two critical topics span the entire TUI:
 
 **Performance** (subchapter 15) keeps the interface smooth. Ratatui's buffer diffing is the foundation, but you also need adaptive frame rates (event-driven when idle, faster during streaming), buffered I/O, and caching of expensive computations like syntax highlighting. Profile before optimizing -- terminal I/O is usually the bottleneck.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have built Python TUIs with Rich, Textual, or curses, the conceptual mapping to Ratatui is roughly:
 - Rich's `Console` and styled text -> Ratatui's `Span`, `Line`, and `Style`
 - Textual's widget tree -> Ratatui's per-frame widget construction from Model state
@@ -99,6 +99,40 @@ The TUI layer you have learned about in this chapter is the visible surface of y
 ::: wild In the Wild
 Every production coding agent has a TUI layer and a state management layer, even if they are not always cleanly separated. Claude Code's architecture reflects this split: a rendering layer that produces terminal output and a conversation state machine that tracks messages, tool calls, permissions, and streaming state. OpenCode's Bubbletea-based architecture achieves similar separation through Bubbletea's built-in TEA pattern. The discipline of keeping state management separate from rendering -- which TEA enforces -- pays dividends as the agent grows in complexity.
 :::
+
+## Exercises
+
+These exercises focus on TUI design decisions, layout strategies, and the challenges of building accessible, performant terminal interfaces for coding agents.
+
+### Exercise 1: TUI Layout Design for a Coding Agent (Easy)
+
+Design the layout for a coding agent TUI that must display four panels: (a) conversation history (scrollable), (b) the current streaming response, (c) a tool execution status area, and (d) a text input field. Sketch the layout using constraint specifications (Length, Min, Max, Percentage) and describe how the layout adapts when the terminal is resized from 120x40 to 80x24.
+
+**Deliverable:** Two layout diagrams (one for each terminal size) with constraint specifications for each panel, and a description of which panels shrink, collapse, or scroll when space is limited.
+
+### Exercise 2: Input Handling Strategy Comparison (Medium)
+
+Compare three approaches to handling user input in a TUI agent: (a) a simple single-line input with readline-style editing, (b) a multi-line textarea with vim-like keybindings, and (c) a modal interface where Escape switches between "chat mode" (typing messages) and "browse mode" (scrolling through history). For each approach, analyze: discoverability for new users, efficiency for power users, compatibility with screen readers, and implementation complexity.
+
+**What to consider:** Most coding agent users are developers who are comfortable with terminal keybindings, but their preferences vary widely (vim vs. emacs vs. neither). Think about how to support multiple keybinding schemes without making the codebase unmaintainable. Consider what happens when a user pastes a multi-line code block into a single-line input.
+
+**Deliverable:** A comparison table for the three approaches across the four dimensions, a recommendation for the default behavior, and a design for making the input mode configurable.
+
+### Exercise 3: Accessibility Audit Design (Medium)
+
+Design an accessibility audit checklist for a terminal-based coding agent. For each item on your checklist, specify: what to test, how to test it, the acceptance criteria, and what to do if it fails. Cover at minimum: color-blind usability, screen reader compatibility, keyboard-only navigation, high-contrast mode, and operation in a restricted terminal (no mouse, no Unicode, no color).
+
+**What to consider:** The `NO_COLOR` environment variable is the standard signal that color should be disabled. But accessibility goes far beyond color. Think about what information is conveyed only through visual formatting (bold, color, position) and how to provide text-based alternatives. Consider users who pipe agent output to a file or another program.
+
+**Deliverable:** A checklist with at least 8 items covering the five areas listed above. Each item should have a test procedure and acceptance criteria. Include a priority ranking (must-have vs. nice-to-have) based on the size of the affected user population.
+
+### Exercise 4: Rendering Optimization for Streaming Content (Hard)
+
+Design a rendering strategy for displaying a streaming code block with syntax highlighting. The tokens arrive one at a time (sometimes partial words), the highlighting requires context from previous lines, and the TUI must maintain 60fps rendering. Your strategy should address: when to re-highlight (every token, every line, every N milliseconds), how to cache highlighting results, how to handle the case where a new token changes the highlighting of previous tokens (e.g., the start of a string literal), and how to avoid visible flicker during rapid updates.
+
+**What to consider:** Syntax highlighting is expensive -- re-highlighting a 200-line code block on every token is not feasible at 60fps. But incremental highlighting is tricky because a single character (like a quote that starts a string) can change the highlighting of everything that follows. Think about whether you can highlight only the last N lines incrementally and re-highlight the full block less frequently. Consider how Ratatui's double-buffering helps with flicker.
+
+**Deliverable:** A rendering pipeline design showing the token arrival, buffering, highlighting, and display stages. Include a caching strategy, a performance analysis with estimated frame budgets, and a fallback behavior for when highlighting cannot keep up with token arrival rate.
 
 ## Key Takeaways
 

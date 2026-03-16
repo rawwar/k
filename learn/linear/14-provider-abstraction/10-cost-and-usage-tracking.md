@@ -10,6 +10,10 @@ description: Implement transparent cost and token usage tracking across all prov
 > - Techniques for calculating real-time cost estimates using per-model pricing tables, including input/output token differentiation
 > - How to implement usage budgets and alerts that warn users or halt execution when spending thresholds are approached
 
+::: warning Pricing and Limits Change Frequently
+The specific prices and token limits in this chapter reflect values at the time of writing. Check each provider's current pricing page for up-to-date figures before making cost decisions.
+:::
+
 LLM API calls cost money, and agentic loops can burn through tokens fast. A coding agent that makes 20 tool calls in a loop, each with the full conversation history, can easily consume millions of tokens in a single session. Users need visibility into what they are spending. In this subchapter you build a tracking system that records usage per request, calculates costs, and enforces budgets.
 
 ## The Usage Tracking Data Model

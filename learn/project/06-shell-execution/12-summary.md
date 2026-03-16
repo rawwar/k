@@ -148,7 +148,7 @@ LLM context windows are finite. Every tool that produces output (file reads, sea
 ### Timeout Enforcement
 Any tool that interacts with external systems (network, filesystem, processes) needs a timeout. The `tokio::time::timeout` wrapper pattern is universal.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have built similar tools in Python, you may have noticed that Rust requires more upfront structure -- builders, enums, explicit error handling. But this structure pays for itself: the compiler catches type errors, exhaustive matches on enums ensure you handle all cases, and the ownership system prevents the data races that plague concurrent Python code. The extra boilerplate is not busywork; it is the compiler helping you write correct code.
 :::
 
@@ -158,9 +158,60 @@ In Chapter 7, you will add **streaming responses** to your agent. Instead of wai
 
 The shell tool you built in this chapter will be a critical part of streaming: as the LLM generates a shell command, you will parse it from the stream, execute it, and feed the result back -- all while the streaming connection is still open.
 
-::: info In the Wild
+::: wild In the Wild
 Production agents like Claude Code and Codex execute the full pipeline described in this chapter for every shell command, often in under 100 milliseconds for the overhead (excluding the command execution itself). The safety checks, environment setup, and output processing add negligible latency compared to the actual command execution. This demonstrates that safety does not have to come at the cost of performance -- well-designed safety layers are fast.
 :::
+
+## Exercises
+
+Practice each concept with these exercises. They build on the shell execution tool you created in this chapter.
+
+### Exercise 1: Add a Command Duration Display (Easy)
+
+Extend `ShellOutput` with a `duration_ms: u64` field that records the wall-clock time of command execution. Display the duration in the formatted tool result (e.g., `[Completed in 1.2s]`). Test it by running a `sleep 1` command and verifying the duration is approximately 1000ms.
+
+- Capture `Instant::now()` before spawning the process
+- Record `elapsed().as_millis()` after the process completes (or times out)
+- Include the duration in `to_tool_result()` output
+
+### Exercise 2: Implement a Command History Log (Easy)
+
+Add a `CommandHistory` struct that records every command executed during a session, including the command string, exit code, duration, and whether it was truncated. Add a method `recent(n: usize)` that returns the last N entries. This gives the LLM context about what commands have already been run.
+
+- Store entries in a `Vec<CommandRecord>` with fields for command, exit code, duration, and truncated flag
+- Push a new record after each `ShellCommand` execution
+- Implement `recent()` using `.iter().rev().take(n)`
+
+### Exercise 3: Add Configurable Timeout Escalation (Medium)
+
+Extend the timeout handling to use a two-phase approach: first send SIGTERM and wait for a configurable grace period, then send SIGKILL. Make both the initial timeout and the grace period configurable through `ShellCommand` builder methods (e.g., `.timeout(30s).grace_period(5s)`).
+
+**Hints:**
+- Add a `grace_period: Duration` field to `ShellCommand` with a default of 5 seconds
+- After the initial timeout fires, send SIGTERM and start a second `tokio::time::timeout` for the grace period
+- Only send SIGKILL if the process is still alive after the grace period
+- Add a `termination_method` field to `ShellOutput` to record whether it was SIGTERM or SIGKILL
+
+### Exercise 4: Implement a Smart Dangerous Command Detector (Medium)
+
+Extend `DangerDetector` with context-aware detection: a command like `rm file.txt` is low risk, but `rm -rf /` is critical. Implement a scoring system where the base command, its flags, and its arguments each contribute to a risk score. Commands above a threshold require approval; commands above a higher threshold are blocked.
+
+**Hints:**
+- Define a `RiskScore` struct with `base: u32`, `flag_modifier: i32`, and `path_modifier: i32` fields
+- `rm` starts at risk 30; adding `-r` adds 20; adding `-f` adds 20; targeting `/` or `$HOME` adds 30
+- Sum the components and compare against thresholds: below 40 is allowed, 40-70 requires approval, above 70 is blocked
+- Write tests for `rm temp.txt` (allowed), `rm -rf ./build` (approval), and `rm -rf /` (blocked)
+
+### Exercise 5: Add Working Directory Validation and Sandboxing (Hard)
+
+Extend `WorkingDirManager` to enforce a project root boundary. The agent should only be able to set working directories within the project root or its subdirectories. Implement path canonicalization that resolves symlinks and `..` components, then verify the resolved path starts with the project root. Return a `ToolError` if the path escapes the boundary.
+
+**Hints:**
+- Store `project_root: PathBuf` in `WorkingDirManager`, canonicalized at construction time
+- Use `std::fs::canonicalize()` on the requested path to resolve symlinks and `..`
+- Check `canonical_path.starts_with(&self.project_root)` to verify containment
+- Handle the case where the path does not exist yet (canonicalize will fail) by canonicalizing the longest existing prefix
+- Write tests for valid subdirectories, `..` escape attempts, and symlink escape attempts
 
 ## Key Takeaways
 

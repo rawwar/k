@@ -335,6 +335,57 @@ Production coding agents like Claude Code and OpenCode implement all of these pa
 
 With context management in place, your agent can handle long, complex coding sessions. In Chapter 10, you will add search and code intelligence -- the ability to find symbols, navigate definitions, and understand code structure. This will make your agent more efficient with its context budget, because it can find exactly the right piece of code instead of reading entire files hoping the relevant section is there.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the context management system you created in this chapter.
+
+### Exercise 1: Add a /context Status Command (Easy)
+
+Implement a `/context` REPL command that displays the current context state: total tokens used, budget utilization percentage, message count, and number of compaction events so far. Format the output as a compact dashboard the user can glance at during a session.
+
+- Read the current values from `ContextManager` fields: `budget.used`, `budget.limit`, `history.len()`
+- Calculate utilization as `(used as f64 / limit as f64) * 100.0`
+- Print a formatted summary like `[Context: 45,200/200,000 tokens (22.6%) | 12 messages | 0 compactions]`
+
+### Exercise 2: Implement a Message Priority Tagger (Easy)
+
+Add a `priority: MessagePriority` field to your message history entries with variants `Critical`, `Normal`, and `Low`. Tag user messages as `Critical`, assistant text as `Normal`, and tool results as `Low`. During compaction, drop `Low` priority messages first, then `Normal`, never `Critical`.
+
+- Define `enum MessagePriority { Critical, Normal, Low }`
+- Assign priority in `ConversationHistory::push()` based on the `role` parameter
+- In the compaction pipeline, sort candidates by priority before pruning
+
+### Exercise 3: Add a Token Budget Warning System (Medium)
+
+Implement a warning system that alerts the user at configurable utilization thresholds (e.g., 60%, 80%, 95%). Each threshold should fire only once per session. At 95%, automatically trigger compaction and report how many tokens were freed.
+
+**Hints:**
+- Store `triggered_warnings: HashSet<u32>` in `ContextManager` to track which thresholds have fired
+- Define thresholds as a `Vec<(u32, &str)>` like `[(60, "Moderate"), (80, "High"), (95, "Critical")]`
+- After each `budget.update()`, check if utilization crossed a new threshold
+- At the 95% threshold, call `self.compaction.compact()` and report the result
+
+### Exercise 4: Implement Conversation Export (Medium)
+
+Add a `/export` command that saves the current conversation to a JSON file. Include message roles, content, token counts, and metadata (session ID, timestamp, model used, total tokens). The file should be importable back into the agent with a `/import` command that restores the conversation state.
+
+**Hints:**
+- Define a `ConversationExport` struct with `serde::Serialize` and `Deserialize`
+- Include a `version: u32` field in the export format for forward compatibility
+- Use `serde_json::to_string_pretty()` for human-readable output
+- On import, validate the version and recalculate token counts (they may differ if the token counter changed)
+
+### Exercise 5: Build a Sliding Window with Pinned Messages (Hard)
+
+Implement a sliding window compaction strategy that keeps the most recent N messages but allows specific messages to be "pinned" so they survive compaction. Add a `/pin` command that pins the last assistant message and a `/pins` command that lists all pinned messages. Pinned messages always remain in context regardless of the window size.
+
+**Hints:**
+- Add a `pinned: bool` field to your message history entries, defaulting to `false`
+- The sliding window should partition messages into pinned and unpinned, then keep all pinned messages plus the most recent N unpinned messages
+- Maintain the original message order after filtering (pinned messages stay in their original position)
+- Set a maximum pin count (e.g., 10) to prevent users from pinning everything
+- Write tests verifying that pinned messages survive compaction while unpinned messages beyond the window are dropped
+
 ## Key Takeaways
 
 - Context management is a pipeline, not a single operation -- token counting, budget tracking, compaction, and persistence all run on every turn

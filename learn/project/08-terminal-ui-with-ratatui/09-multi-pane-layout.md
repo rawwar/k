@@ -281,7 +281,7 @@ fn render_input_box(frame: &mut Frame, app: &App, area: Rect) {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `textual` framework handles focus automatically through its widget tree -- pressing Tab cycles focus, and focused widgets get a special CSS class. In Ratatui, you manage focus entirely yourself since there is no widget tree. This is more work but gives you complete control over the focus order and behavior. The `textual` equivalent of our focus cycling would be:
 ```python
 class AgentApp(App):
@@ -348,7 +348,7 @@ impl App {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a single-column layout that adapts based on terminal width. When the terminal is wide enough, tool results appear inline with the conversation. OpenCode uses a more complex layout with distinct panes for conversation, file context, and tool output. Both agents handle resize events gracefully -- the layout reflows rather than breaking. The key insight is that constraint-based layouts handle resize naturally; you only need to worry about state adjustments (like scroll positions) when the viewport size changes.
 :::
 

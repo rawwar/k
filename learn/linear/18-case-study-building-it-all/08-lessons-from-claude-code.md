@@ -77,7 +77,7 @@ impl FileOperation {
 
 The uniqueness constraint on `EditFile`'s `old_text` is a safety mechanism. If the model provides text that matches multiple locations, the edit fails rather than making ambiguous changes. This is a subtle but important design decision.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Edit tool requires that the `old_string` parameter matches exactly once in the file. If it matches zero times, the edit fails — the model gets an error and can retry with corrected text. If it matches more than once, the edit also fails — the model must provide more surrounding context to make the match unique. This constraint prevents a large class of accidental edits where the model intends to change one occurrence but accidentally changes all of them.
 :::
 

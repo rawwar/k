@@ -88,7 +88,7 @@ The layered approach mirrors what experienced Python developers do manually: `fi
 
 **LSP.** JSON-RPC protocol providing full semantic analysis. Core requests include definition, references, hover, and completion. More powerful than tree-sitter but heavier — use on demand for deep analysis, not as a default for every file.
 
-::: tip In the Wild
+::: wild In the Wild
 The trend in production agents is toward richer code intelligence. Early agents like the first versions of GitHub Copilot relied almost entirely on the LLM's ability to understand code from context. Newer agents increasingly pre-process code before sending it to the model — extracting outlines, resolving imports, and providing type information as structured context. This reduces hallucination, improves accuracy on refactoring tasks, and makes the agent more token-efficient. The tools in this chapter are the building blocks of that pre-processing pipeline.
 :::
 
@@ -102,6 +102,24 @@ Chapter 12 covers version control integration — working with Git repositories,
 - **Code navigation** powers intelligent commit message generation — the agent can describe changes in terms of their semantic impact rather than raw line counts.
 
 The code intelligence stack you built here becomes the foundation for making the agent a thoughtful collaborator on version-controlled codebases.
+
+## Exercises
+
+### Exercise 1: Grep vs. AST-Based Search Trade-offs (Easy)
+
+A user asks the agent to "find all functions that accept a `Config` parameter." Compare how you would solve this with ripgrep alone versus tree-sitter queries. For each approach, describe the query you would write, the false positives or negatives you would expect, and the performance characteristics. Under what circumstances is the simpler ripgrep approach good enough, and when does the tree-sitter approach become necessary?
+
+### Exercise 2: Write a Tree-sitter Query for Error Handling Patterns (Medium)
+
+Design a tree-sitter S-expression query that matches Rust functions containing `unwrap()` calls that are not inside test modules. Think through the node types involved: `function_item`, `call_expression`, `method_call`, `identifier`, and `mod_item` with `#[cfg(test)]`. Write out the query pattern and explain which parts are straightforward to match structurally and which would require post-processing in Rust code. Consider how your approach would differ for Python's bare `except:` clauses.
+
+### Exercise 3: Code Navigation Strategy Design (Medium)
+
+You are building a "go to definition" feature for an agent that must work across five languages (Rust, Python, TypeScript, Go, Java) without requiring language servers to be installed. Design a heuristic strategy using only tree-sitter and ripgrep. For each language, identify the definition patterns you would match (function declarations, class definitions, type definitions) and the resolution rules for imports. Where would your heuristic approach fail compared to LSP, and how would you communicate those limitations to the model?
+
+### Exercise 4: Symbol Resolution Across a Monorepo (Hard)
+
+Consider a monorepo with 50 packages across Rust, TypeScript, and Python. A user asks the agent to "rename the `process_event` function everywhere it is used." Design a multi-layer resolution strategy that identifies: (a) the canonical definition, (b) all direct call sites, (c) re-exports and aliases, and (d) dynamic references (strings containing the function name in configs or tests). For each category, specify which code intelligence layer (glob, ripgrep, tree-sitter, LSP) you would use and why. Discuss the trade-off between completeness (finding every reference) and precision (avoiding false renames).
 
 ## Key Takeaways
 

@@ -202,7 +202,7 @@ fn count_commits_between(base: &str, tip: &str) -> usize {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code leverages its understanding of Git's object model to provide intelligent diff displays and commit message generation. When it reads the current repository state, it does not just check which files changed -- it understands the relationship between the working tree, the index (staging area), and the HEAD commit. This three-tree architecture (HEAD, index, working tree) is central to how Git status and diff work, and it is the foundation for the status and diff operations you will implement in subchapter 3.
 :::
 

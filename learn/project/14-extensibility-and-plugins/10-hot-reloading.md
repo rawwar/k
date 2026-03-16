@@ -93,7 +93,7 @@ impl FileWatcher {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers often use `watchdog` for file watching:
 ```python
 from watchdog.observers import Observer
@@ -476,7 +476,7 @@ impl Debouncer {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code does not implement hot-reloading in the traditional sense -- configuration changes require restarting the session. However, the `/init` command regenerates the project configuration file (CLAUDE.md) on the fly, and MCP server connections can be re-established mid-session. For development workflows, some coding agents take the approach of watching `CLAUDE.md` or equivalent project files and re-reading them between conversation turns rather than doing true filesystem-watch-based hot reload.
 :::
 

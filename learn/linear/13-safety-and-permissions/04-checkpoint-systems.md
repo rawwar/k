@@ -448,7 +448,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code creates checkpoints using git commits on a dedicated branch pattern. Before executing a series of changes, it captures the current state so the user can undo the entire operation. Codex runs in an isolated environment and uses git worktrees to maintain a clean separation between the agent's changes and the user's working tree -- if the agent's changes are rejected, the worktree is simply discarded without affecting the main working directory.
 :::
 

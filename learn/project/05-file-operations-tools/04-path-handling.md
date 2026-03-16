@@ -140,7 +140,7 @@ This is a substantial piece of code, so let's walk through each step.
 
 **Step 4: Boundary check.** After canonicalization, we check that the resolved path starts with the canonical base directory. This is the security gate -- it catches `..` escapes, symlink escapes, and absolute paths outside the project.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would use `pathlib` for this:
 ```python
 from pathlib import Path

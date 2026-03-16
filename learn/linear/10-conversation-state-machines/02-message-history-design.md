@@ -276,7 +276,7 @@ impl MessageHistory {
 
 Notice the role mapping: `ToolCall` becomes `"assistant"` and `ToolResult` becomes `"user"` in the API. Internally you track five distinct roles for clarity, but the API only understands three roles plus content block types. This translation layer keeps your internal model clean while conforming to API requirements.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code structures its messages with content blocks that match the Anthropic API format directly. Each assistant message can contain interleaved text and `tool_use` blocks, and the tool results are sent back as `tool_result` content blocks in the next user turn. OpenCode, targeting the OpenAI API, uses a different structure where tool calls and results are separate messages with explicit `tool_call_id` fields. If you plan to support multiple providers (which Chapter 14 covers), designing your internal message format as a superset of all providers' formats saves painful translation work later.
 :::
 

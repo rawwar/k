@@ -159,7 +159,7 @@ Let's trace a concrete example. The user types: "Add a retry mechanism to the HT
 
 Every step in this flow crosses exactly one architectural boundary. That is the hallmark of a well-designed system.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code structures its architecture around a similar component graph, but with an additional layer for "skills" — pre-composed sequences of tool calls that handle common tasks like creating a commit or reviewing a pull request. These skills sit between the agentic loop and the tool registry, acting as macro-tools that decompose into multiple lower-level tool calls. OpenCode takes a flatter approach where all tool calls are atomic and the model handles sequencing entirely through its own reasoning.
 :::
 

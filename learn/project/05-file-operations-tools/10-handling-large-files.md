@@ -105,7 +105,7 @@ fn count_lines(path: &Path) -> Result<usize, String> {
 
 The `count_lines` function uses a `BufReader` to count lines without loading the entire file into memory. For a 100 MB file, `fs::read_to_string` would allocate 100 MB of memory; `BufReader::lines()` processes line by line with a small buffer.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would count lines efficiently like this:
 ```python
 def count_lines(path: str) -> int:
@@ -423,7 +423,7 @@ mod tests {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Read tool automatically truncates output at 2,000 lines and includes a message telling the model to use offset/limit parameters for the rest. This threshold is configurable. The tool also returns file metadata (size, line count) when truncation occurs, so the model can make informed decisions about what to read next. This pagination pattern is essential for working with real codebases where files like `Cargo.lock` or generated bindings can be thousands of lines long.
 :::
 

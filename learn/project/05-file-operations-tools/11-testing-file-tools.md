@@ -109,7 +109,7 @@ fn it_works() {
 
 The `TestProject` struct encapsulates everything a file tool test needs: a temporary directory, helper methods for file setup and verification, and automatic cleanup when the test finishes.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would use `pytest`'s `tmp_path` fixture:
 ```python
 def test_read_file(tmp_path):
@@ -622,7 +622,7 @@ tests/
 
 Unit tests go in the same file as the code they test (inside `#[cfg(test)]` blocks). Integration tests that span multiple tools go in the `tests/` directory.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code tests its file tools with extensive edge-case coverage, including files with mixed line endings, Unicode content in various encodings, deeply nested directory structures, and symlinks. The test suite includes both unit tests for individual operations and integration tests that simulate multi-step agent workflows (read, edit, verify). This two-level testing strategy catches both low-level bugs (wrong byte offset calculation) and high-level bugs (edit tool reports success but read tool shows no change).
 :::
 

@@ -156,7 +156,7 @@ impl PluginTestHarness {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python testing with pytest often uses fixtures to set up mock environments:
 ```python
 import pytest
@@ -535,7 +535,7 @@ mod integration_tests {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Testing in the Claude Code ecosystem relies on the MCP specification itself as a test contract. MCP server developers write tests that verify their server handles `initialize`, `tools/list`, and `tools/call` correctly according to the spec. The protocol acts as the test surface -- if your server speaks MCP correctly, it works with any MCP client. This is a powerful pattern: protocol-based testing gives you compatibility guarantees across the entire ecosystem without testing against every specific client.
 :::
 

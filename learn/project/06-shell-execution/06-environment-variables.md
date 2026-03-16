@@ -86,7 +86,7 @@ async fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run()` takes an `env` parameter that **replaces** the entire environment:
 ```python
 import os, subprocess
@@ -259,7 +259,7 @@ Here are environment variables you will frequently interact with:
 
 For an agent, setting `TERM=dumb` and `NO_COLOR=1` is often helpful because it prevents commands from emitting ANSI color codes that clutter the output sent to the LLM.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code strips sensitive environment variables (API keys, tokens) before passing the environment to child processes. It also injects `CI=true` and `TERM=dumb` to encourage non-interactive, color-free output from build tools and test runners. This produces cleaner output that is easier for the LLM to parse and reason about.
 :::
 

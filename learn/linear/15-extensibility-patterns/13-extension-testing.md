@@ -520,7 +520,7 @@ mod conformance {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 VS Code's extension testing infrastructure provides a complete test runner that spins up a headless VS Code instance for integration testing. Extension authors run their tests in this environment to verify their extension works correctly with the real editor APIs. For a coding agent, the test harness serves the same purpose: it simulates enough of the agent environment that plugins can be tested without running the full agent binary.
 :::
 

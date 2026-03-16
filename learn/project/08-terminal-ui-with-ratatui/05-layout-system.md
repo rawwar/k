@@ -183,7 +183,7 @@ fn nested_layout(area: Rect) -> (Rect, Rect, Rect, Rect, Rect) {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `textual` uses CSS-like grid and dock layouts. If you have used CSS flexbox, Ratatui's constraints are the closest analog:
 ```python
 # Textual CSS
@@ -337,7 +337,7 @@ fn view(frame: &mut Frame, app: &App) {
 
 This separates layout computation from rendering, keeping your view function clean and making it easy to adjust the layout without touching widget code.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode computes its layout dynamically based on terminal width, collapsing panels on narrow terminals and expanding them on wide ones. Claude Code similarly adapts its layout -- tool output sections expand and collapse depending on content and available space. The pattern of computing layout as data (a struct of `Rect`s) and making responsive decisions based on `area.width` is exactly how production agents handle the wide variety of terminal sizes they encounter in practice.
 :::
 

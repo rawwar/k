@@ -205,7 +205,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code wraps ripgrep behind its Grep tool, adding several agent-specific behaviors: it always respects `.gitignore`, it limits results to prevent context window overflow, and it strips ANSI color codes from output. OpenCode similarly shells out to `rg` and post-processes results. The key insight is that agents use grep not for human-readable output, but as a structured data source — each match has a file path, line number, and text that feeds into the next step of the agent's reasoning.
 :::
 

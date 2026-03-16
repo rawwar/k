@@ -192,13 +192,61 @@ This chapter was about understanding the loop. The next chapters are about build
 
 Each of these chapters builds a component that slots into the agentic loop architecture described here. The loop is the skeleton; the tools, conversation management, and process handling are the muscles and organs.
 
-::: tip In the Wild
+::: wild In the Wild
 Both Claude Code and OpenCode evolved their loop implementations over time. The initial versions were simpler -- fewer error states, no parallel tool execution, basic permission models. As real users encountered edge cases, the loops grew more robust. This is the natural progression: build the basic loop first, get it working end-to-end, then layer on sophistication as real-world usage reveals what matters. Our Rust implementation will follow the same trajectory.
 :::
 
 ## The Agentic Loop in One Paragraph
 
 An agentic loop is a two-level control structure where an outer REPL handles user interaction and an inner loop handles model-driven tool execution. On each turn, user input is processed into a message, added to the conversation history, and sent to the LLM along with the system prompt and tool definitions. The LLM responds with either a final text response (ending the turn) or tool use requests (continuing the loop). Tool calls are validated, dispatched through a registry, executed with permission checks and timeouts, and their results are formatted and fed back into the conversation history. The inner loop continues until the model produces a final response, an iteration or token limit is reached, or the user interrupts. Errors at every stage are either retried (API failures), fed back to the model for self-correction (tool failures), or reported to the user (unrecoverable failures). The entire system is modeled as a state machine with eight states and deterministic transitions, making it testable, debuggable, and extensible.
+
+## Exercises
+
+These exercises focus on analyzing and designing aspects of the agentic loop. They emphasize reasoning about edge cases, failure modes, and architectural trade-offs.
+
+### Exercise 1: Loop Termination Scenario Analysis (Easy)
+
+For each of these scenarios, identify which stop condition should fire and what the agent should report to the user:
+
+1. The model has made 25 tool calls without producing a final response (iteration limit is 30)
+2. The conversation history has reached 180K tokens in a 200K context window
+3. The model has attempted the same file edit 4 times and failed each time (error budget is 5)
+4. The user presses Ctrl+C while the model is mid-stream generating a response
+5. The model returns `end_turn` but its response is empty
+
+**Deliverable:** For each scenario, state which condition fires, what the agent should communicate to the user, and whether the agent should save its partial progress.
+
+### Exercise 2: Error Recovery Strategy Comparison (Medium)
+
+Compare three approaches to handling tool execution failures in the agentic loop: (a) feed the error back to the model as a tool result and let it retry, (b) retry the tool call automatically with the same arguments after a delay, and (c) ask the user to decide what to do. For each approach, identify two scenarios where it works well and two where it fails.
+
+**What to consider:** Think about transient vs. permanent errors, the cost of wasted API calls, user experience during long autonomous tasks, and what happens when the model enters an error loop. Consider how the error budget interacts with each strategy.
+
+**Deliverable:** A comparison table with the three approaches, their strengths, weaknesses, and the two good/two bad scenarios for each. Include a recommendation for which approach to use as the default and when to switch to alternatives.
+
+### Exercise 3: State Machine Extension Design (Medium)
+
+The chapter describes an 8-state machine for the agentic loop. Design an extension that adds support for "planning steps" -- a mode where the model thinks about what to do before taking action, similar to chain-of-thought reasoning. Define: what new states are needed, what transitions connect them to the existing states, what data each new state carries, and how the user can see the plan.
+
+**What to consider:** Should planning be a separate state or a modifier on existing states? Should the plan be shown to the user before execution? Can the user reject a plan? How does planning interact with the iteration limit -- does a planning step count as an iteration?
+
+**Deliverable:** An updated state transition table showing the new states and transitions, the Rust enum variants with their data, and a paragraph explaining the user experience.
+
+### Exercise 4: Comparing Loop Implementations (Hard)
+
+The chapter describes loops in Claude Code (TypeScript), OpenCode (Go), and Pi (Rust). Analyze how each would handle this sequence of events: the model requests two tool calls in parallel, the first succeeds but the second times out, and the model then requests a third tool call that depends on the result of the timed-out second call.
+
+**What to consider:** How does each agent handle parallel tool execution? What does the model see when a tool times out -- an error result, a timeout notification, or nothing? How does the model handle a dependency on a failed tool? What should the ideal behavior be, and which agent's architecture best supports it?
+
+**Deliverable:** A step-by-step trace through each agent's loop for this scenario, identifying where they diverge. Include a proposed "ideal" handling and an analysis of which architectural decisions enable or prevent it.
+
+### Exercise 5: Graceful Degradation Design (Hard)
+
+Design a graceful degradation strategy for when the agent hits a stop condition mid-task. The agent should: summarize what it has accomplished so far, identify what remains to be done, save enough state that the user can resume the task, and present this information clearly. Define what data needs to be captured during loop execution to enable this report, and how the agent constructs the summary.
+
+**What to consider:** The agent cannot ask the model to summarize (it may have hit a token limit). Consider what metadata the loop should track during execution: which files were read, which were modified, which tool calls succeeded, which failed, and what the model's last stated intent was. Think about how this interacts with conversation history persistence.
+
+**Deliverable:** A design specifying the tracking data structure, the summary generation algorithm, the user-facing output format, and how resume would work in the next session.
 
 ## Key Takeaways
 

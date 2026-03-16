@@ -101,7 +101,7 @@ fn main() {
 
 The key discipline: every piece of state that affects rendering or behavior lives in the Model. If you find yourself storing state in a widget or a global variable, move it to the Model.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python Textual apps, state often lives in individual widget objects -- a `TextInput` stores its text, a `ListView` stores its items. This distributed state can lead to synchronization bugs when multiple widgets need to agree on the same data. TEA's answer is radical centralization: one struct holds everything, and widgets are stateless views of that struct. This is more like Redux in the JavaScript world than typical Python GUI patterns.
 :::
 

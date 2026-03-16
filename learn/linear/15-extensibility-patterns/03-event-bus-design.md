@@ -279,7 +279,7 @@ async fn logging_plugin(bus: &ChannelEventBus) {
 
 The channel approach gives you natural backpressure (the channel has a bounded capacity), decoupled lifetimes (subscribers run independently), and easier reasoning about concurrency. The tradeoff is that every subscriber receives every event, so filtering happens on the receive side rather than the dispatch side.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's internal architecture emits events at key points in the agentic loop -- tool start, tool complete, LLM response, permission check. These events drive the terminal UI rendering: when a tool completes, the UI updates to show the result. The event-driven design means the UI layer never polls the agent core, and adding new UI features (like a progress spinner or a token counter) requires only subscribing to the right events.
 :::
 

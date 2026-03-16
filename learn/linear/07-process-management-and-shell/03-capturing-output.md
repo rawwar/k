@@ -52,7 +52,7 @@ Bulk capture is problematic when:
 - The output is very large. A test suite with verbose logging might produce hundreds of megabytes.
 - You want to kill the command early based on output content (e.g., stop after the first test failure).
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run(capture_output=True)` behaves identically -- it waits for the process to complete, then gives you `result.stdout` and `result.stderr` as bytes. The async equivalent is `asyncio.create_subprocess_exec()` with `await process.communicate()`. Rust's `output()` is the direct analog of both.
 :::
 
@@ -247,7 +247,7 @@ async fn main() {
 
 When the agent reports results to the LLM, it includes a note like "Output truncated after 200 lines" so the LLM knows the output is incomplete.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code captures command output and applies intelligent truncation before feeding it back to the model. It preserves the first and last sections of output (head + tail) because error messages often appear at the end while context appears at the beginning. This "head-and-tail" strategy retains the most useful information when output exceeds token budgets.
 :::
 

@@ -403,7 +403,7 @@ fn main() {
 
 This approach has a crucial advantage over pure text search: by using tree-sitter to find `identifier` and `type_identifier` nodes, you automatically exclude matches in comments and string literals. The identifier `Config` in `// Config is used for settings` is a comment node child, not an identifier node, so it is filtered out.
 
-::: tip In the Wild
+::: wild In the Wild
 GitHub's code navigation uses tree-sitter for cross-file reference finding. When you click "Find all references" in the GitHub UI, it uses tree-sitter queries to find identifier nodes matching the symbol name across the repository. This is a heuristic — it can produce false positives when two unrelated symbols share the same name in different modules — but it works remarkably well for most codebases and is far more accurate than plain text search.
 :::
 

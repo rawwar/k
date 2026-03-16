@@ -74,7 +74,7 @@ impl Language {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers might reach for the `mimetypes` module or the `python-magic` library:
 ```python
 import mimetypes
@@ -372,7 +372,7 @@ fn collect_nodes_by_kind(
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents support dozens of languages. Claude Code supports every language that tree-sitter has a grammar for, which covers virtually all mainstream programming languages. The language detection is typically done once per file, and the result is cached. Some agents also use content-based heuristics for ambiguous cases -- for example, a `.h` file could be C or C++, and examining whether it contains `class` or `template` keywords helps disambiguate.
 :::
 

@@ -64,7 +64,7 @@ When the LLM receives a task that requires finding code, it follows this decisio
 
 Good tool descriptions guide the LLM through this flow. The cross-references in each tool's description ("for file names, use glob instead") act as decision edges.
 
-::: tip Coming from Python
+::: python Coming from Python
 The search pipeline maps to familiar Python tools:
 ```python
 # Layer 1: File discovery
@@ -134,7 +134,7 @@ The search toolkit you built covers the fundamental use cases, but there are sev
 
 **Cross-File Reference Resolution.** The current symbol index finds definitions but does not track references (call sites, type usages). Adding reference tracking would enable "find all usages" queries.
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents are continuously expanding their search capabilities. Claude Code recently added support for tree-sitter-based code understanding, complementing its existing grep and glob tools. Cursor and Continue integrate with LSP servers for precise navigation. The trend is clear: more structural understanding leads to better agent performance, because the agent spends less time searching and more time solving the actual problem.
 :::
 

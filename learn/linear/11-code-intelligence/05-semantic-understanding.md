@@ -357,7 +357,7 @@ fn parse_response(body: &[u8]) -> Vec<Record> {
 
 This extracted signature information is exactly what an agent needs when generating code that calls these functions. Instead of reading the entire function body (which costs context window tokens), the agent gets a compact summary of the API.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code and similar agents often include function signatures in their context when making edits. Rather than pasting entire files into the prompt, they extract the signatures of relevant functions and include those as compact references. Tree-sitter makes this extraction fast and reliable across languages — the same query patterns work for Rust `fn`, Python `def`, and TypeScript `function` declarations with only minor grammar-specific adjustments.
 :::
 

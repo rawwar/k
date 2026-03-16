@@ -26,7 +26,7 @@ Glob patterns are simpler than regular expressions and purpose-built for file pa
 
 The `**` pattern (sometimes called a "globstar") is the most important for a coding agent. It enables recursive matching, which is how you search an entire project tree.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `pathlib.Path.glob()` and `Path.rglob()` support the same basic patterns:
 ```python
 from pathlib import Path
@@ -272,7 +272,7 @@ impl Tool for GlobTool {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's glob tool returns results sorted by modification time, with the most recently changed files first. This heuristic works well because the agent's task usually involves files that were recently created or modified. OpenCode takes a similar approach but also tracks which files the user has mentioned in conversation, boosting those paths in search results.
 :::
 

@@ -54,7 +54,7 @@ Regex works well for simple pattern matching, but it breaks down for structural 
 
 **Cross-language support.** A regex for Python function definitions (`def\s+\w+`) is completely different from Rust (`fn\s+\w+`) or JavaScript (`function\s+\w+`). Tree-sitter uses grammar files for each language, so you write *one* query pattern that works across languages: "find all function definitions."
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `ast` module provides AST parsing for Python code:
 ```python
 import ast
@@ -271,7 +271,7 @@ fn main() {
 
 The tree still has a `function_item` node with the correct name, even though the code has a syntax error. Error nodes are marked in the tree with `ERROR` or `MISSING` node types, but the surrounding valid structure is preserved. This robustness is essential for a coding agent that frequently works with in-progress code.
 
-::: info In the Wild
+::: wild In the Wild
 GitHub uses tree-sitter for syntax highlighting across all its supported languages. The incremental parsing and error recovery features are why your code gets highlighted correctly on GitHub even when you are viewing a partial diff or a file with syntax errors. Coding agents like Cursor and Continue use tree-sitter for similar purposes: understanding code structure to provide better completions and edits.
 :::
 

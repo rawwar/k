@@ -216,7 +216,7 @@ fn format_directory_listing(listing: &str) -> String {
 
 Adding line numbers to file content is a common pattern in coding agents. When the model sees numbered lines, it can reference specific line numbers in its responses ("the error is on line 42"), making its explanations and edits more precise.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code adds line numbers to file contents returned by its read tool and truncates outputs that exceed a configurable limit. It also formats command output to clearly separate stdout and stderr, and includes the exit code so the model knows whether the command succeeded. OpenCode applies similar formatting, wrapping tool results in structured blocks that help the model parse the output reliably.
 :::
 

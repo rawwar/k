@@ -38,7 +38,7 @@ This might sound wasteful, but it has huge advantages:
 2. **Simple mental model** -- rendering is a pure function from state to UI. No callbacks, no observers, no event listeners on widgets.
 3. **Easy testing** -- you can test your rendering logic by constructing a state and checking what widgets it produces.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Python's `curses` library, Ratatui's model will feel familiar -- `curses` also redraws the screen each frame. But if you have used `textual` (the modern Python TUI framework), that is *retained mode*: you create widget classes, mount them in a DOM-like tree, and update them reactively. Ratatui's approach is closer to Python's `rich` library used in "live" mode, where you pass a renderable to `Live.update()` each tick.
 :::
 
@@ -242,7 +242,7 @@ mod tests {
 
 This is extremely useful for ensuring your agent's UI renders correctly without needing to run it in a real terminal.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code and OpenCode both use full-screen terminal UIs built on immediate-mode rendering models. Claude Code uses the Ink framework (React for terminals in JavaScript), which is retained-mode, while OpenCode uses the Bubble Tea framework in Go, which follows the same immediate-mode Elm architecture that you will implement with Ratatui. The patterns you learn here translate directly to understanding how production agents build their interfaces.
 :::
 

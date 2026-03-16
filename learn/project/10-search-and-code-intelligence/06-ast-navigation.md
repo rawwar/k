@@ -166,7 +166,7 @@ fn collect_functions(
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python's `ast` module, you would use `ast.walk()` or a `NodeVisitor` subclass:
 ```python
 import ast
@@ -440,7 +440,7 @@ pub fn get_parent_context(source: &str, node: Node) -> Vec<String> {
 
 This produces context chains like `["mod utils", "impl Config", "fn new"]` that the LLM can use to understand exactly where a search result lives in the code hierarchy.
 
-::: info In the Wild
+::: wild In the Wild
 Many coding agents use tree-sitter for building "outline" views of files -- a compact representation that shows the structure without the implementation details. Claude Code, for instance, can parse a file into its structural components (functions, classes, methods) to present a high-level overview when the full file would exceed the context window. This is more reliable than regex-based extraction because tree-sitter handles edge cases like nested structures and multiline signatures correctly.
 :::
 

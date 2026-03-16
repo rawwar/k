@@ -242,7 +242,7 @@ pub enum TrustLevel {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's PyPI and `pip install` is the canonical example of a package registry:
 ```python
 # Install a package
@@ -486,7 +486,7 @@ The trust model has several layers:
 | **Community** | Anyone | Automated scanning only | Process isolation (MCP/subprocess) |
 | **Unverified** | Unknown | None | Process isolation + resource limits |
 
-::: info In the Wild
+::: wild In the Wild
 The VS Code marketplace provides a useful reference. Extensions are published by anyone but verified publishers get a blue checkmark. VS Code extensions run in a shared process (the extension host) with access to the workspace filesystem. This has led to real security incidents where malicious extensions harvested credentials. Coding agents face even higher stakes because they have shell access. The MCP model partially addresses this -- MCP servers run as separate processes with only the capabilities they explicitly declare, providing natural sandboxing.
 :::
 

@@ -410,7 +410,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code maintains a denylist of dangerous command patterns that is checked before any shell command executes. The denylist includes patterns like `rm -rf`, `sudo`, and redirections to sensitive paths. Critically, it also blocks shell metacharacters that could be used for evasion -- semicolons, backticks, and command substitution are flagged for additional scrutiny. Codex sidesteps many of these concerns by running in a network-isolated sandbox, meaning even if a command is malicious, it cannot exfiltrate data.
 :::
 

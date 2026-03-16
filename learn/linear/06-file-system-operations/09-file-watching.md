@@ -77,7 +77,7 @@ fn watch_directory(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 `RecommendedWatcher` automatically selects the best backend for your platform: `inotify` on Linux, `FSEvents` on macOS, `ReadDirectoryChanges` on Windows.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `watchdog` library serves the same purpose as Rust's `notify` crate. If you've used `watchdog.observers.Observer` with a `FileSystemEventHandler`, the concepts map directly. Rust's channel-based approach replaces Python's callback-based handler pattern. The `notify` crate is more performant because it runs the event loop without the GIL, but the conceptual model is the same: register paths to watch, receive events when things change.
 :::
 

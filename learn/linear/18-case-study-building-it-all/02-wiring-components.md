@@ -179,7 +179,7 @@ let message_count = ctx.message_count();
 
 The `RwLock` allows multiple simultaneous readers or one exclusive writer. This is the right primitive for conversation history because reads are far more frequent than writes.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code manages shared state through a centralized conversation store that components access through controlled interfaces rather than direct shared references. OpenCode uses Go's channel-based concurrency model instead — components communicate by passing messages rather than sharing memory. Both approaches avoid the pitfalls of uncontrolled global state, but they reflect the idioms of their respective languages. In Rust, `Arc<RwLock<T>>` is the idiomatic equivalent: explicit, compiler-verified, and zero-overhead when uncontended.
 :::
 

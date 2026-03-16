@@ -372,7 +372,7 @@ pub fn wait_for_ci(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code integrates with the GitHub workflow by creating commits and PRs that follow the repository's conventions. When Claude Code creates a PR, it generates a descriptive title and body that summarize the changes. The agent uses the diff and commit history to build a meaningful PR description rather than a generic one. This automation pattern -- pushing a branch, creating a PR, and monitoring CI -- is the complete end-to-end workflow that turns agent modifications into reviewable, mergeable changes.
 :::
 

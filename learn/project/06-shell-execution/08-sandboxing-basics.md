@@ -178,7 +178,7 @@ impl PathPolicy {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess` module does not have built-in sandboxing. You would typically use OS-level tools or Docker containers:
 ```python
 import subprocess
@@ -314,7 +314,7 @@ pub async fn execute_sandboxed_linux(
 
 Bubblewrap uses Linux namespaces to create an isolated environment. The `--unshare-net` flag prevents network access, and `--ro-bind` makes system directories read-only. Only the project directory is mounted read-write.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses macOS `sandbox-exec` profiles and Linux namespace isolation to restrict shell command access. The sandbox denies network access by default (preventing data exfiltration) and limits filesystem writes to the project directory and temp directories. Codex CLI takes a similar approach, offering multiple sandbox modes from "full network access" to "network disabled" depending on the user's trust level.
 :::
 

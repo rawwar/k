@@ -68,7 +68,7 @@ fn main() {
 
 Here, `/bin/sh` receives `"ls *.rs | wc -l"` as a command string. The shell parses it, expands `*.rs` to matching filenames, creates a pipe between `ls` and `wc`, and executes both programs. This is powerful but comes with significant risks.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run` has a `shell=True` parameter that does exactly this:
 ```python
 import subprocess
@@ -264,7 +264,7 @@ As a rule of thumb for a coding agent:
 2. **Validate before execution** -- apply deny patterns and possibly require user confirmation.
 3. **Use direct exec when possible** -- for simple commands like `cargo test` or `git status`, avoid the shell entirely.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code passes most commands through `sh -c` because LLMs generate natural command strings that often include pipes and redirects. To mitigate the risks, it validates commands against a deny list of dangerous patterns and uses a sandboxing layer to limit file system access. Codex takes a more restrictive approach -- running commands in a sandboxed Docker container where even dangerous commands have limited impact because the filesystem is disposable.
 :::
 

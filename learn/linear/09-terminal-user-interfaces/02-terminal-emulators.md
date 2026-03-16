@@ -97,7 +97,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `rich` library performs similar detection automatically. When you create a `Console()` object, Rich inspects `TERM`, `COLORTERM`, and even queries the terminal for its capabilities. In Rust, the `crossterm` crate provides some detection, but for fine-grained capability discovery you often need to check environment variables yourself as shown above. The `supports-color` crate provides a focused API for just this purpose.
 :::
 

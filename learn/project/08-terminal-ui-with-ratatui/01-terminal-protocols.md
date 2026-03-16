@@ -42,7 +42,7 @@ This is what TUI applications need. When a user presses the up arrow key, your p
 
 Cbreak mode is a middle ground: keypresses are delivered immediately (no line buffering), but signal characters like Ctrl+C still generate signals. Some applications use this, but most TUI frameworks prefer full raw mode because they want complete control over every key combination.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would use the `tty` module to enter raw mode:
 ```python
 import tty, sys, termios
@@ -179,7 +179,7 @@ enum ColorSupport {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code detects terminal capabilities at startup and adjusts its rendering accordingly. On terminals with limited color support, it falls back to a simpler color palette. OpenCode uses a similar approach, checking `COLORTERM` and `TERM` environment variables to determine whether to use its full theme or a reduced-color variant.
 :::
 

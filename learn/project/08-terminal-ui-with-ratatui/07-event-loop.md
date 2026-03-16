@@ -102,7 +102,7 @@ fn run_with_polling(
 
 Now the loop runs at approximately 20 frames per second (every 50ms), even when no input events arrive. The `Tick` message gives your application a chance to update animations (like streaming dots or spinners) and redraw.
 
-::: tip Coming from Python
+::: python Coming from Python
 This is similar to how `curses` applications use `timeout()` or `nodelay()`:
 ```python
 import curses
@@ -315,7 +315,7 @@ pub async fn adaptive_event_loop(
 
 This adaptive approach saves CPU when the agent is idle but provides smooth updates during streaming.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode uses Bubble Tea's built-in tick-based event loop, which fires at a fixed rate and batches events between ticks. Claude Code's Ink-based renderer similarly debounces updates to avoid overwhelming the terminal with too many redraws during fast token streaming. The pattern of reducing frame rate when idle and increasing it during active streaming is common across production agents.
 :::
 

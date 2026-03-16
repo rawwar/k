@@ -519,7 +519,7 @@ impl CommandChecker {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's safety mechanisms are tested against known prompt injection patterns and command evasion techniques. The development team maintains a growing set of adversarial test cases based on real-world bypass attempts reported by users and security researchers. Codex similarly tests its sandboxing by attempting escapes from inside the sandbox -- verifying that network requests fail when network is disabled, that file access outside the mount point is blocked, and that privilege escalation attempts are rejected.
 :::
 

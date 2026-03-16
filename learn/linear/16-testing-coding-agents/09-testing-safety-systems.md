@@ -218,7 +218,7 @@ mod command_tests {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might test security boundaries with pytest's parametrize:
 ```python
 @pytest.mark.parametrize("command", [
@@ -404,7 +404,7 @@ mod regression_tests {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code maintains a comprehensive safety test suite that covers path traversal, command injection, privilege escalation, and symlink attacks. The suite runs on every commit as part of the CI pipeline, ensuring that code changes never accidentally weaken security boundaries. New attack vectors discovered through security reviews or bug reports are immediately added as regression tests.
 :::
 

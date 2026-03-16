@@ -13,8 +13,18 @@ if [ "$NODE_VERSION" -lt 18 ]; then
     exit 1
 fi
 
-echo "Installing dependencies..."
-npm install
+if [ -d "node_modules" ]; then
+    echo "Dependencies already installed (node_modules/ exists). Skipping npm install."
+else
+    echo "Installing dependencies..."
+    npm install
+fi
 
+echo ""
+echo "NOTE: The code snapshots in learn/code/ are Rust projects."
+echo "To compile them, you need Rust and Cargo installed: https://rustup.rs/"
+echo ""
 echo "Starting VitePress dev server..."
+echo "The site will be available at: http://localhost:5173"
+echo ""
 npx vitepress dev

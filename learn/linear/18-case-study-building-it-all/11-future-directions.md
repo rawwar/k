@@ -74,7 +74,7 @@ impl AgentOrchestrator {
 
 Multi-agent systems introduce new challenges: agents need to share context without overwhelming each other's context windows. They need to resolve conflicts when two agents modify the same file. They need a coordination protocol that ensures coherent results. These are active research problems.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's "sub-agent" pattern hints at multi-agent architecture. When Claude Code encounters a complex task, it can spawn a sub-agent with a focused context to handle a subtask (like researching how an API works) and incorporate the results into its main conversation. This is not full multi-agent orchestration, but it demonstrates the principle of delegation with focused context. OpenCode does not yet implement sub-agents but its architecture — with clean provider and tool abstractions — is well-positioned to support them.
 :::
 
@@ -223,7 +223,7 @@ impl BackgroundAgent {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 This pattern is already emerging in production. GitHub's Copilot agent can pick up issues and create pull requests autonomously. Anthropic's Claude Code supports a headless mode for use in CI pipelines. The trajectory is clear: coding agents are moving from interactive tools to autonomous team members that participate in the standard software development workflow.
 :::
 

@@ -358,7 +358,7 @@ pub fn analyze_commit_conventions(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code analyzes the repository context when generating commit messages and code changes. It examines existing code patterns, import styles, and naming conventions in the files it reads to produce changes that match the project's style. This "convention following" behavior comes from feeding repository context into the LLM prompt, not from explicit rule configuration. The git log and blame techniques covered here are the foundation for building that context automatically.
 :::
 

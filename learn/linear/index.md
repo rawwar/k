@@ -38,6 +38,31 @@ This track is ideal if you want to understand *why* things work the way they do.
 17. [Packaging and Distribution](/linear/17-packaging-and-distribution/) — Shipping Rust binaries
 18. [Case Study: Building It All](/linear/18-case-study-building-it-all/) — Putting it all together
 
+## Cross-Reference: Project Track
+
+Each linear chapter has a corresponding project track chapter where you implement the same concepts hands-on.
+
+| Linear Chapter | Project Chapter |
+|---------------|----------------|
+| 1. What Is a Coding Agent? | — (conceptual overview) |
+| 2. Rust for Python Developers | 1. Hello, Rust CLI |
+| 3. Understanding LLMs | 2. First LLM Call |
+| 4. Anatomy of an Agentic Loop | 3. The Agentic Loop |
+| 5. Tool Systems Deep Dive | 4. Building a Tool System |
+| 6. File System Operations | 5. File Operations Tools |
+| 7. Process Management and Shell | 6. Shell Execution |
+| 8. Streaming and Realtime | 7. Streaming Responses |
+| 9. Terminal User Interfaces | 8. Terminal UI with Ratatui |
+| 10. Conversation State Machines | 9. Conversation Context Management |
+| 11. Code Intelligence | 10. Search and Code Intelligence |
+| 12. Version Control Integration | 11. Git Integration |
+| 13. Safety and Permissions | 12. Permission and Safety |
+| 14. Provider Abstraction | 13. Multi-Provider Support |
+| 15. Extensibility Patterns | 14. Extensibility and Plugins |
+| 16. Testing Coding Agents | 15. Production Polish |
+| 17. Packaging and Distribution | 15. Production Polish |
+| 18. Case Study: Building It All | — (capstone) |
+
 ## Prerequisites
 
 - Basic programming experience (Python is perfect)

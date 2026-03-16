@@ -361,7 +361,7 @@ pub struct SkillInfo {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a skill-like system through its slash commands. When you type `/review`, Claude Code activates a code review mode that loads a specialized prompt and makes certain tools more prominent. The "skill" concept packages domain expertise (the review prompt), tool requirements (file reading, diff viewing), and an activation trigger (the slash command) into a single, discoverable unit. This makes the agent feel more like a specialized assistant that has different "modes" of operation rather than a generic tool caller.
 :::
 

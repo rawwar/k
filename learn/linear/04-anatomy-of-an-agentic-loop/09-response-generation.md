@@ -264,7 +264,7 @@ impl TurnTracker {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code displays a summary after each turn showing the number of tool calls made and the tokens consumed. It also provides a running cost estimate based on the model's token pricing. OpenCode tracks similar metrics and displays them in its TUI status bar. Both agents accumulate token usage across all inner loop iterations so the user sees the total cost of the turn, not just the last API call.
 :::
 

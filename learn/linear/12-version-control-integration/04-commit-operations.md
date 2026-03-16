@@ -243,7 +243,7 @@ pub fn format_agent_commit_message(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses the `Co-Authored-By` trailer to attribute commits it helps create. The human user remains the author (from their git config), and Claude is listed as a co-author. This preserves the human-in-the-loop model: the user is responsible for the commit, but the tooling that helped produce it is transparently recorded. This pattern is also recognized by GitHub, which displays co-authors in the commit UI.
 :::
 

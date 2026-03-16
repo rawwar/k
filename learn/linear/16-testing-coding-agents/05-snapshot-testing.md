@@ -76,7 +76,7 @@ mod tests {
 
 The `@r###"..."###` syntax is an inline snapshot. Insta fills in the expected value on first run, and you commit it with your code. If the output changes, `cargo test` fails and `cargo insta review` opens an interactive diff viewer where you accept or reject the change.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python has a similar concept with `pytest-snapshot` or `syrupy`:
 ```python
 def test_tool_output(snapshot):
@@ -252,7 +252,7 @@ Snapshot testing becomes a liability when:
 
 The rule of thumb: snapshot test outputs that are consumed by external systems (the LLM, the API, the user's terminal) where unintended changes have consequences.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses snapshot-style testing for its tool schema definitions to ensure that changes to tool parameters are intentional. When a developer modifies a tool's input schema, the snapshot test fails, forcing a review of the change. This prevents accidental schema changes that could break the model's ability to use the tool correctly.
 :::
 

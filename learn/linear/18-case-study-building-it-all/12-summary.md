@@ -111,7 +111,7 @@ Let's take stock of what you now have. The agent you have built across these eig
 
 This is not a toy. This is the same architecture that powers production coding agents. The difference between what you have built and what ships as a product is polish, scale, and the thousands of edge cases that only surface after thousands of users push the system to its limits.
 
-::: tip In the Wild
+::: wild In the Wild
 The three agents you studied in this chapter — Claude Code, OpenCode, and Pi — each started from the same fundamental architecture you have built. They diverged based on their specific goals (Anthropic integration vs. multi-provider support vs. plan-based execution), but the foundation is the same: an agentic loop, a tool system, a safety model, provider abstraction, and a terminal interface. Understanding this foundation is what lets you read their source code, contribute to their projects, and build your own agents that go beyond what exists today.
 :::
 
@@ -176,6 +176,28 @@ Coding agents are at the beginning of a transformation in how software is built.
 You are now one of the people who understands how these agents work from the inside. You can build them, customize them, debug them, and improve them. That understanding is valuable not just for building agents, but for using them effectively. When you know why the agent made a particular tool call, how the context window affected its reasoning, or why the safety layer blocked an action, you can collaborate with the agent more effectively than someone who treats it as a black box.
 
 Build something. Ship it. Learn from the bugs. Improve it. That is how the field advances.
+
+## Exercises
+
+### Exercise 1: Architecture Review of Your Agent (Easy)
+
+Using the self-assessment checklist from this chapter, evaluate an agent design (your own or one of the open-source agents discussed). For each "no" answer, describe what is missing, estimate the effort to add it (small/medium/large), and prioritize the items. If you could only address three gaps before a first release, which three would you choose and why? Consider which gaps are safety-critical versus quality-of-life improvements.
+
+### Exercise 2: Feature Prioritization for a Specialized Agent (Medium)
+
+You are building a specialized "code review agent" that reviews pull requests and suggests improvements. Starting from the general-purpose agent architecture in this chapter, identify which subsystems you would keep as-is, which you would simplify, and which you would extend. For example: do you need the full conversation state machine, or is a simpler request/response model sufficient? Do you need the TUI, or is plain stdout enough? What new tools would you add (PR diff fetching, inline comment posting, CI status checking)? Create a prioritized feature list for a three-milestone roadmap.
+
+### Exercise 3: Production Readiness Checklist (Hard)
+
+Design a comprehensive production readiness checklist for deploying your agent to a team of 20 developers. Cover: (a) reliability -- what happens when the LLM provider has an outage, when the agent crashes mid-edit, or when two developers run the agent on the same repo simultaneously, (b) observability -- what metrics would you collect, what alerts would you set, what does the dashboard look like, (c) security -- how do you handle API key distribution, per-developer permission scoping, and audit logging, and (d) operations -- how do you roll out updates, roll back a bad release, and handle a security vulnerability. For each item, specify whether it is a launch blocker or a post-launch improvement.
+
+### Exercise 4: Performance Profiling Strategy (Medium)
+
+Your agent takes 3 seconds from user input to first token of the LLM response. Design a profiling strategy to identify the bottleneck. List every component in the path (input parsing, system prompt construction, context assembly, token counting, API request serialization, network latency, response streaming setup) and describe how you would measure each one. What tools would you use (tracing spans, `tokio-console`, custom timing, network profiling)? Propose three hypotheses for where the 3 seconds is being spent, and describe the experiment you would run to test each hypothesis.
+
+### Exercise 5: Agent Comparison Study (Easy)
+
+Compare the architectural choices of Claude Code, OpenCode, and Pi (from this chapter) across five dimensions: language choice, provider flexibility, safety model, extensibility approach, and distribution strategy. For each dimension, identify which agent made the strongest choice and why. If you were starting a new agent project today, which combination of choices from these three agents would you adopt? Justify your selections based on your target use case.
 
 ## Key Takeaways
 

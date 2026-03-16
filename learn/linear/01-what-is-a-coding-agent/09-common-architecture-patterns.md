@@ -72,7 +72,7 @@ loop {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code and OpenCode both include circuit breakers in their loops — if the agent has executed an unusually large number of tool calls without completing the task, the loop pauses and asks the user whether to continue. This prevents runaway loops where the model keeps trying variations of a broken approach. Pi handles this more subtly, tracking the number of consecutive failed tool calls and prompting the user if a threshold is exceeded.
 :::
 
@@ -149,7 +149,7 @@ Permission systems typically address three questions:
 
 3. **What happens when an operation is denied?** The agent must handle denial gracefully — typically by informing the model that the operation was blocked and letting it find an alternative approach.
 
-::: tip In the Wild
+::: wild In the Wild
 The permission models reveal interesting philosophical differences. Claude Code's model trusts the user to make good decisions about what to allow. Codex's model trusts the sandbox to contain any damage. OpenCode gives users fine-grained control through configuration. Pi encodes permission checks in the type system, making it a compile-time concern rather than a runtime one. Each approach reflects a different assumption about where trust should live in the system.
 :::
 

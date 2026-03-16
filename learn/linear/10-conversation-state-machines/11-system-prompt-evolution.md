@@ -271,7 +271,7 @@ impl ProjectContext {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code reads a `CLAUDE.md` file from the project root (and parent directories) to inject custom instructions into its system prompt. This file can contain project-specific coding conventions, preferred patterns, and even instructions about which files to avoid modifying. The system prompt is rebuilt for each API call, incorporating the latest project context. This means if a user creates a `CLAUDE.md` file mid-session, the very next LLM call will include those instructions. OpenCode supports a similar mechanism with its `.opencode` configuration directory.
 :::
 

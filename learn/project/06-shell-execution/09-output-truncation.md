@@ -221,7 +221,7 @@ impl TruncationConfig {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python does not have built-in output truncation for subprocesses. You would typically do it manually:
 ```python
 result = subprocess.run(["find", "/"], capture_output=True, text=True)
@@ -298,7 +298,7 @@ impl ShellOutput {
 
 The truncation notice tells the LLM exactly what happened and suggests a more targeted approach. A smart LLM will respond by running `head -50 file.log` or `grep "error" file.log` instead of trying to read the entire file again.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses middle truncation by default, keeping the first and last portions of command output. The truncation message includes the original byte count and a hint that the LLM can use more targeted commands to see specific parts. This creates a feedback loop where the LLM learns to use `grep`, `head`, `tail`, and other filtering commands to get precisely the output it needs.
 :::
 

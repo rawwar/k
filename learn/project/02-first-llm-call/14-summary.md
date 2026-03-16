@@ -467,6 +467,55 @@ You are also ready for these enhancements:
 
 The foundation is solid. Let's build on it.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the API integration you created in this chapter.
+
+### Exercise 1: Add a Token Usage Tracker (Easy)
+
+Add a running total of tokens used across the entire session. After each API response, print both the per-request usage and the cumulative session total. Display the final total when the user quits.
+
+- Add `total_input_tokens: u32` and `total_output_tokens: u32` variables before the REPL loop
+- Accumulate the values from each `response.usage` after a successful call
+- Print the session summary in the quit handler
+
+### Exercise 2: Implement Request Timeout Configuration (Easy)
+
+Make the HTTP client timeout configurable via an environment variable `REQUEST_TIMEOUT_SECS`. Default to 60 seconds if not set. Print the configured timeout at startup.
+
+- Add a `timeout_secs: u64` field to your `Config` struct
+- Parse it from the environment with a default of 60
+- Pass it to `reqwest::Client::builder().timeout()`
+
+### Exercise 3: Add Structured API Error Reporting (Medium)
+
+Extend your `ApiError` enum with a `RateLimited { retry_after: Option<u64> }` variant. When you receive a 429 response, parse the `retry-after` header and use that value (if present) instead of your default backoff delay.
+
+**Hints:**
+- Access the header with `response.headers().get("retry-after")`
+- Parse the header value as a `u64` representing seconds
+- In your retry loop, check for this variant and use `retry_after` if `Some`, falling back to exponential backoff if `None`
+
+### Exercise 4: Implement a /tokens Command (Medium)
+
+Add a `/tokens` REPL command that estimates the token count for any text the user provides. Use the approximation that 1 token is roughly 4 characters of English text. Display both the character count and the estimated token count.
+
+**Hints:**
+- Match on input starting with `/tokens ` in your command handler
+- Strip the prefix to get the text to measure
+- Calculate `text.len() / 4` as the rough estimate
+- Compare this with the actual usage the API reports to see how accurate the approximation is
+
+### Exercise 5: Add Response Caching with a HashMap (Hard)
+
+Implement a simple response cache: if the user sends an identical message to one sent earlier in the session (and no other messages have been sent in between), return the cached response instead of making an API call. Print a note when serving from cache.
+
+**Hints:**
+- Store a `HashMap<String, String>` mapping user messages to assistant responses
+- Only cache single-shot messages (not messages that depend on conversation context)
+- One approach: cache responses when `conversation.len() == 1` (first message) or when the preceding messages are identical to a previous cached sequence
+- A simpler approach: cache the hash of the entire messages vector, so identical conversation states hit the cache
+
 ## Key Takeaways
 
 - You built a complete pipeline from environment configuration through HTTP requests, JSON parsing, error handling, and retry logic to a working multi-turn REPL.

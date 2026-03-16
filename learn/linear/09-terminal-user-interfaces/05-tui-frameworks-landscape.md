@@ -20,7 +20,7 @@ ncurses provides a C API for terminal-independent screen painting. It uses the `
 
 The strengths of ncurses are its ubiquity (it is installed on virtually every Unix system) and its decades of battle-tested terminal compatibility. Its weaknesses are a mutable, imperative API with global state, manual memory management in C, and an architecture that predates modern UI patterns.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `curses` module is a thin wrapper around the C ncurses library. If you have written Python TUI code with `curses.wrapper()`, `stdscr.addstr()`, and `curses.color_pair()`, you have used ncurses directly. The experience is low-level and imperative: you manually position the cursor, write characters, and call `refresh()` to push changes to the screen. Ratatui's approach is declarative by comparison -- you describe what the screen should look like, and the framework figures out the minimal updates.
 :::
 
@@ -172,7 +172,7 @@ Ink is powerful for JavaScript developers but introduces the full React runtime 
 # app.run()
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Textual, you will find Ratatui's immediate-mode rendering quite different. Textual maintains a widget tree that it updates incrementally -- you modify a widget's properties and Textual re-renders just that widget. In Ratatui, you redraw the entire screen every frame, and the framework's buffer diffing ensures only changed cells are written. The immediate-mode approach is simpler to reason about (no stale widget state) but requires you to keep all display data in your model.
 :::
 

@@ -261,7 +261,7 @@ The practical answer is: use both. Here is a decision framework for your agent:
 - You need to run hooks (libgit2 does not run Git hooks)
 - You are performing operations that involve remote communication (fetch, push, clone with SSH)
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code primarily uses the Git CLI approach, spawning `git` commands through its shell execution tool. This is a pragmatic choice: the CLI gives access to every Git feature, and the output parsing overhead is acceptable for the frequency of Git operations in a typical agent session. The shell-based approach also means Git hooks run normally, which is important for repositories that use pre-commit hooks for linting or formatting. Some operations like reading repository status are frequent enough that a direct library approach would reduce latency, but the simplicity of a single integration path usually wins.
 :::
 

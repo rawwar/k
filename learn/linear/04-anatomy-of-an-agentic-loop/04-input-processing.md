@@ -126,7 +126,7 @@ fn classify_input(input: &str) -> InputAction {
 
 Slash commands bypass the agentic loop entirely. They are handled in the outer REPL, not the inner loop. This is an important design decision: slash commands are user-to-agent communication (configuring the agent itself), while normal messages are user-to-model communication (asking the model to do something).
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code supports a rich set of slash commands including `/clear`, `/compact`, `/cost`, `/doctor`, `/help`, `/init`, `/login`, `/logout`, `/model`, and `/review`. OpenCode has a similar set with `/clear`, `/compact`, `/model`, and `/help`. Both agents process these commands in their outer REPL before the input reaches the agentic loop. Claude Code's `/compact` command is particularly interesting -- it summarizes the conversation history to free up context window space without losing important context.
 :::
 
@@ -306,7 +306,7 @@ fn estimate_tokens(
 
 Token estimation is inherently approximate -- the exact count depends on the model's tokenizer. Production agents use the model's actual tokenizer for precise counts, but a character-based heuristic (roughly 4 characters per token for English text) is good enough for context management decisions.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements context management through its `/compact` command and automatic context compaction. When the conversation approaches the context limit, Claude Code summarizes the history using the model itself, replacing detailed tool call sequences with a condensed summary. OpenCode also implements automatic compaction -- when the context window fills up, it summarizes the conversation and continues with the compressed history. Both agents keep the system prompt and the most recent messages intact while compressing the middle of the conversation.
 :::
 

@@ -181,7 +181,7 @@ Let's examine the key design decisions.
 
 **Silently skipping errors.** Permission-denied entries are skipped rather than causing the whole operation to fail. In a typical project, there might be a few unreadable files in `node_modules` or `.git` -- these should not prevent the tool from returning the files it can access.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, glob matching is built into `pathlib`:
 ```python
 from pathlib import Path
@@ -373,7 +373,7 @@ mod tests {
 
 The tests cover the main scenarios: recursive search, subdirectory search, no matches, result limiting, and invalid patterns. The `setup_project` helper creates a realistic directory structure that mirrors a small Rust project.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Glob tool returns results sorted by modification time, matching our implementation. It also filters out common noise directories like `node_modules` and `.git` by default. The tool is one of the most frequently used in practice -- the model calls it at the start of almost every task to discover the relevant files before reading or editing them. OpenCode uses a similar search tool but adds file size information to each result, which helps the model decide whether to read the full file or use range-based reading.
 :::
 

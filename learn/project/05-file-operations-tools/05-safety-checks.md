@@ -192,7 +192,7 @@ fn matches_pattern(path: &str, pattern: &str) -> bool {
 
 This is intentionally simple. It handles the patterns we defined in our defaults: `*.pem`, `**/.git/objects/**`, `.env`, and `.env.*`. For a more robust solution, you would use the `glob` crate's `Pattern::matches` function.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might use `fnmatch` for glob-style matching:
 ```python
 import fnmatch
@@ -303,7 +303,7 @@ if let Some(warning) = self.safety.check_content_safety(&content) {
 result.push_str(&numbered_content);
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a sophisticated permission system where dangerous operations require user approval. Reading files inside the project is generally allowed, but writing to certain paths (like `.env` or files outside the project) triggers a confirmation prompt. The user sees exactly what the agent wants to write and can approve or reject. OpenCode takes a similar approach, blocking writes to sensitive paths entirely rather than prompting. Our implementation is closer to OpenCode's approach -- we block rather than prompt -- but you could extend it with user confirmation by adding an `is_interactive` flag.
 :::
 

@@ -379,7 +379,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Most coding agents do not run their own LSP servers. Instead, they rely on text search (ripgrep) and the LLM's own reasoning for code navigation. However, agents that integrate LSP can answer questions that are otherwise impossible without reading large amounts of code — "what type does this function return?" or "show me every implementation of this trait." The Zed editor's AI features use LSP data to provide the model with precise type information, reducing hallucination. As agents become more sophisticated, LSP integration is becoming a differentiating feature.
 :::
 

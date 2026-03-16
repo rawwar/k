@@ -26,7 +26,7 @@ If the response contains tool use blocks, Claude Code executes each tool, collec
 
 Here's the critical insight: **the model decides when to stop**. There's no hardcoded limit on the number of loop iterations. The model uses each tool result to assess whether the task is done. If it writes code and runs tests that pass, it might stop after three iterations. If it encounters a complex bug requiring multiple investigation steps, it might iterate twenty times. This open-ended loop is what gives Claude Code its ability to handle tasks that no one anticipated at design time.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's loop includes a "stop after" heuristic for safety — if the agent has executed a very large number of tool calls without completing the task, it pauses and checks in with the user. This prevents runaway loops where the model keeps trying variations of a broken approach. When you build your own agent, you'll implement a similar circuit breaker.
 :::
 

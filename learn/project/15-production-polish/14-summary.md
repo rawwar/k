@@ -120,6 +120,60 @@ The project track is complete, but your agent is not finished. Software is never
 
 The foundation you built is solid. Build on it.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the production polish infrastructure you created in this chapter.
+
+### Exercise 1: Add Structured Error Reporting with Context (Easy)
+
+Extend your error types to include contextual information: the operation that failed, the component that raised the error, and a suggested user action. Implement a `format_user_error()` method that produces a friendly, actionable message instead of a raw error string. Test it by triggering each error variant and verifying the output.
+
+- Add `operation: String` and `suggestion: Option<String>` fields to your error types
+- Format user-facing errors as: `"Error in [operation]: [message]. Try: [suggestion]"`
+- For example: `"Error in API call: rate limited. Try: wait 30 seconds and retry"`
+
+### Exercise 2: Add a /config Validation Command (Easy)
+
+Implement a `/config` REPL command that loads and validates the full configuration stack (defaults, global, project, environment, CLI) and reports any issues. Display each config source, which values it provides, and flag any conflicts or invalid values. This helps users debug configuration problems.
+
+- Iterate through config layers in priority order and show which keys each layer sets
+- Highlight overrides: `"model: claude-sonnet-4-20250514 (from: env ANTHROPIC_MODEL, overrides: global config)"`
+- Validate values and warn about issues: missing API key, invalid model name, unreachable API base URL
+
+### Exercise 3: Implement Startup Performance Profiling (Medium)
+
+Add a `--timing` CLI flag that measures and displays how long each startup phase takes: config loading, provider initialization, tool registration, plugin loading, and MCP server connection. Display a summary table at the end of startup showing each phase's duration and percentage of total startup time.
+
+**Hints:**
+- Wrap each startup phase with `let start = Instant::now();` and `let duration = start.elapsed();`
+- Store results in a `Vec<(&str, Duration)>` and display after all phases complete
+- Format as a table: `"Config loading:     12ms (8%) | Provider init:  45ms (30%) | ..."`
+- Use `tracing` spans with timing to also capture this data in structured logs
+- Set a target: total startup under 500ms, and flag any phase over 200ms as a warning
+
+### Exercise 4: Build a Release Checklist Validator (Medium)
+
+Create a `cargo xtask release-check` command that validates everything is ready for a release: all tests pass, `Cargo.toml` version matches the git tag, CHANGELOG.md has an entry for the new version, no uncommitted changes exist, and the binary compiles on the current platform with release optimizations.
+
+**Hints:**
+- Implement as a binary in a `xtask/` workspace member (the cargo xtask pattern)
+- Run each check as a subprocess: `cargo test`, `cargo build --release`, `git status --porcelain`
+- Parse `Cargo.toml` for the version and compare with the latest git tag
+- Search CHANGELOG.md for a heading matching the version string
+- Print a checklist with pass/fail indicators: `[PASS] Tests pass`, `[FAIL] Uncommitted changes found`
+
+### Exercise 5: Implement End-to-End Integration Tests with a Mock Server (Hard)
+
+Build a complete integration test that starts a mock LLM server, runs the agent against it with a scripted conversation, and verifies the agent correctly executes tool calls and produces expected side effects (files created, commands run). The mock server should replay recorded responses and verify that requests match expected patterns.
+
+**Hints:**
+- Use `wiremock` or `axum` to create a mock server that binds to a random port
+- Define test scenarios as JSON fixtures: each fixture has a sequence of expected requests and corresponding responses
+- Configure the agent to use `http://localhost:{port}` as the API base URL
+- Script a conversation that triggers tool use: "Create a file called test.txt" should result in a `WriteFile` tool call
+- After the conversation completes, verify side effects: check that `test.txt` exists with the expected content
+- Clean up all created files in a `Drop` implementation or `#[test]` cleanup block
+
 ## Key Takeaways
 
 - Production polish is not optional -- error recovery, logging, configuration, testing, packaging, and documentation are the infrastructure that makes the difference between a prototype and a product users trust.

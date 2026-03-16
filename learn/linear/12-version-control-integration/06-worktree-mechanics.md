@@ -287,7 +287,7 @@ pub fn is_branch_checked_out(
 
 **Stale worktrees accumulate.** If the agent crashes or the user kills it mid-task, worktree directories may be left behind. Run `git worktree prune` periodically to clean up entries whose directories no longer exist.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses worktrees extensively for parallel task execution. When a user asks Claude Code to work on multiple tasks simultaneously, it creates separate worktrees so each task has its own file system context. This avoids the "stash and switch" dance that would be necessary with a single working directory. The worktree approach is especially important for long-running tasks: if one task is waiting on a CI check, the agent can work on another task in a different worktree without any file conflicts. Claude Code automatically cleans up worktrees when tasks complete.
 :::
 

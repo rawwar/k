@@ -127,7 +127,7 @@ The `match` on the timeout result handles three cases:
 2. **`Ok(Err(e))`** -- the process encountered an I/O error (rare, but possible).
 3. **`Err(_elapsed)`** -- the timeout expired. You must kill the process explicitly.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run()` has a built-in `timeout` parameter:
 ```python
 try:

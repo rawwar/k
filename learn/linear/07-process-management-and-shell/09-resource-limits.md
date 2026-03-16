@@ -95,7 +95,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python has the `resource` module in its standard library:
 ```python
 import resource
@@ -305,7 +305,7 @@ The key decisions:
 
 4. **Child processes**: The NPROC limit prevents fork bombs. Set it high enough for parallel compilation but low enough to prevent exponential process creation.
 
-::: info In the Wild
+::: wild In the Wild
 Codex runs commands inside Docker containers with explicit memory and CPU limits set through Docker's resource constraints (which use cgroups under the hood). This gives strong isolation -- a runaway `cargo build` cannot consume all the host's memory. Claude Code takes a lighter approach, relying on wall-clock timeouts and process group management rather than strict memory limits, trading some safety for lower overhead and simpler setup.
 :::
 

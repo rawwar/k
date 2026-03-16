@@ -38,7 +38,7 @@ fn string_basics() {
 
 This strictness is a feature, not a bug. When your agent reads a file into a `String`, you know the content is valid UTF-8. When it passes that string to the LLM API, there will be no encoding errors downstream.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python 3 made the `str`/`bytes` split, which was a huge improvement over Python 2's ambiguous `str` type. Rust takes a similar approach: `String` is always Unicode text, and `Vec<u8>` is arbitrary bytes. The difference is that Python's `str` can represent any Unicode code point, while Rust's `String` is specifically UTF-8 encoded. This means Rust strings have the nice property that indexing by byte position is O(1), but you can't index by character position without iterating because UTF-8 characters can be 1-4 bytes long.
 :::
 

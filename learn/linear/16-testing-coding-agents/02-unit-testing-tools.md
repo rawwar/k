@@ -86,7 +86,7 @@ mod tests {
 
 Notice that each test uses a real temporary directory. The `tempfile` crate handles cleanup automatically when the `TempDir` value is dropped, so tests do not leave files behind.
 
-::: tip Coming from Python
+::: python Coming from Python
 In pytest, you use the `tmp_path` fixture to get a temporary directory:
 ```python
 def test_read_file(tmp_path):
@@ -360,7 +360,7 @@ mod error_tests {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's tool implementations are heavily tested at the unit level. Each tool has tests for happy paths, error paths, edge cases (empty files, binary files, very large files), and input validation. This thorough tool-level testing means that most bugs are caught before they ever reach the agentic loop, keeping integration tests focused on conversation flow rather than tool correctness.
 :::
 

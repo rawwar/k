@@ -24,7 +24,7 @@ Within the container, the agent operates with full autonomy. It can read and wri
 
 When the agent completes its task, the system presents its changes as a diff or a pull request. You review the changes, and if they look correct, you merge them into your codebase. The sandbox is then destroyed, along with any side effects the agent produced.
 
-::: tip In the Wild
+::: wild In the Wild
 The sandbox approach has precedents outside the coding agent world. Continuous integration systems like GitHub Actions run your tests in isolated containers for the same reason — you don't want a test to accidentally modify production data or leak secrets. Codex applies this same principle to code generation: let the agent do anything it wants in a safe space, then review the results before they touch the real world.
 :::
 
@@ -82,7 +82,7 @@ Codex and Claude Code represent two opposite ends of the safety spectrum, and un
 
 Neither approach is universally better. Permission-based safety is more flexible and enables interactive workflows, but it depends on correctly categorizing operations as safe or dangerous — and getting that classification wrong has real consequences. Isolation-based safety is more robust (you don't need to classify anything), but it restricts what the agent can do and introduces the latency of working asynchronously.
 
-::: tip In the Wild
+::: wild In the Wild
 Some organizations use both approaches depending on the task. Quick interactive fixes are done with Claude Code in the terminal. Larger refactoring tasks, especially those touching sensitive code, are submitted to Codex-style sandboxed agents where the isolation provides an extra safety layer. The agents complement each other rather than competing.
 :::
 

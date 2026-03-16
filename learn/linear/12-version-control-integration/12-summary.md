@@ -63,7 +63,7 @@ The key design principle for write operations is **transparency**: every agent m
 
 Worktrees deserve special emphasis because they solve a fundamental problem for concurrent agent work. Without worktrees, an agent that handles multiple tasks must constantly stash and switch branches, risking file conflicts and lost state. With worktrees, each task gets its own working directory with its own index and HEAD, while sharing the same object database. This is the mechanism that enables production agents to handle parallel workstreams safely.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's approach to version control integration embodies the principles covered in this chapter: it uses Git as both a collaboration mechanism and a safety net. Before making changes, it understands the repository state. When making changes, it creates clear, attributable commits. When working in parallel, it uses worktrees for isolation. And when things go wrong, it provides clear paths to undo. The design philosophy is that version control integration is not an add-on feature -- it is a core part of the agent's safety model that makes autonomous code modification trustworthy.
 :::
 
@@ -115,6 +115,24 @@ If you have been following along from the Python perspective, the biggest shift 
 ## What Comes Next
 
 With the infrastructure layer complete, the remaining chapters focus on advanced agent capabilities: permission systems, multi-model architectures, and production deployment. The version control integration you built here is the foundation for safe, autonomous operation -- every advanced feature builds on the assumption that the agent can safely modify code, track what it changed, and undo anything that goes wrong.
+
+## Exercises
+
+### Exercise 1: Git Operation Safety Classification (Easy)
+
+Classify the following Git operations into three risk tiers (safe/read-only, moderate/reversible writes, dangerous/potentially irreversible): `git status`, `git push --force`, `git commit`, `git branch -D`, `git stash`, `git reset --hard`, `git checkout -b`, `git rebase`, `git log`, `git clean -fd`. For each operation in the dangerous tier, describe what data could be lost and what recovery mechanism (if any) exists via the reflog or object database.
+
+### Exercise 2: Diff Generation Strategy Comparison (Medium)
+
+An agent needs to show the user what it changed after a multi-file refactoring. Compare three diff presentation strategies: (a) raw unified diff from `git diff`, (b) file-by-file summary with change counts, and (c) semantic diff that describes changes in terms of affected functions and types. For each strategy, discuss what information is preserved, what is lost, and how many tokens each would consume in the context window. Design a hybrid approach that adapts the presentation based on the size of the changeset -- what thresholds would you use to switch strategies?
+
+### Exercise 3: Branch Management for Concurrent Agent Tasks (Hard)
+
+An agent is handling three parallel user requests: a bug fix, a feature addition, and a refactoring. Each task may touch overlapping files. Design a branch and worktree management strategy that handles: (a) isolating each task so partial work on one does not affect the others, (b) detecting when two tasks modify the same file and alerting the user, (c) merging completed tasks back to the main branch in the correct order, and (d) cleaning up worktrees and branches after completion. Consider what happens if the user abandons one task mid-way and how your design recovers from a process crash during a merge.
+
+### Exercise 4: Conflict Resolution Approaches (Medium)
+
+When an agent's branch conflicts with upstream changes, it can: (a) abort and ask the user, (b) attempt automatic resolution using the code intelligence stack, or (c) create a new branch that incorporates both sets of changes. For each approach, analyze the failure modes, the user experience, and the risk of data loss. Design a decision tree that an agent would follow to choose between these approaches based on the conflict type (whitespace, import ordering, overlapping logic changes) and the user's configured trust level.
 
 ## Key Takeaways
 

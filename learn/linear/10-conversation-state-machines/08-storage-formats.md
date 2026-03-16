@@ -275,7 +275,7 @@ The `fts5` virtual table gives you full-text search across all messages. A user 
 
 **Weaknesses**: Heavier dependency, more complex code, not human-readable (need a SQLite client to inspect), append-only patterns require more care (WAL mode helps but inserts are slower than file appends).
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code stores its session data in project-specific directories using file-based formats. The session history lives alongside project metadata, making it easy to associate conversations with specific codebases. For cross-session search, Claude Code uses the conversation index that maps session IDs to key topics and file paths. OpenCode uses SQLite for its session storage, which gives it built-in query capabilities for listing and searching past sessions.
 :::
 

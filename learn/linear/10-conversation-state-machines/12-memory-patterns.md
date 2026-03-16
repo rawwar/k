@@ -320,7 +320,7 @@ impl MemoryExtractor {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a memory system through its `CLAUDE.md` files. Project-level memories are stored in `CLAUDE.md` at the project root, user-level memories in `~/.claude/CLAUDE.md`, and the agent can read and update these files during conversations. This is an elegant approach because the memory is human-readable and editable -- users can review, modify, and version-control their agent's memories alongside their code. The Pi coding agent takes a different approach with an explicit `/memory` command that lets users manage stored facts through a structured interface.
 :::
 

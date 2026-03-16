@@ -366,7 +366,7 @@ pub fn summarize_merge_conflicts(files: &[FileConflicts]) -> String {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code detects merge conflicts by checking for the `CONFLICTED` status in `git status` output after operations that could produce conflicts. When conflicts are found, Claude Code reads the conflicted files, understands the semantic meaning of both sides using the LLM, and proposes a resolution that preserves the intent of both changes. This is more sophisticated than simple "accept ours/theirs" -- the LLM can reason about whether two changes are truly incompatible or can be combined in a way that satisfies both.
 :::
 

@@ -129,7 +129,7 @@ fn main() -> io::Result<()> {
 
 Notice the `\r\n` instead of just `\n`. In raw mode, the terminal driver does not translate `\n` (line feed) into `\r\n` (carriage return + line feed). If you write only `\n`, the cursor moves down one row but stays in the same column, producing a staircase effect. You must explicitly include `\r` to move the cursor back to column 1.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `curses` module enters raw mode automatically when you call `curses.wrapper()`. The wrapper also handles cleanup when your program exits. Python's `textual` framework (from the Rich family) does the same thing internally. In Rust, `crossterm::terminal::enable_raw_mode()` is the equivalent, but you must manage cleanup yourself -- either with explicit calls or by using RAII patterns as shown below.
 :::
 

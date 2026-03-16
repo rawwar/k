@@ -247,7 +247,7 @@ mod integration_tests {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In pytest, you might use fixtures and async test decorators:
 ```python
 @pytest.fixture
@@ -403,7 +403,7 @@ async fn recovers_from_tool_error() {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code's integration tests exercise complete conversation flows including error recovery. A typical test scripts a sequence where the model tries a command that fails, observes the error, and tries an alternative approach. This ensures the agentic loop handles real-world failure patterns where the model's first attempt does not always succeed. The test asserts on the full action sequence, not just the final output.
 :::
 

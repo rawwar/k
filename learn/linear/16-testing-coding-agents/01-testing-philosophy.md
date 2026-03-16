@@ -71,7 +71,7 @@ Traditional testing uses a pyramid: many unit tests at the base, fewer integrati
 
 **Top: Live evaluation benchmarks.** Run the agent against a set of coding tasks using the real API and score the results. This is expensive and non-deterministic, so you run it rarely — on release candidates or weekly CI schedules. Target five to twenty benchmark tasks.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python's pytest ecosystem, you might organize these tiers with markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`. Rust uses a different mechanism. Unit tests live in `#[cfg(test)]` modules inside each source file. Integration tests live in the `tests/` directory at the crate root. You control which tests run using `cargo test`, `cargo test --test integration`, or by using the `#[ignore]` attribute for expensive tests that only run when explicitly requested with `cargo test -- --ignored`.
 :::
 
@@ -113,7 +113,7 @@ Better metrics for agent test quality:
 
 Track these as checklists, not percentages. A coding agent with 60% line coverage and complete scenario coverage is better tested than one with 95% line coverage that never tests a multi-turn conversation.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code maintains an extensive suite of deterministic tests for its tool implementations and parser logic, paired with a smaller set of evaluation benchmarks that run against the real API on a schedule. The evaluation suite covers specific coding tasks (fix a bug, add a feature, refactor a module) and scores the agent on whether the task was completed correctly. This two-tier approach — fast deterministic tests for correctness, slow evaluations for quality — is the industry standard for production coding agents.
 :::
 

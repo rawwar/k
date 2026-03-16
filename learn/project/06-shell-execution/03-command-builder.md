@@ -143,7 +143,7 @@ impl ShellCommand {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess` module uses keyword arguments for configuration:
 ```python
 result = subprocess.run(
@@ -299,7 +299,7 @@ impl ShellCommand {
 
 These accessor methods let safety-checking code inspect the command without needing access to the internal fields.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code parses the LLM's tool call into a structured command representation before execution. This intermediate representation is where safety checks, permission lookups, and logging all happen. The command only reaches the OS after passing through every validation layer. This is exactly the pattern you are building with `ShellCommand` -- a structured intermediate form between the LLM's request and the actual process spawn.
 :::
 

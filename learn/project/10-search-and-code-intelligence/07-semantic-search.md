@@ -258,7 +258,7 @@ fn find_parent_type(source: &str, node: tree_sitter::Node) -> Option<String> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers often use `jedi` or `rope` for semantic code analysis, or the built-in `ast` module for simpler cases:
 ```python
 import ast
@@ -370,7 +370,7 @@ pub fn format_kind_search(index: &SymbolIndex, kind: &SymbolKind) -> String {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Production coding agents typically maintain a symbol index that is updated incrementally as files change. Claude Code achieves something similar by combining grep results with structural understanding. When you ask it to find a function definition, it uses targeted grep patterns plus context to distinguish definitions from call sites. A full symbol index is more precise but requires upfront parsing time -- the right trade-off depends on the project size and how often the agent needs structural queries.
 :::
 

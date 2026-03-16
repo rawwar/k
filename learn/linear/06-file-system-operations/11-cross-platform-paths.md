@@ -39,7 +39,7 @@ fn path_basics() {
 
 The `push` method automatically inserts the correct path separator for the current platform. On Unix it adds `/`, on Windows it adds `\`.
 
-::: tip Coming from Python
+::: python Coming from Python
 Rust's `Path`/`PathBuf` map directly to Python's `pathlib.PurePath`/`pathlib.Path`. Python's `Path("dir") / "file.txt"` is Rust's `PathBuf::from("dir").join("file.txt")` or using `push`. The `/` operator overload in Python is elegant, but Rust's `join` and `push` methods are explicit and work the same way. Python's `Path.name`, `Path.stem`, `Path.suffix`, and `Path.parent` correspond to Rust's `file_name()`, `file_stem()`, `extension()`, and `parent()`.
 :::
 
@@ -248,7 +248,7 @@ fn path_display() {
 
 For a coding agent, `to_string_lossy()` is almost always fine since source code file paths are invariably valid UTF-8. But it's good to be aware of why the API uses `OsStr`.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `pathlib.Path` works with strings internally and handles encoding transparently. Rust makes the distinction explicit: paths are OS-native byte sequences (`OsStr`), not UTF-8 strings (`str`). This matters on Linux where filenames can contain arbitrary bytes. In practice, you'll use `.display()` for output and `.to_str()` when you need a `&str`, and it works seamlessly for all normal file paths.
 :::
 

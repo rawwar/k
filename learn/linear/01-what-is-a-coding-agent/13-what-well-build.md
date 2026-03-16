@@ -232,7 +232,7 @@ Here's how the tutorial maps to the architecture:
 
 Each chapter builds on the previous ones. By Chapter 4, you'll have a working (if limited) agent that can chat. By Chapter 6, it can read files, write code, and run commands. By Chapter 10, it has a polished terminal interface. By Chapter 14, it handles edge cases and advanced scenarios that make it genuinely useful for real work.
 
-::: tip In the Wild
+::: wild In the Wild
 The progression of our build mirrors how production agents were developed. Claude Code didn't ship with every feature on day one — it started as a basic REPL with API connectivity, then added tools, then streaming, then permissions, then polish. OpenCode's git history shows the same pattern: core loop first, tools second, UI third, refinements last. This layered approach isn't just pedagogically convenient — it's how real agents are built.
 :::
 

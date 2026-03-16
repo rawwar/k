@@ -171,7 +171,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `rich` library abstracts away escape sequences entirely. You write `console.print("[bold red]Error[/]")` and Rich generates the correct escape sequences based on detected terminal capabilities. In Rust, Ratatui provides similar abstraction through its `Style` type, but understanding the raw sequences helps you debug issues when a style does not render as expected. The Rust crate `owo-colors` provides a lightweight API similar to Rich's markup for simple colored output without a full TUI framework.
 :::
 

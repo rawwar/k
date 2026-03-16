@@ -300,7 +300,7 @@ fn handle_stream_event(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code streams tool calls to the terminal in real-time. As soon as it detects a tool use block starting, it shows the tool name and begins rendering a formatted display of the tool execution. The tool parameters are parsed from the accumulated partial JSON only after the block is complete. OpenCode follows a similar pattern in its TUI, showing tool execution progress as the stream arrives.
 :::
 

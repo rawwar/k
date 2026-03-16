@@ -32,7 +32,7 @@ Rust wraps these Unix primitives in two complementary APIs:
 
 **`tokio::process::Command`** mirrors the same API but returns futures that integrate with the async runtime. This is what your agent uses during normal operation, because blocking on a synchronous process call would freeze the entire event loop. The async `spawn()` method combined with `tokio::io::BufReader` gives you line-by-line streaming of command output -- essential for providing real-time feedback to users.
 
-::: tip Coming from Python
+::: python Coming from Python
 The relationship between `std::process::Command` and `tokio::process::Command` mirrors Python's `subprocess.run()` versus `asyncio.create_subprocess_exec()`. In both languages, the synchronous version is simpler but blocks the thread, while the async version integrates with the event loop. Rust makes the distinction more explicit through separate types in separate crates, while Python uses the same function patterns in different modules.
 :::
 
@@ -103,9 +103,57 @@ When implementing process execution in your agent, consider these decision point
 
 6. **What if it fails?** Capture both stdout and stderr. Report the exit code. Return enough context for the LLM to understand what went wrong.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code, Codex, and OpenCode all implement variations of the patterns covered in this chapter. They share common design choices -- async process management, timeout enforcement, output capture, and security validation -- but differ in their approach to sandboxing (Claude Code uses platform-native sandboxing, Codex uses Docker containers, OpenCode relies more heavily on its permission system). These differences reflect tradeoffs between security, performance, and setup complexity that each team has made based on their specific deployment context.
 :::
+
+## Exercises
+
+These exercises focus on reasoning about process management trade-offs, security design, and the challenges of letting an LLM execute arbitrary commands.
+
+### Exercise 1: Dangerous Command Classification (Easy)
+
+Classify each of these commands into a risk tier (safe/read-only, moderate/needs-confirmation, dangerous/should-block) and justify your classification:
+
+1. `git log --oneline -20`
+2. `cargo test`
+3. `rm -rf target/`
+4. `git push --force origin main`
+5. `chmod -R 777 .`
+6. `curl -s https://api.github.com/repos/owner/repo`
+7. `docker run --privileged -v /:/host ubuntu bash`
+8. `find . -name "*.rs" -type f`
+
+**Deliverable:** A classification for each command with a one-sentence justification. Then propose a general rule for each tier that would correctly classify most commands without a hardcoded list.
+
+### Exercise 2: Process Lifecycle Design for Long-Running Commands (Medium)
+
+Design the lifecycle management for a `cargo build` command that might take 2-5 minutes on a large project. Your design should address: how the agent shows progress to the user, when (if ever) the agent should time out, how Ctrl+C is handled at different stages, what happens if the user sends a new message while the build is running, and how build output is streamed vs. captured.
+
+**What to consider:** A 30-second default timeout would kill most builds. But an infinite timeout means a hanging build freezes the agent. Think about adaptive timeouts based on command type. Consider whether the agent should continue reasoning while the build runs, or block until it finishes.
+
+**Deliverable:** A state diagram showing the process lifecycle from spawn to completion (or cancellation), a timeout strategy, a progress display design, and a handling plan for user interruption at each stage.
+
+### Exercise 3: Signal Handling Edge Cases (Medium)
+
+For each of these scenarios, describe what happens at the OS level and what your agent should do:
+
+1. The agent sends SIGTERM to a process group, but one child process has installed a SIGTERM handler that ignores the signal
+2. The agent spawns `sh -c "sleep 100 | wc -l"` and then needs to kill it -- how many processes exist and which ones need signals?
+3. The agent's own process receives SIGTERM while it has a child process running -- what happens to the child?
+4. A subprocess forks a daemon that detaches from the process group before the agent can kill the group
+
+**What to consider:** Process groups and sessions in Unix are subtle. Think about what `setsid` does, how orphaned process groups work, and why `kill(0, sig)` sends to the entire group. Consider the gap between "theoretically correct" signal handling and "practically reliable" signal handling.
+
+**Deliverable:** For each scenario, a description of the OS-level behavior, the failure mode for a naive implementation, and the correct handling strategy.
+
+### Exercise 4: Sandboxing Strategy Comparison (Hard)
+
+Compare three sandboxing approaches for a coding agent's shell execution: (a) macOS Seatbelt profiles (`sandbox-exec`), (b) Linux namespaces and seccomp filters, and (c) Docker/container-based isolation. For each approach, analyze: what resources it can restrict (filesystem, network, processes, syscalls), how it affects the agent's ability to run common development commands (`cargo build`, `npm install`, `git push`), the setup complexity for end users, and the failure mode when the sandbox blocks a legitimate operation.
+
+**What to consider:** Development workflows often need network access (downloading dependencies), broad filesystem access (reading source code, writing build artifacts), and process spawning (compilers, test runners). A sandbox that blocks these is unusable. Think about the minimum viable sandbox that provides meaningful security without breaking common workflows.
+
+**Deliverable:** A comparison matrix for the three approaches across the four dimensions, a recommendation for which to use on each platform, and a design for communicating sandbox-related failures to the LLM so it can adjust its approach.
 
 ## Key Takeaways
 

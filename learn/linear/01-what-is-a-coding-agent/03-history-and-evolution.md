@@ -76,7 +76,7 @@ The convergence of large context windows, reliable tool use, strong instruction 
 
 **Open-source agents** like OpenCode and Pi emerged to give developers full visibility into and control over the agent's architecture. OpenCode, written in Go, provides a terminal UI with multi-provider support. Pi, written in Rust, emphasizes type safety and composable tool design.
 
-::: tip In the Wild
+::: wild In the Wild
 The architectural divergence between Claude Code (runs locally, trusts the user's environment) and Codex (runs in a sandbox, trusts nothing) reflects a fundamental design tension in agent development. When you build your own agent, you'll face this same decision: do you run tools directly on the user's machine for maximum power, or isolate execution for maximum safety? We'll explore both approaches in this track.
 :::
 

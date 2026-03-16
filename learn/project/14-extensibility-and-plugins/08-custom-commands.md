@@ -89,7 +89,7 @@ pub struct CommandContext {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python CLI frameworks like Click or Typer, commands are decorated functions:
 ```python
 import click
@@ -582,7 +582,7 @@ impl Agent {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code provides built-in slash commands like `/help`, `/clear`, `/compact`, `/status`, and `/init`. The `/compact` command is particularly interesting -- it summarizes the current conversation to reduce context size, a feature that the LLM itself cannot trigger. Custom slash commands from plugins would follow the same pattern: direct user actions that bypass the LLM conversation loop.
 :::
 

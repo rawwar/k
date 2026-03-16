@@ -10,6 +10,10 @@ description: Tracking token usage and estimated costs per request and per sessio
 > - How to implement per-session budget limits that prevent runaway spending
 > - Techniques for displaying cost summaries and making cost data available for model selection heuristics
 
+::: warning Pricing and Limits Change Frequently
+The specific prices and token limits in this chapter reflect values at the time of writing. Check each provider's current pricing page for up-to-date figures before making cost decisions.
+:::
+
 LLM API costs accumulate fast in a coding agent. Each tool call, each follow-up question, each retry adds tokens to the bill. Without cost tracking, users have no visibility into how much a session costs until their monthly invoice arrives. In this subchapter, you build a cost tracker that records every request's token usage, calculates costs per provider, and enforces budget limits.
 
 ## The Cost Tracker

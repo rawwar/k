@@ -81,7 +81,7 @@ pub trait Plugin: Send + Sync {
 
 This trait captures the plugin lifecycle: initialize, activate, deactivate. The `PluginManifest` declares what the plugin provides and what it needs. The `as_any` method enables type-safe downcasting, which you will need when the plugin manager queries specific capabilities.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, plugins are often loaded dynamically through `importlib` or entry points:
 ```python
 import importlib
@@ -284,7 +284,7 @@ impl PluginManager {
 
 The key insight is topological sorting for dependency resolution. If plugin A depends on plugin B, B must be initialized first. The reverse applies during deactivation -- A shuts down before B.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code implements hooks as a configuration-driven system where users define shell commands that run at specific lifecycle points (pre-tool-use, post-tool-use, notification, etc.). The hooks are defined in `.claude/settings.json` rather than compiled into the binary, making them accessible to non-developers. This is a pragmatic approach: full plugin systems are powerful but complex, while config-driven hooks cover the most common extensibility needs with minimal implementation effort.
 :::
 

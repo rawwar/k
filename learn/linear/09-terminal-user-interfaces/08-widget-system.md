@@ -135,7 +135,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Rich's `Text` object with `Text.from_markup("[bold red]Error[/]")`, Ratatui's `Span` and `Line` types serve the same purpose but with explicit construction rather than markup parsing. Rich's approach is more concise for simple cases. Ratatui's approach is more type-safe and avoids the overhead of parsing a markup language at runtime. Some Ratatui companion crates like `tui-markup` do provide Rich-style markup if you prefer that workflow.
 :::
 

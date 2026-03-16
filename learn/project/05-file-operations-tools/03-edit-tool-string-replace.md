@@ -183,7 +183,7 @@ The logic has three branches, and the error messages in each are carefully craft
 
 **Multiple matches:** The message tells the model to include more context. This nudges the model to expand its `old_string` to include surrounding lines that make the match unique.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might implement the same logic like this:
 ```python
 def edit_file(path: str, old_string: str, new_string: str) -> str:
@@ -333,7 +333,7 @@ mod tests {
 
 The multiple-matches test is especially important: it verifies that when an edit fails, the file is not modified. This is a safety property -- failed edits must be atomic. Either the edit succeeds completely or the file is untouched.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's Edit tool uses this exact same "old_string must match exactly once" strategy. When the match fails, the error message guides the model to include more context. This creates a natural retry loop: the model tries an edit, gets "found 3 occurrences," expands the old_string to include the surrounding function signature, and tries again. The model learns quickly -- after a few interactions, it almost always includes enough context on the first try.
 :::
 

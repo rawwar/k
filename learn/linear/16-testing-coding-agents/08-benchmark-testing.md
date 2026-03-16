@@ -273,7 +273,7 @@ fn evaluate_criterion(criterion: &Criterion, workspace: &std::path::Path) -> Cri
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python benchmark suites for LLM agents often use pytest with custom fixtures and markers:
 ```python
 @pytest.mark.benchmark
@@ -338,7 +338,7 @@ pub fn generate_report(results: Vec<BenchmarkResult>) -> BenchmarkReport {
 
 Save reports as JSON files named by date and compare them across runs. When the pass rate drops or token usage spikes, investigate the change.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code runs a benchmark suite called an "eval suite" that covers dozens of real coding tasks across different languages, task types (bug fixes, new features, refactoring), and complexity levels. Each task has automated success criteria (tests pass, lint passes, file exists). The results are tracked over time so the team can see the impact of model upgrades, prompt changes, and agent logic improvements on real-world task completion rates.
 :::
 

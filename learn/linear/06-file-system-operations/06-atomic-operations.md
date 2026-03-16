@@ -61,7 +61,7 @@ pub fn atomic_write(path: &Path, content: &str) -> Result<(), std::io::Error> {
 
 The `sync_all()` call in step 4 is important for durability. Without it, the data might be in the OS page cache but not yet on the physical disk. If power fails between steps 3 and 5, the temp file might be empty on disk even though `flush` succeeded. `sync_all` forces the OS to write the data to the storage device.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `os.rename()` has the same atomic guarantee on Unix. The `atomicwrites` PyPI package provides a convenient `atomic_write` context manager that handles the temp file creation and rename for you. Rust's `tempfile::NamedTempFile::persist()` serves the same purpose. The key insight is the same in both languages: never write directly to the target file.
 :::
 

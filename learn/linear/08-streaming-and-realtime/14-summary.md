@@ -177,6 +177,46 @@ Before moving on, verify you understand:
 - [ ] The exponential backoff with jitter pattern for reconnection
 - [ ] When to use event-driven architecture versus a simple procedural loop
 
+## Exercises
+
+These exercises focus on reasoning about streaming architecture decisions, edge cases in real-time data processing, and the trade-offs that affect user experience.
+
+### Exercise 1: SSE Parsing Edge Cases (Easy)
+
+For each of these raw byte sequences, describe what your SSE parser should produce (complete events, partial state, or errors). Identify which ones are tricky and explain why:
+
+1. `data: {"text": "hello"}\n\n` (standard single event)
+2. `data: {"text": "line1\n` followed by `data: line2"}\n\n` (multi-line data field)
+3. `data: {"text": "hel` then connection drops (incomplete event)
+4. `: keep-alive\n\n` (comment line)
+5. `event: error\ndata: {"type": "rate_limit"}\n\ndata: {"text": "hi"}\n\n` (two events, first is error type)
+
+**Deliverable:** The parser output for each case and a one-sentence explanation of why cases 2 and 3 require special handling.
+
+### Exercise 2: Streaming vs. Batch Trade-Off Analysis (Medium)
+
+Compare streaming and batch (non-streaming) API calls for these three agent scenarios: (a) a quick question that the model answers in one sentence, (b) a multi-step task where the model makes 10 tool calls over 2 minutes, and (c) a code generation task where the model writes a 200-line file. For each scenario, analyze: time-to-first-byte, total completion time, user experience, implementation complexity, and error recovery behavior.
+
+**What to consider:** Streaming adds implementation complexity (SSE parsing, partial JSON handling, connection management) but provides better user experience for long responses. For short responses, the overhead of streaming setup may not be worth it. Think about whether an agent should adaptively choose streaming vs. batch based on expected response length.
+
+**Deliverable:** A comparison table for the three scenarios across the five dimensions, a recommendation for when to use each mode, and a brief design for an adaptive streaming decision.
+
+### Exercise 3: Backpressure Strategy Design (Medium)
+
+Design a backpressure strategy for the pipeline: LLM stream -> SSE parser -> JSON processor -> renderer. The LLM can produce tokens faster than the terminal can render them (especially during syntax highlighting). Your strategy should handle: normal operation (renderer keeps up), temporary slowdown (renderer falls behind briefly during a code block), and sustained overload (renderer cannot keep up at all).
+
+**What to consider:** A bounded channel of capacity 16 provides backpressure, but what happens when it fills? The SSE parser blocks, which blocks the HTTP reader, which applies TCP flow control to the server. This is correct behavior, but it means the server is generating tokens you are not consuming -- those tokens still count toward billing. Consider whether dropping tokens, summarizing, or buffering is the right trade-off.
+
+**Deliverable:** A pipeline diagram with channel capacities, the behavior at each saturation point, a strategy for the three operating modes, and an analysis of the billing implications of backpressure.
+
+### Exercise 4: Error Recovery in Long-Running Streams (Hard)
+
+Design an error recovery system for a streaming response that is 3 minutes into a 5-minute generation when the connection drops. Your system should handle: preserving the text and tool calls accumulated so far, deciding whether to reconnect and resume or start a new request, reconstructing the conversation state for a retry, and communicating the interruption to the user.
+
+**What to consider:** The LLM API does not support resuming a response mid-stream -- a retry means resending the full conversation and regenerating from scratch. But you have 3 minutes of useful output already. Think about whether you can append the partial response to the conversation as an assistant message and ask the model to continue. Consider the token cost of retrying vs. the cost of lost work. What if the partial response included a tool call that was already executed?
+
+**Deliverable:** A decision tree for the recovery system (reconnect vs. retry vs. save-and-report), a strategy for handling partial tool calls, a user communication plan, and an analysis of the cost trade-offs for each recovery path.
+
 ## Key Takeaways
 
 - A streaming pipeline has **five layers** -- network, protocol (SSE), data (JSON), application (state), and rendering -- each with distinct concerns and buffering characteristics.

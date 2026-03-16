@@ -171,7 +171,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Textual's CSS-based layout, Ratatui's constraints serve a similar purpose but with a different syntax. Textual lets you write `width: 30%;` or `height: 3;` in CSS. Ratatui uses `Constraint::Percentage(30)` or `Constraint::Length(3)` in code. The mental model is the same: declare desired sizes and let the engine resolve them. The main difference is that Textual supports CSS features like margins, padding in CSS syntax, and grid layout, while Ratatui's layout is limited to sequential horizontal/vertical splits.
 :::
 

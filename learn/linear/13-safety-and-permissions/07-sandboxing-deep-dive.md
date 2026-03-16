@@ -419,7 +419,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Codex uses a particularly aggressive sandboxing approach: every agent session runs in a sandboxed environment with network access disabled by default. The agent can read and write files within the project, but it cannot make outbound connections, preventing data exfiltration entirely. Claude Code takes a lighter approach on the sandboxing side, relying more on its permission and approval system to control what commands can run, but it does restrict file access to the project directory and blocks known dangerous commands. The tradeoff is clear: Codex sacrifices some agent capability (no network means no downloading dependencies during a session) in exchange for stronger isolation guarantees.
 :::
 

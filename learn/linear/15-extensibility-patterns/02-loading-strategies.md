@@ -237,7 +237,7 @@ impl SubprocessPlugin {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 MCP (the Model Context Protocol) is essentially a standardized version of this subprocess plugin pattern. When Claude Code connects to an MCP server, it spawns the server as a child process and communicates over stdin/stdout using JSON-RPC. This gives full process isolation -- an MCP server crash cannot take down the agent -- while the standardized protocol means any MCP server works with any MCP client. We will explore MCP in depth in the upcoming subchapters.
 :::
 

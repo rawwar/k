@@ -243,7 +243,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's Textual uses an async event loop based on `asyncio`. Events are dispatched to handler methods like `on_key`, `on_click`, and `on_mount`. If you have used Textual, Ratatui's approach is more explicit -- you write the event loop yourself and decide how to dispatch events. This gives you more control but requires more boilerplate. The `ratatui` crate does not include an event loop; you build your own using `crossterm::event`. Some Ratatui companion crates like `tui-framework` provide opinionated event loop scaffolding.
 :::
 

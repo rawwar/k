@@ -144,7 +144,7 @@ fn main() {
 
 The diffing algorithm is straightforward: iterate through all cells, compare each cell's symbol and style with the corresponding cell in the previous buffer, and collect changes. The optimization comes from the output: instead of writing escape sequences for every cell, Ratatui only generates cursor-move and style-change sequences for the cells that differ.
 
-::: tip Coming from Python
+::: python Coming from Python
 This is conceptually similar to React's virtual DOM diffing, which Textual also uses. If you have worked with Rich's `Live` display, Rich uses a similar strategy: it keeps the previous rendered output and computes a minimal set of ANSI sequences to update the display. The key insight in all these systems is the same -- rendering to a virtual buffer and diffing is cheaper than redrawing the entire screen every frame.
 :::
 

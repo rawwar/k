@@ -345,6 +345,56 @@ fn main() {
 
 This code compiles and runs. It is the starting point for Chapter 5, where you will replace the `EchoTool` with `ReadFile`, `WriteFile`, and `EditFile` implementations.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the tool system you created in this chapter.
+
+### Exercise 1: Add a TimeTool (Easy)
+
+Implement a `TimeTool` that returns the current date and time as a formatted string. It should take no required parameters but accept an optional `format` parameter (e.g., `"%Y-%m-%d"`, `"%H:%M:%S"`). Register it in your `ToolRegistry` and test it through the dispatch pipeline.
+
+- Implement the `Tool` trait on a new `TimeTool` struct
+- Use `chrono::Local::now()` for the current time (add the `chrono` crate)
+- Define the `input_schema` with an optional `format` property
+
+### Exercise 2: Add Input Validation to Dispatch (Easy)
+
+Extend `dispatch_tool_call` to validate the input against the tool's `input_schema` before calling `execute`. If the input is missing a required field, return a `ToolResult` with `is_error: true` and a message listing the missing fields.
+
+- Use `tool.input_schema()["required"]` to get the list of required fields
+- Check each required field exists in `tool_use.input` with `.get(field)`
+- Return early with a descriptive error if any required fields are missing
+
+### Exercise 3: Add Execution Timing to ToolResult (Medium)
+
+Extend `ToolResult` with a `duration_ms: u64` field that records how long the tool's `execute` method took. Modify `dispatch_tool_call` to measure execution time using `std::time::Instant`. Include the duration in the formatted tool result message so the LLM can see how long operations take.
+
+**Hints:**
+- Capture `let start = std::time::Instant::now();` before calling `tool.execute()`
+- After execution, compute `start.elapsed().as_millis() as u64`
+- Append a line like `\n[Completed in 12ms]` to the tool result content
+
+### Exercise 4: Implement a Tool Output Truncator (Medium)
+
+Write a `truncate_output` function that limits tool output to a configurable maximum length (e.g., 10,000 characters). When truncation occurs, keep the first and last portions of the output with a `[... truncated N characters ...]` marker in the middle. Integrate it into `dispatch_tool_call`.
+
+**Hints:**
+- Accept parameters for `max_length` and the ratio of head-to-tail content (e.g., 60% head, 40% tail)
+- Calculate `head_len` and `tail_len` from the ratio
+- Construct the truncated string: `&output[..head_len]` + marker + `&output[output.len()-tail_len..]`
+- Call it in `dispatch_tool_call` before constructing the `ToolResult`
+
+### Exercise 5: Add a Calculator Tool End-to-End (Hard)
+
+Build a complete `CalculatorTool` that evaluates simple arithmetic expressions (addition, subtraction, multiplication, division). Define the schema, implement parsing, handle errors (division by zero, invalid expressions), register the tool, and write tests that exercise it through `dispatch_tool_call`.
+
+**Hints:**
+- The schema should have one required `expression` field of type `string`
+- Parse the expression by splitting on operators -- start simple with two-operand expressions like `"3 + 4"`
+- Use `str::parse::<f64>()` to convert operands, returning `ToolError::InvalidInput` on failure
+- Handle division by zero with `ToolError::ExecutionFailed`
+- Write at least four tests: valid expression, division by zero, invalid input, and unknown tool name
+
 ## Key Takeaways
 
 - The tool system has five components: the `Tool` trait, the `ToolError` type, the `ToolRegistry`, the dispatch pipeline, and JSON schemas. Each is simple individually; together they form a complete tool infrastructure.

@@ -213,7 +213,7 @@ The `OnceCell` guarantees the provider is initialized exactly once, even if mult
 
 Use deferred initialization for components that meet two criteria: (1) expensive to create and (2) might not be needed in every session. For components that are cheap or always needed (like the config or safety layer), eager initialization is simpler and clearer.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a form of deferred initialization for its MCP server connections. The initial startup is fast because it only loads the core tools and configuration. MCP servers connect in the background, and their tools become available as the connections complete. If you start typing before all MCP servers are ready, the agent works with the built-in tools and gains MCP tools as they come online. OpenCode takes a similar approach with its LSP integration — the language server starts in the background and code intelligence features activate once it's ready.
 :::
 

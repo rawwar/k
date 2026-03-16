@@ -24,7 +24,7 @@ Before writing code, let's establish the design principles that make search tool
 
 **4. Structured output with explicit truncation.** Always tell the LLM how many results were returned, how many were truncated, and what the model can do to narrow the search.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python tool frameworks like LangChain use similar patterns:
 ```python
 from langchain.tools import tool
@@ -354,7 +354,7 @@ The tool descriptions are your primary lever for guiding which tool the LLM sele
 
 The descriptions include phrases like "For finding files by name, use the glob tool instead" -- these cross-references help the LLM choose correctly when the task is ambiguous.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code exposes grep, glob, and a file read tool as its core search primitives. The tool descriptions are carefully worded to help the model differentiate between them. For example, the grep description mentions "searching file contents" while the glob description mentions "finding files by name pattern." This seemingly small difference in wording significantly affects how often the model picks the right tool. Some agents also include example invocations in the description to further guide the LLM.
 :::
 

@@ -310,7 +310,7 @@ fn summarize_progress(state: &AgentContext) -> String {
 
 The key principle is: **never lose work silently**. If the agent has made file edits, run commands, or gathered information before hitting a stop condition, the user should know about it. Otherwise they might re-run the same task, duplicating work or conflicting with changes already made.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements multiple stop conditions. It has a configurable token budget (shown in the `/cost` command output), it respects user interrupts via Ctrl+C at any point during execution, and it handles context overflow by offering to compact the conversation. When an iteration limit or budget is reached, it presents the partial progress and offers to continue. OpenCode similarly implements iteration limits and budget tracking, with its TUI displaying a running cost counter so users can see their budget consumption in real-time.
 :::
 

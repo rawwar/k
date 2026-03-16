@@ -379,7 +379,7 @@ pub fn resolve_tool_name(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code handles MCP tool naming by using the server name as a namespace when needed. If you configure a "postgres" MCP server, its tools appear with their original names unless they conflict with built-in tools. Claude Code also prefixes tool descriptions with the server name so the LLM knows where the tool comes from. This approach balances clean tool names for the common case with disambiguation for edge cases.
 :::
 

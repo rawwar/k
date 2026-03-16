@@ -291,7 +291,7 @@ pub trait Plugin: Send + Sync {
 
 The `#[deprecated]` attribute causes compiler warnings (not errors) when plugin authors use the old method, guiding them to migrate without breaking their code.
 
-::: tip In the Wild
+::: wild In the Wild
 MCP handles versioning through protocol version negotiation during the initialization handshake. The client declares which protocol version it supports, and the server responds with its version. If they are incompatible, the connection fails with a clear error message. This is similar to HTTP content negotiation -- both sides declare their capabilities and find common ground. For your plugin API, the same principle applies: version checking at connection/load time with clear diagnostics is far better than mysterious runtime failures.
 :::
 

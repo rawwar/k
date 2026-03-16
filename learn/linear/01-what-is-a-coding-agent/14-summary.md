@@ -44,7 +44,7 @@ We studied four production agents in depth, each teaching us different lessons:
 
 **Codex** showed us the other end of the safety spectrum. Its sandboxed, network-isolated execution model eliminates security risks through architectural isolation rather than permission checks. Its async task model trades real-time interaction for batch efficiency. Codex taught us that the safety-autonomy trade-off has more than one valid answer.
 
-::: tip In the Wild
+::: wild In the Wild
 The diversity of approaches across these four agents reflects the youth of the field. There isn't yet a single "correct" architecture for a coding agent — there are patterns that work, trade-offs to navigate, and design spaces to explore. By understanding multiple approaches, you're equipped to make informed choices when building your own agent rather than cargo-culting a single implementation.
 :::
 
@@ -103,6 +103,40 @@ You now have something that many agent users lack: a mental model of how these s
 In Chapter 2, you'll translate this understanding into Rust code. The mental model becomes a concrete system. The patterns become implementations. The architectural blueprint becomes your codebase.
 
 Let's build.
+
+## Exercises
+
+These exercises focus on understanding agent architectures and design trade-offs. They are conceptual -- you are designing and analyzing, not implementing.
+
+### Exercise 1: Agentic vs. Non-Agentic Classification (Easy)
+
+Take five developer tools you use regularly (e.g., your editor, linter, search tool, CI pipeline, package manager) and classify each as agentic or non-agentic using the five-characteristic definition from this chapter (LLM core, tool access, iterative loop, autonomous multi-step execution, task-oriented behavior). For each tool, identify which characteristics it has and which it lacks.
+
+**Deliverable:** A table with five tools, their classification, and which of the five characteristics are present or absent.
+
+### Exercise 2: Agent Capability Matrix (Medium)
+
+Design a capability matrix comparing Claude Code, OpenCode, Pi, and Codex across these dimensions: tool set, safety model, extensibility, streaming support, context management, and provider support. For each dimension, rate each agent on a scale and write one sentence explaining the rating.
+
+**What to consider:** Think about the trade-offs each agent makes. A higher rating in safety might come at the cost of autonomy. A richer tool set might mean a larger attack surface. The goal is not to pick a "best" agent but to map the design space.
+
+**Deliverable:** A comparison matrix with ratings and justifications for each cell.
+
+### Exercise 3: Designing a Sixth Agent Characteristic (Medium)
+
+The chapter defines five characteristics of a coding agent. Propose a sixth characteristic that you believe is essential for production-quality agents but is missing from the current definition. Argue why it should be included, give examples of how production agents exhibit (or fail to exhibit) this characteristic, and explain what changes to the architecture it would require.
+
+**What to consider:** Think about what separates agents that work reliably in production from those that only work in demos. Consider characteristics like explainability, cost-awareness, or user trust.
+
+**Deliverable:** A written argument (one paragraph for the proposal, one for examples, one for architectural implications).
+
+### Exercise 4: Architecture Trade-Off Analysis (Hard)
+
+Claude Code uses a permission-based safety model while Codex uses sandbox-based isolation. Design a hybrid approach that combines elements of both. Specify: which operations use permissions, which use sandboxing, how they interact when both apply, and what the user experience looks like. Analyze the security properties, performance implications, and failure modes of your hybrid design.
+
+**What to consider:** Think about the developer experience -- too many permission prompts slow down work, but too much sandboxing limits what the agent can do. Consider how your hybrid would handle edge cases like network-dependent builds, credential-requiring deployments, and multi-file refactors.
+
+**Deliverable:** A design document with the hybrid model, a security analysis, and a comparison against the pure-permission and pure-sandbox approaches.
 
 ## Key Takeaways
 

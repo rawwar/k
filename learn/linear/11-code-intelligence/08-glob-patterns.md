@@ -226,7 +226,7 @@ fn main() {
 
 The parallel walker is the same engine that ripgrep uses for file discovery. On a project with 50,000 files, it can enumerate all files in under 100ms on modern hardware. The sequential walker takes 300-500ms for the same task.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's file discovery tool (Glob) uses gitignore-aware walking to avoid returning results from `node_modules/`, `target/`, `.git/`, and other directories that would pollute search results. It applies the same filtering that ripgrep uses, ensuring consistency between file listing and content search. OpenCode follows the same approach, using Go's `gitignore` library for the same purpose. The lesson is clear: always respect gitignore rules in agent tools — searching generated or vendored code wastes tokens and confuses the LLM.
 :::
 

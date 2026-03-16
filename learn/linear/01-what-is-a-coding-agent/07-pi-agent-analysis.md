@@ -82,7 +82,7 @@ Each tool — `ReadFile`, `WriteFile`, `ShellExec`, `Search` — implements this
 
 This design strikes a balance between OpenCode's fully dynamic registry and Claude Code's static dispatch. The tool set is determined at startup (you decide which tools to register), but adding a new tool is as simple as implementing the `Tool` trait and registering an instance. The trait guarantees that every tool provides the required methods, so the dispatcher doesn't need to handle missing implementations.
 
-::: tip In the Wild
+::: wild In the Wild
 Pi's trait-based tool system mirrors how many Rust applications handle plugin-like architectures. The `Tool` trait is analogous to the `Handler` trait in web frameworks like Actix or the `Service` trait in Tower. If you've seen these patterns in the Rust ecosystem, Pi's approach will feel familiar. Our agent will follow a very similar design — a `Tool` trait that defines the interface, with concrete implementations for each capability.
 :::
 

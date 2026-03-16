@@ -400,7 +400,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code maintains a conversation log that records every message exchange and tool invocation. This serves as both a debugging aid and an audit trail -- if the agent produces unexpected results, the user can review the full conversation history to understand the reasoning chain. The logs include tool inputs and outputs, making it possible to replay the agent's decision process. Codex captures similar information and additionally logs the full diff of every file modification, providing a complete record of what changed and when.
 :::
 

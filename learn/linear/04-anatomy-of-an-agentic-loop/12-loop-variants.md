@@ -250,7 +250,7 @@ fn is_read_only(tool_name: &str) -> bool {
 - When tool latency is high (network calls, slow I/O)
 - When you want to minimize total turn time
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code executes tool calls from the model's response. When the model requests multiple file reads or multiple search operations simultaneously, these can run in parallel since they are independent read-only operations. OpenCode also supports parallel tool execution for independent operations, significantly reducing the total time for turns that involve multiple file reads.
 :::
 

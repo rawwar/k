@@ -49,7 +49,7 @@ When you need to test something new, use this decision framework:
 | Real-world agent quality | Benchmark evaluation | Expensive but necessary ground truth |
 | Prompt changes | Replay test (before change) + benchmark (after) | Replay verifies no regression, benchmark measures improvement |
 
-::: tip Coming from Python
+::: python Coming from Python
 If you are coming from pytest, here is how Rust's testing tools map to what you know:
 
 | Python (pytest) | Rust equivalent |
@@ -123,9 +123,27 @@ Over these twelve subchapters, you built a complete testing infrastructure:
 
 This testing infrastructure lets you iterate on your agent with confidence. You can change prompts, swap models, add tools, and refactor code knowing that your test suite will catch regressions in correctness, security, and quality.
 
-::: info In the Wild
+::: wild In the Wild
 The most successful production coding agents — Claude Code, Cursor, and similar tools — all invest heavily in testing infrastructure. They maintain thousands of deterministic tests for their tool implementations and core logic, hundreds of mock-based integration tests for conversation flows, and curated benchmark suites that measure real-world task completion. The common lesson: the testing infrastructure is as important as the agent code itself. Spending a week building good test fixtures, mock providers, and CI pipelines pays for itself many times over in bugs caught before they reach users.
 :::
+
+## Exercises
+
+### Exercise 1: Testing Strategy for a Non-Deterministic Feature (Medium)
+
+Your agent has a "smart commit message" feature that generates commit messages from diffs using the LLM. The output varies between runs even with the same input. Design a testing strategy that gives you confidence in this feature without requiring exact output matching. Consider: what properties should every generated commit message satisfy (length, format, content relevance)? How would you write a property-based test for this? How would you use recording/replay to create a regression suite? What would a benchmark evaluation for commit message quality look like -- what scoring criteria would you use?
+
+### Exercise 2: Mock Provider Design for Edge Cases (Easy)
+
+Design a `MockProvider` configuration that simulates three failure scenarios: (a) the model returns a tool call with malformed JSON arguments, (b) the model enters an infinite loop calling the same tool repeatedly, and (c) the model's response is cut off mid-stream due to a connection drop. For each scenario, describe the mock response sequence you would configure and what behavior your test should assert about the agent's recovery. Which of these scenarios is hardest to simulate with a mock and why?
+
+### Exercise 3: Integration Test Architecture (Hard)
+
+Design an integration test that verifies the following end-to-end scenario: a user asks the agent to "add error handling to the `process_data` function," the agent reads the file, identifies `unwrap()` calls, edits the file to replace them with proper error handling, and runs `cargo check` to verify the result compiles. Your test must not call any real LLM API. Describe: the workspace fixture setup (what files and Cargo.toml you need), the mock provider response sequence (what tool calls the model makes and in what order), the assertions you check after each step, and how you handle the fact that `cargo check` is a real subprocess. What is the boundary between what you mock and what you run for real?
+
+### Exercise 4: Regression Test Design for Safety Bypasses (Medium)
+
+A user reports that they were able to get the agent to read `/etc/passwd` by asking it to "compare the format of /etc/passwd with your project's user config file." Design a regression test that: (a) reproduces this exact attack vector, (b) verifies the safety layer blocks the file read, (c) checks that the denial is communicated to the model as a tool error (not a crash), and (d) confirms the agent continues functioning after the denial. Generalize your test into a parameterized test suite that covers similar path traversal attacks using relative paths, symlinks, and URL-encoded paths.
 
 ## Key Takeaways
 

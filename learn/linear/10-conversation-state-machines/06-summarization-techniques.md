@@ -341,7 +341,7 @@ impl SegmentedSummarizer {
 
 Breaking at natural boundaries (user messages) ensures that each segment captures complete turns. If you split in the middle of a tool call/result pair, the summary of that segment would lose the connection between the call and its output.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a summarization strategy it calls "auto-compact" that triggers when the conversation approaches the context limit. It summarizes older conversation turns while preserving recent context verbatim. The summarization prompt is carefully tuned to retain file paths, key code changes, and the reasoning behind decisions. The summary is injected as a special system-level message at the beginning of the context, right after the main system prompt, so the model always has access to the condensed history of the full session.
 :::
 

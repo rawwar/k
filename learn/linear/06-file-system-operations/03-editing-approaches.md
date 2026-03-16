@@ -181,7 +181,7 @@ Some agents use AST parsing for *analysis* (understanding code structure) while 
 
 String replacement hits the sweet spot: it is simple to implement, works reliably with LLM output, catches errors through the uniqueness check, and uses minimal tokens because the model only outputs the changed portion plus enough context to make it unique.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python developers familiar with `str.replace()` will feel right at home. The core operation is identical: find a substring and replace it. The Rust version adds the uniqueness constraint and file I/O wrapping, but the fundamental string operation is the same. Rust's `str::replacen` with `n=1` ensures only the first occurrence is replaced, matching the semantics you'd get from Python's `str.replace(old, new, 1)`.
 :::
 

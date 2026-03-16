@@ -62,7 +62,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `pygments` library is the standard for syntax highlighting and serves a similar role to `syntect`. Rich uses pygments internally when you call `console.print(syntax)`. The key difference is that syntect uses TextMate grammars (the VS Code format) while pygments uses its own grammar system. If you have customized pygments styles, you will find syntect's theme system similar -- both map token types to colors.
 :::
 

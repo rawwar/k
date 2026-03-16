@@ -70,7 +70,7 @@ xterm did not invent new protocols -- it faithfully emulated the VT100 (and late
 
 These xterm extensions became de facto standards themselves. When you see a terminal feature described as "xterm-compatible," it means the feature uses escape sequences that xterm defined.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Python's `curses` module, you have interacted with a library that wraps the C `ncurses` library -- which itself was built to abstract away differences between terminal types catalogued in the `terminfo` database. The `terminfo` system exists precisely because of the historical fragmentation this section describes: different terminals supported different escape sequences, and `terminfo` provided a lookup table so programs could adapt. In Rust, the `crossterm` crate handles this abstraction for you without relying on `terminfo`.
 :::
 

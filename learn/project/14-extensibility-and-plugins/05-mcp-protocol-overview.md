@@ -42,7 +42,7 @@ An MCP server is a process that implements one or more of these capabilities. An
                                         └──────────────────┘
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 If you have used Python's Language Server Protocol (LSP) support in editors, MCP follows a similar idea. LSP standardized how editors talk to language intelligence servers. MCP standardizes how AI agents talk to tool servers. In Python, you might connect to an LSP server with:
 ```python
 import subprocess
@@ -306,7 +306,7 @@ Client                           Server (remote)
 
 The HTTP transport enables sharing a single MCP server across multiple agent instances, running servers on remote machines, and connecting through firewalls.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code supports MCP natively. Users configure MCP servers in their project settings (`.claude/settings.json`) or global settings. Claude Code launches each server as a child process using the stdio transport and discovers tools during initialization. The tools appear alongside built-in tools -- the LLM does not know or care whether a tool is built-in or provided by an MCP server. OpenCode also supports MCP servers with a similar configuration-driven approach, showing that MCP is becoming the standard extension mechanism across coding agents.
 :::
 

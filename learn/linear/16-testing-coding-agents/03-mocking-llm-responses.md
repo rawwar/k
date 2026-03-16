@@ -137,7 +137,7 @@ impl LlmProvider for MockProvider {
 
 The mock records every call for later assertion. This lets you verify not just the final result but the entire conversation that led to it.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you might use `unittest.mock.MagicMock` or a library like `responses` to mock HTTP calls:
 ```python
 from unittest.mock import AsyncMock
@@ -332,7 +332,7 @@ mod error_tests {
 
 This lets you test that your agentic loop retries on rate limits, reports server errors to the user, and handles network failures gracefully.
 
-::: info In the Wild
+::: wild In the Wild
 OpenCode uses a mock provider approach in its test suite where scripted responses are loaded from JSON files. This keeps the test code clean — the test function specifies which fixture file to load, and the mock provider serves those responses in order. Claude Code takes a similar approach but generates mock responses inline using builder functions. Both approaches work well; the choice comes down to whether you prefer fixtures-as-data (JSON files) or fixtures-as-code (builder functions).
 :::
 

@@ -300,7 +300,7 @@ fn handle_parse_error(
 
 Notice the pattern: for recoverable parse errors (invalid JSON, unknown tools), we feed the error back to the model and let it try again. For unrecoverable parse errors (completely malformed response, missing IDs), we transition to the Error state.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code handles invalid tool call JSON by sending an error result back to the model with the original malformed JSON included. This gives the model the context to fix its output. In practice, modern Claude models very rarely produce invalid JSON for tool calls, but the handling is still important for robustness. OpenCode includes similar error recovery in its tool dispatch layer, wrapping all JSON parsing in error handlers that generate informative error messages for the model.
 :::
 

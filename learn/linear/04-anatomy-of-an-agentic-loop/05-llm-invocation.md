@@ -364,7 +364,7 @@ fn parse_retry_after(body: &str) -> Option<u64> {
 
 Rate limits and server overload are retryable -- you wait and try again. Context overflow requires action (truncate history or compact). Authentication errors are fatal for the current session. The error classification directly feeds into the retry and recovery logic that we will cover in the Error States subchapter.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements retry logic with exponential backoff for rate limits and server errors. When it hits a rate limit, it waits for the `retry-after` duration specified by the API, then retries. For overloaded errors (HTTP 529), it uses exponential backoff starting at 1 second. OpenCode implements similar retry logic in its provider abstraction layer, where each LLM provider (Anthropic, OpenAI, etc.) has its own error handling and retry strategy.
 :::
 

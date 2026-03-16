@@ -83,7 +83,7 @@ async fn main() {
 
 `JoinSet::join_next()` returns results in completion order, not spawn order. This is usually what you want -- process whichever result finishes first.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `asyncio.gather` or `asyncio.TaskGroup` serves the same purpose:
 ```python
 import asyncio
@@ -339,7 +339,7 @@ async fn main() {
 
 The semaphore ensures that no more than `MAX_CONCURRENT` processes run at any time. Each task acquires a permit before spawning its process and automatically releases it when the task completes (when the permit is dropped).
 
-::: info In the Wild
+::: wild In the Wild
 Production agents limit concurrency to avoid overwhelming the system. Claude Code typically runs one command at a time (serialized), but when parallel tool execution is enabled, it uses a bounded concurrency model to prevent resource exhaustion. The concurrency limit is often configurable, allowing users with more powerful machines to run more commands in parallel.
 :::
 

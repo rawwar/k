@@ -229,7 +229,7 @@ Command: cargo test --workspace
   Risk: Low
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python you might use a simple list of string checks:
 ```python
 DANGEROUS_PATTERNS = [
@@ -344,7 +344,7 @@ sh /tmp/cmd.sh
 
 This is why sandboxing (the previous subchapter) is essential. Dangerous command detection catches the obvious cases and honest mistakes. Sandboxing catches everything else by restricting what the process can actually do at the OS level.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code combines pattern-based detection with a user confirmation flow. Commands that match dangerous patterns are presented to the user with a clear warning before execution. The user can approve, modify, or reject the command. This human-in-the-loop approach acknowledges that automated detection is imperfect and gives the user final say over risky operations. OpenCode takes a similar approach with its permission system, categorizing tools by risk level and requiring explicit approval for high-risk operations.
 :::
 

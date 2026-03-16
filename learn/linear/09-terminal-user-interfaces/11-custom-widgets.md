@@ -255,7 +255,7 @@ fn main() {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python's Textual, widgets are persistent objects that hold their own state. A `TextLog` widget keeps its scroll position and text buffer internally. Ratatui's `StatefulWidget` achieves the same thing but with explicit state separation: the widget struct is ephemeral (rebuilt each frame), while the state struct persists in your Model. This pattern aligns with TEA -- all mutable state lives in the Model, and widgets are pure views.
 :::
 

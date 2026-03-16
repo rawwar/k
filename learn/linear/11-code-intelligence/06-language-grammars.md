@@ -227,7 +227,7 @@ fn detect_language(path: &Path, first_line: &str) -> &'static str {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Editors like Neovim and Zed maintain their own language detection tables that map extensions, filenames, and content patterns to tree-sitter grammars. GitHub uses a library called Linguist that combines file extensions, content heuristics, and even statistical analysis of token frequencies to determine file languages. For a coding agent, extension-based detection with a handful of fallback rules covers the vast majority of files you will encounter.
 :::
 

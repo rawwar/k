@@ -412,7 +412,7 @@ fn main() {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a form of rate limiting through its tool use patterns -- it tracks how many tool calls occur per turn and can detect when the agent enters a repetitive loop (making the same edit, running tests, seeing the same error). When this happens, it surfaces the pattern to the user rather than continuing indefinitely. Codex addresses runaway agents differently: since it runs in a sandboxed environment with resource limits (memory, CPU), the container itself acts as a circuit breaker -- if the agent consumes too many resources, the container is killed.
 :::
 

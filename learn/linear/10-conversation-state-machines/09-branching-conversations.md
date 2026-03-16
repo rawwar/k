@@ -304,7 +304,7 @@ struct BranchComparison<'a> {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code supports conversation continuation with `--continue` and session resumption with `--resume`, which implicitly creates a form of branching. When a user resumes a session, the original conversation path is preserved and new messages extend from the resume point. If the user resumes the same session multiple times, each resumption effectively creates a branch, though Claude Code presents these as separate continuations rather than an explicit tree. Codex uses a different model entirely -- its sandbox architecture means each task runs in isolation, so there's no need for branching within a session; instead, users just start new tasks.
 :::
 

@@ -142,6 +142,58 @@ With provider abstraction in place, your agent is now truly flexible:
 
 The multi-provider system is one of the most impactful features you can add to a coding agent. It transforms the agent from a single-vendor tool into a platform that adapts to each user's needs, budget, and constraints.
 
+## Exercises
+
+Practice each concept with these exercises. They build on the multi-provider system you created in this chapter.
+
+### Exercise 1: Add a /model Status Command (Easy)
+
+Implement a `/model` REPL command that displays the current provider name, model ID, and a summary of the model's capabilities (supports tools, supports streaming, max context window). Pull the information from the `CapabilityRegistry` and the active provider.
+
+- Call `provider.name()` and `provider.model()` for the basic info
+- Look up capabilities with `registry.get(provider.model())`
+- Format as a compact display: `[Provider: anthropic | Model: claude-sonnet-4-20250514 | Tools: yes | Stream: yes | Context: 200k]`
+
+### Exercise 2: Implement a Request/Response Logger for Debugging (Easy)
+
+Add a `ProviderLogger` wrapper that implements the `Provider` trait and logs every request and response to a file. Log the system prompt length, message count, tool count, response token usage, stop reason, and latency. This is invaluable for debugging provider differences.
+
+- Wrap an `Arc<dyn Provider>` and delegate all trait methods to it
+- Before each `send_message`, log the request metadata (not the full content, to avoid leaking data)
+- After each response, log the usage, stop reason, and elapsed time
+- Write to a configurable log file path with one JSON object per line
+
+### Exercise 3: Add Response Normalization Tests (Medium)
+
+Write a test suite that verifies all three providers (Anthropic, OpenAI, Ollama) produce identical `ProviderResponse` structures for equivalent inputs. Create a set of recorded response fixtures (one per provider for the same prompt) and assert that after normalization, the `Message`, `ContentBlock`, and `TokenUsage` types are equivalent.
+
+**Hints:**
+- Create a `tests/fixtures/` directory with JSON files for each provider's raw response format
+- Write a helper that loads a fixture, passes it through the adapter's parsing logic, and returns a `ProviderResponse`
+- Assert field-by-field equality: `response.content[0].text`, `response.usage.input_tokens`, `response.stop_reason`
+- Test edge cases: empty responses, tool-use responses, and multi-block responses
+
+### Exercise 4: Implement a Cost Tracking Dashboard (Medium)
+
+Extend the `CostTracker` to provide a per-provider and per-model cost breakdown. Add a `/costs` REPL command that displays a table showing each provider/model combination, the number of requests, total input tokens, total output tokens, and estimated cost in USD. Use configurable pricing rates per model.
+
+**Hints:**
+- Store cost records keyed by `(provider_name, model_id)` in a `HashMap`
+- Define pricing as a `HashMap<String, (f64, f64)>` mapping model IDs to `(input_price_per_1k, output_price_per_1k)`
+- Accumulate totals on each `record()` call
+- Format the table with aligned columns using `format!("{:<20} {:>8} {:>10} {:>10} {:>10}", ...)`
+
+### Exercise 5: Add a New Provider Adapter (Hard)
+
+Implement a complete adapter for a new provider (e.g., Mistral, Cohere, or Google Gemini). The adapter must implement the full `Provider` trait including `send_message` and `stream_message`, translate between your generic types and the provider's API format, map provider-specific errors to `ProviderError`, and register model capabilities. Write tests using recorded response fixtures.
+
+**Hints:**
+- Start by reading the provider's API documentation and mapping their request/response format to your `Message` and `ContentBlock` types
+- Most providers follow the OpenAI chat completions format, so you can start by copying `openai.rs` and modifying the differences
+- Pay special attention to how the provider handles tool calls -- some use the `function` wrapper, some use `tool_use` blocks, some use text-based tool calling
+- Register at least two models in the `CapabilityRegistry` with accurate context window sizes and feature flags
+- Write both unit tests (parsing fixtures) and an integration test (mock HTTP server) for the adapter
+
 ## Key Takeaways
 
 - The provider system has four layers: the trait (contract), adapters (translation), runtime features (intelligence), and configuration (setup) -- each with clear boundaries

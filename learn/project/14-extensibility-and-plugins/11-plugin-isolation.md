@@ -84,7 +84,7 @@ where
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python has a similar mechanism with `try/except`:
 ```python
 def safe_plugin_call(plugin_name: str, func, *args):
@@ -478,7 +478,7 @@ pub async fn execute_in_subprocess(
 
 This is exactly what MCP provides in a standardized way. The MCP protocol is essentially a structured version of this subprocess communication pattern. Use direct subprocess calls for simple plugins, and MCP for plugins that need the full discovery and lifecycle protocol.
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code achieves plugin isolation naturally through its architecture: built-in tools run in-process for performance, while hooks run as separate shell commands (subprocess isolation), and MCP servers run as separate processes with full protocol-level isolation. This tiered approach matches the trust level to the isolation level -- core code is trusted and runs fast in-process, while user-defined hooks and community MCP servers are sandboxed by process boundaries.
 :::
 

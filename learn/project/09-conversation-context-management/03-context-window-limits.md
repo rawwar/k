@@ -10,6 +10,10 @@ description: Map out the context window budget including model limits, reserved 
 > - How different Claude models have different context window sizes and how to adapt dynamically
 > - How to implement a token budget tracker that warns before hitting limits
 
+::: warning Token Limits Change Frequently
+The specific context window sizes and token limits in this chapter reflect values at the time of writing. Check each model's current documentation for up-to-date figures.
+:::
+
 Now that you can count tokens accurately, you need a system that tracks your context budget in real time. Think of it like a financial budget: you have income (the model's context limit), fixed expenses (system prompt, tool definitions), and discretionary spending (conversation history). The budget tracker makes sure you never overdraft.
 
 ## Model Limits Are Not Your Limit

@@ -54,7 +54,7 @@ The three `Stdio` options are:
 - **`Stdio::piped()`** -- creates a pipe between parent and child. The parent gets a handle to read from (for stdout/stderr) or write to (for stdin).
 - **`Stdio::null()`** -- connects the stream to `/dev/null`. Output is silently discarded; reads return EOF immediately.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.Popen` offers the same three options with different names: `subprocess.PIPE`, `subprocess.DEVNULL`, and `None` (inherit). Rust's `Stdio::piped()` is `subprocess.PIPE`, `Stdio::null()` is `subprocess.DEVNULL`, and `Stdio::inherit()` is the default `None`. The concepts are identical -- only the spelling differs.
 :::
 
@@ -282,7 +282,7 @@ fn main() {
 
 This is equivalent to `> /dev/null 2>&1` in shell. Use it when you only need the exit code.
 
-::: info In the Wild
+::: wild In the Wild
 Production agents typically capture both stdout and stderr separately, tag each line with its source stream, and combine them when reporting to the LLM. Claude Code, for example, captures stderr to detect compilation warnings and errors even when the command exits successfully. This dual-stream capture lets the agent provide richer context to the LLM about what happened during execution.
 :::
 

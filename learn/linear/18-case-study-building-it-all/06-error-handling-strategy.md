@@ -298,7 +298,7 @@ fn format_error_for_user(error: &anyhow::Error) -> String {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code displays tool execution errors inline in the conversation with enough context for the model to self-correct. When a shell command fails, the model sees both the exit code and stderr output, which is often enough information to diagnose and fix the problem on the next iteration. OpenCode takes a similar approach but adds structured error metadata (error code, component origin, timestamp) to its log output, making it easier to diagnose issues in automated environments.
 :::
 

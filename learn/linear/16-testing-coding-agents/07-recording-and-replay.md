@@ -222,7 +222,7 @@ mod sanitize_tests {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `vcrpy` library provides similar record/replay functionality for HTTP interactions:
 ```python
 @vcr.use_cassette('fixtures/read_file.yaml')
@@ -370,7 +370,7 @@ fn main() {
 }
 ```
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code uses a recording infrastructure to capture real API interactions during development and replay them in CI. This approach lets the team test against real model behavior without incurring API costs on every test run. Recordings are periodically refreshed when the model or system prompt changes. The recordings are stored in a separate fixtures directory and are treated as test data in version control.
 :::
 

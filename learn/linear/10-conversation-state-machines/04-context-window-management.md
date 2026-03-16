@@ -285,7 +285,7 @@ fn estimate_compactable_tokens(
 
 The `Reject` case handles an important edge condition: when the system prompt and tool definitions alone consume so much of the context window that even deleting all conversation messages won't help. This happens when you have many tools with large schemas, or when the system prompt has grown to include extensive project context.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code implements a multi-tier context management strategy. It monitors token usage after each API response using the `usage` field, and when approaching the limit it first tries to drop cached tool outputs that are no longer relevant, then falls back to summarization of older conversation segments. The compaction process preserves the system prompt, the most recent user message, and any tool calls that are still in progress. OpenCode uses a simpler approach: when context is full, it truncates from the front while preserving the first and last N messages, inserting a "[earlier messages truncated]" marker.
 :::
 

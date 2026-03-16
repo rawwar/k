@@ -167,7 +167,7 @@ pub fn generate_colored_diff(
 
 This produces output where deleted lines are red, added lines are green, hunk headers are cyan, and the file header is dimmed. The result is immediately readable in any terminal that supports ANSI colors.
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, you would use the `difflib` module from the standard library:
 ```python
 import difflib
@@ -355,7 +355,7 @@ mod tests {
 
 These tests verify the diff output format, edge cases (no changes), statistics counting, multi-line changes, and the presence of ANSI color codes.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code displays diffs in the terminal after every file edit, using a similar colored format. This allows the user to review changes in real time and interrupt the agent if something looks wrong. OpenCode also shows diffs but uses a side-by-side format in its TUI. The diff is also included in the tool result that goes back to the model, so the model can self-verify its edits. This self-verification loop -- edit, see diff, confirm correct, move on -- is a key pattern in reliable agentic coding.
 :::
 

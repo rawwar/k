@@ -367,7 +367,7 @@ fn render_conversation(frame: &mut Frame, app: &App, area: Rect) {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `rich` library has built-in markdown rendering:
 ```python
 from rich.markdown import Markdown
@@ -410,7 +410,7 @@ impl CachedMessage {
 
 During streaming, you call `update_source()` each time new tokens arrive. Between streaming updates, the cached `rendered` lines are reused without re-parsing.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code renders markdown in assistant responses with full syntax highlighting and styled headings, lists, and inline code. It uses a streaming-aware markdown renderer that can handle partial markdown -- for example, rendering a heading even when only `# Hel` has arrived so far, then re-rendering as more tokens come in. Your cached rendering approach accomplishes the same thing by re-rendering the full content each time the source changes during streaming.
 :::
 

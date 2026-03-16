@@ -337,7 +337,7 @@ pub fn checkpoint_branch(
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code typically works on the user's current branch rather than creating its own branches. This direct approach is appropriate for an interactive agent where the user is present and can review changes in real time. However, when Claude Code uses worktrees (covered in the next subchapter), it creates dedicated branches for parallel work. The choice between branch-per-task and working-on-current-branch depends on whether the agent operates interactively (where branch overhead is friction) or autonomously (where branch isolation is safety).
 :::
 

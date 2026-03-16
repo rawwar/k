@@ -106,7 +106,7 @@ Technical infrastructure is necessary but not sufficient. A thriving extension e
 
 **Clear communication about stability**: Use your API version numbers honestly. Document what is stable, what is experimental, and what might change. Plugin authors invest time -- respect that investment by communicating clearly about compatibility.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's extensibility story centers on MCP as the primary extension protocol and hooks as the primary customization mechanism. This two-pronged approach is effective because MCP handles the "add new capabilities" use case (new tools, new data sources) while hooks handle the "customize existing behavior" use case (run linters, block commands, transform output). The lesson: you do not need every extensibility mechanism from this chapter. Pick the two or three that serve your users' actual needs and invest in making those excellent.
 :::
 
@@ -115,6 +115,24 @@ Claude Code's extensibility story centers on MCP as the primary extension protoc
 The extensibility patterns in this chapter prepare your agent for growth beyond what any single team can build. An agent with a healthy extension ecosystem is not just a tool -- it is a platform. Users become contributors. Niche use cases get served by specialized extensions. The agent gets more capable over time without the core team needing to build every feature.
 
 The MCP ecosystem is growing rapidly, and agents that support it will have a significant advantage in the years ahead. The investment you make now in clean plugin APIs, a robust event bus, secure isolation, and clear versioning will pay dividends as the ecosystem matures.
+
+## Exercises
+
+### Exercise 1: Plugin Architecture Pattern Selection (Easy)
+
+You need to add three capabilities to your agent: (a) a Jira integration that creates tickets from TODO comments, (b) a custom linter that blocks commits containing `println!` debug statements, and (c) a "migration mode" that enriches the system prompt with framework upgrade guides. For each capability, identify which extensibility mechanism from this chapter is the best fit (MCP server, hook, skill, configuration, or built-in plugin) and explain your reasoning. What would change about your choice if the agent needed to work offline?
+
+### Exercise 2: MCP Protocol Analysis (Medium)
+
+The MCP protocol uses a handshake sequence: `initialize` request, `initialized` notification, then tool/resource discovery. Analyze why this two-phase initialization exists instead of a single "connect and discover" request. Consider: what information does the server learn from the `initialize` request that affects its behavior? What happens if the client sends a tool call before `initialized`? How does this design support protocol versioning and capability negotiation? Compare this to how LSP handles initialization and identify the similarities.
+
+### Exercise 3: Hook System Design for Content Filtering (Hard)
+
+Design a hook system that filters sensitive data from tool results before they reach the LLM. Your design must handle: (a) detecting patterns like API keys, passwords, and private keys in file contents and command output, (b) replacing detected patterns with placeholder tokens, (c) allowing the user to configure which patterns to detect and which files to exempt, and (d) maintaining an audit log of what was redacted and where. Consider the ordering problem: your redaction hook must run after the tool executes but before the result is sent to the model. What priority should it have relative to logging hooks? What happens if the redaction hook itself errors -- should the unredacted result be sent to the model or should the tool call fail?
+
+### Exercise 4: Extension Security Threat Analysis (Medium)
+
+A user installs a third-party MCP server that provides a "code search" tool. Analyze the security risks: What data can this MCP server access through the tool call parameters the agent sends it? Could a malicious MCP server exfiltrate code by encoding it in error messages? Could it manipulate the agent's behavior by returning crafted tool results that include prompt injection? For each risk, propose a mitigation from the security mechanisms in this chapter (capability-based permissions, subprocess sandboxing, input/output validation). Which risk is hardest to mitigate and why?
 
 ## Key Takeaways
 

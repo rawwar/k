@@ -216,7 +216,7 @@ fn main() -> io::Result<()> {
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 In Python, libraries like `colorama` and `rich` handle escape codes for you. Rich in particular provides a markup syntax:
 ```python
 from rich import print
@@ -256,7 +256,7 @@ fn describe_style(style: Style) -> String {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Production coding agents must handle a wide range of terminal capabilities. Claude Code detects whether the terminal supports truecolor, 256 colors, or only basic 16 colors, and adjusts its escape code output accordingly. OpenCode takes a similar approach, using truecolor when available but falling back gracefully. The ANSI color detection you learned in the previous subchapter feeds directly into this decision -- your agent should never send truecolor escape codes to a terminal that cannot interpret them.
 :::
 

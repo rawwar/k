@@ -234,7 +234,7 @@ fn render_conversation(frame: &mut Frame, app: &App, area: Rect, theme: &Theme) 
 }
 ```
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `textual` framework has a full CSS theming system:
 ```python
 class AgentApp(App):
@@ -400,7 +400,7 @@ pub fn view(frame: &mut Frame, app: &App) {
 }
 ```
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code adapts to the user's terminal automatically, detecting whether the terminal has a dark or light background and adjusting colors accordingly. OpenCode supports multiple theme presets (catppuccin, dracula, tokyonight) that users can select in their configuration file. Both agents understand that a theme mismatch (dark colors on a light background) makes the tool unusable, so automatic detection with manual override is the standard approach.
 :::
 

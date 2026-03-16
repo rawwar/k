@@ -212,7 +212,7 @@ Unified diff format looks precise, but generating it correctly requires the LLM 
 
 In practice, LLMs generate invalid patches at an unacceptably high rate. The syntax is fiddly, the line counting is error-prone, and a single wrong context line causes the entire hunk to fail.
 
-::: tip Coming from Python
+::: python Coming from Python
 If you've used `subprocess.run(["git", "apply", "-"], input=patch_text)` to apply patches in Python, you know how fragile it can be. Even human-written patches break when whitespace changes or line numbers shift. Now imagine an LLM generating that patch text -- the failure rate is much higher than with a simple string find-and-replace.
 :::
 

@@ -10,6 +10,10 @@ description: Understanding API rate limits, token-based pricing models, and stra
 > - The pricing structure for input and output tokens and how agent loops multiply API costs
 > - Practical strategies for retry logic, exponential backoff, and cost optimization in agent systems
 
+::: warning Pricing and Limits Change Frequently
+The specific prices, token limits, and rate limit numbers in this chapter reflect values at the time of writing. Check each provider's current pricing page for up-to-date figures before making cost decisions.
+:::
+
 Every API call costs money and is subject to rate limits. For a chatbot that makes one API call per user message, this is straightforward. For a coding agent that might make 20-50 API calls to complete a single task -- each with tool definitions, conversation history, and tool results -- costs and rate limits become a real engineering concern. This subchapter gives you the numbers and the strategies to handle them.
 
 ## How Rate Limits Work

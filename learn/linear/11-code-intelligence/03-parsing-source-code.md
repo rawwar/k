@@ -349,7 +349,7 @@ pub fn start_server(config: Config, handler: Handler, logger: Logger) -> Result<
 
 This gives you structured information about every function — name, location, arity, return type, visibility — extracted directly from the syntax tree. No regex required, no false positives from comments or strings, and it works correctly even if the file contains other nodes like structs, enums, or impl blocks.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code's file reading tools return source code as plain text that the LLM must parse mentally. Agents that integrate tree-sitter can pre-process files before sending them to the LLM, providing structured summaries like "this file contains 3 public functions, 2 structs, and 1 impl block" along with the raw source. This helps the LLM understand the file organization without spending tokens on mental parsing — a pattern used by several open-source coding agents to improve accuracy on large files.
 :::
 

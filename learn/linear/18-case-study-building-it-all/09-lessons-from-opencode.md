@@ -89,7 +89,7 @@ impl ModelRegistry {
 
 The lesson for your agent: even if you start with a single provider, design the abstraction to accommodate multiple providers from the beginning. The cost of abstraction is low, and the cost of retrofitting it later is high.
 
-::: tip In the Wild
+::: wild In the Wild
 OpenCode's model registry includes pricing information for each model, enabling it to show users the cost of each conversation in real time. The status bar displays running costs alongside token counts, which helps users make informed decisions about when to use expensive frontier models versus cheaper alternatives. This is a feature that falls naturally out of a well-designed provider abstraction — once you have a model catalog, cost tracking is a simple multiplication.
 :::
 

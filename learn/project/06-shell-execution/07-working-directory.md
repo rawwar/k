@@ -82,7 +82,7 @@ fn main() {
 
 `canonicalize()` resolves symlinks and `../` components, giving you the real absolute path. This is important for security: without canonicalization, a path like `/safe/dir/../../etc/passwd` might bypass directory restrictions.
 
-::: tip Coming from Python
+::: python Coming from Python
 Python's `subprocess.run()` also takes a `cwd` parameter:
 ```python
 import subprocess
@@ -259,7 +259,7 @@ pub async fn handle_command(
 
 This approach handles the common case cleanly. For compound commands like `cd src && cargo test`, you let the shell handle it (the `cd` within the `sh -c` invocation works fine since both commands run in the same shell instance).
 
-::: info In the Wild
+::: wild In the Wild
 Claude Code tracks the working directory as persistent agent state. When the LLM runs a command that includes `cd`, Claude Code parses the command to detect the directory change and updates its internal state accordingly. This way, subsequent commands automatically execute in the correct directory. OpenCode takes a similar approach, maintaining a "session working directory" that persists across tool calls.
 :::
 

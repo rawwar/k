@@ -308,7 +308,7 @@ args = ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/projects"]
 
 Users can include as little or as much as they want. A minimal config might be just two lines setting the model and API key. Everything else falls back to sensible defaults.
 
-::: tip In the Wild
+::: wild In the Wild
 Claude Code uses a layered configuration system with a global `~/.claude/settings.json` and per-project `.claude/settings.json` files. Project-level settings override global ones, and CLI flags override both. OpenCode follows a similar pattern with `~/.config/opencode/config.json` as the global config and project-level configuration that can customize model selection, tool behavior, and UI preferences. Both use JSON rather than TOML, but the layering principle is identical.
 :::
 
