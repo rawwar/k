@@ -5,18 +5,82 @@ Reference materials and personal notes for the CLI Coding Agent learning platfor
 ## Organization
 
 ### `agents/`
-Architecture analysis of existing coding agents:
-- **claude-code.md** — Anthropic's CLI coding agent
-- **opencode.md** — Open-source Go-based coding agent
-- **pi-coding-agent.md** — Pi's coding agent implementation
-- **codex.md** — OpenAI's Codex CLI agent
+Architecture analysis of 17 CLI coding agents (`agents/<agent-name>/`).
+
+Each agent folder contains 8 standard files:
+`README.md` · `architecture.md` · `agentic-loop.md` · `tool-system.md` · `context-management.md` · `unique-patterns.md` · `benchmarks.md` · `references.md`
+
+**Tier 1 — Top benchmark performers & major players:**
+| # | Agent | Description |
+|---|-------|-------------|
+| 1 | **forgecode** | #1 Terminal-Bench 2.0 (81.8%), ZSH-native multi-agent |
+| 2 | **claude-code** | Anthropic's CLI coding agent |
+| 3 | **codex** | OpenAI's Codex CLI agent (Rust, 3-layer sandbox) |
+| 4 | **droid** | Factory.ai enterprise multi-interface agent |
+| 5 | **ante** | Antigma Labs, Rust-built self-organizing agent |
+| 6 | **opencode** | Open-source Go-based CLI agent |
+| 7 | **openhands** | Open-source, formerly OpenDevin, event-driven architecture |
+
+**Tier 2 — Notable & differentiated:**
+| # | Agent | Description |
+|---|-------|-------------|
+| 8 | **warp** | AI-native terminal (Rust+Metal GPU rendering) |
+| 9 | **gemini-cli** | Google's first-party terminal agent (1M token context) |
+| 10 | **goose** | Block (fka Square), MCP-native extensible agent |
+| 11 | **junie-cli** | JetBrains' dual IDE/CLI agent |
+| 12 | **mini-swe-agent** | Minimal 100-line bash-only agent from Princeton/Stanford |
+| 13 | **pi-coding-agent** | Radically extensible 4-tool agent by Mario Zechner |
+| 14 | **aider** | Pioneering AI pair programming tool, code-editing benchmark |
+
+**Tier 3 — Emerging / leaderboard notable:**
+| # | Agent | Description |
+|---|-------|-------------|
+| 15 | **sage-agent** | OpenSage multi-agent pipeline |
+| 16 | **tongagents** | BIGAI (Beijing), top-3 on Terminal-Bench 2.0 |
+| 17 | **capy** | Cloud IDE with two-agent split |
 
 ### `concepts/`
-Deep-dive concept notes that inform the learning content:
-- **agentic-loop.md** — The core loop pattern
-- **tool-systems.md** — Tool registration, dispatch, and execution
-- **context-management.md** — Token counting, compaction, and session management
-- **streaming.md** — SSE, chunked transfer, and incremental rendering
+Deep-dive concept notes organized into topic folders:
+
+#### `context-management/`
+Token counting, compaction, and session management.
+`README.md` · `the-problem.md` · `token-counting.md` · `compaction-strategies.md` · `summarization.md` · `sliding-window.md` · `repo-map.md` · `code-search-and-retrieval.md` · `memory-systems.md` · `session-persistence.md` · `multi-agent-context.md` · `tools-and-projects.md` · `agent-comparison.md`
+
+#### `agentic-loop/`
+The core loop pattern, orchestration, and evaluation.
+`README.md` · `the-react-pattern.md` · `simple-loops.md` · `streaming-loops.md` · `event-driven-loops.md` · `message-passing-loops.md` · `multi-agent-orchestration.md` · `edit-apply-verify.md` · `state-management.md` · `stop-conditions.md` · `error-recovery.md` · `agent-frameworks.md` · `benchmarks-and-evaluation.md` · `observability.md` · `agent-comparison.md`
+
+#### `tool-systems/`
+Tool registration, dispatch, execution, and safety.
+`README.md` · `design-patterns.md` · `json-schema.md` · `mcp-deep-dive.md` · `sandboxing.md` · `execution-models.md` · `permission-systems.md` · `file-editing-tools.md` · `bash-and-shell.md` · `error-handling.md` · `safety-and-guardrails.md` · `tools-and-projects.md` · `agent-comparison.md`
+
+#### `streaming/`
+SSE, chunked transfer, incremental rendering, and multimodal.
+`README.md` · `protocols.md` · `openai-streaming.md` · `anthropic-streaming.md` · `google-streaming.md` · `incremental-parsing.md` · `tui-frameworks.md` · `terminal-rendering.md` · `gpu-rendering.md` · `error-recovery.md` · `voice-and-multimodal.md` · `tools-and-projects.md` · `agent-comparison.md`
+
+#### `prompt-engineering/`
+System prompts, tool descriptions, chain-of-thought, prompt caching, structured output.
+
+#### `model-providers/`
+OpenAI, Anthropic, Google, DeepSeek, open-source, model routing, LiteLLM, pricing.
+
+#### `human-in-the-loop/`
+Permission prompts, plan-and-confirm, trust levels, feedback loops, UX patterns.
+
+#### `code-understanding/`
+Static analysis, tree-sitter, LSP, search strategies, dependency graphs, git integration.
+
+#### `testing-and-verification/`
+TDD, lint integration, type checking, build verification, CI/CD, self-review.
+
+#### `multi-agent-systems/`
+Orchestrator-worker, specialist agents, Swarm patterns, communication protocols.
+
+#### `llm-apis-and-protocols/`
+Chat Completions, Responses API, Messages API, function calling, extended thinking.
+
+#### `agent-design-patterns/`
+Prompt chaining, routing, parallelization, evaluator-optimizer, simplicity principle.
 
 ### `notes/`
 Scratchpad for ad-hoc research notes and ideas.
