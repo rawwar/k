@@ -60,27 +60,35 @@ SSE, chunked transfer, incremental rendering, and multimodal.
 
 #### `prompt-engineering/`
 System prompts, tool descriptions, chain-of-thought, prompt caching, structured output.
+`README.md` · `system-prompts.md` · `tool-descriptions.md` · `chain-of-thought.md` · `few-shot-examples.md` · `prompt-caching.md` · `structured-output.md` · `model-specific-tuning.md` · `tools-and-projects.md` · `agent-comparison.md`
 
 #### `model-providers/`
 OpenAI, Anthropic, Google, DeepSeek, open-source, model routing, LiteLLM, pricing.
+`README.md` · `openai.md` · `anthropic.md` · `google.md` · `deepseek.md` · `open-source-models.md` · `litellm.md` · `model-routing.md` · `pricing-and-cost.md` · `api-patterns.md` · `agent-comparison.md`
 
 #### `human-in-the-loop/`
 Permission prompts, plan-and-confirm, trust levels, feedback loops, UX patterns.
+`README.md` · `permission-prompts.md` · `plan-and-confirm.md` · `trust-levels.md` · `feedback-loops.md` · `undo-and-rollback.md` · `interactive-debugging.md` · `ux-patterns.md` · `agent-comparison.md`
 
 #### `code-understanding/`
 Static analysis, tree-sitter, LSP, search strategies, dependency graphs, git integration.
+`README.md` · `static-analysis.md` · `codebase-indexing.md` · `language-servers.md` · `search-strategies.md` · `dependency-graphs.md` · `git-integration.md` · `project-detection.md` · `tools-and-projects.md` · `agent-comparison.md`
 
 #### `testing-and-verification/`
 TDD, lint integration, type checking, build verification, CI/CD, self-review.
+`README.md` · `test-driven-development.md` · `lint-integration.md` · `type-checking.md` · `build-verification.md` · `self-review.md` · `rollback-strategies.md` · `ci-cd-integration.md` · `agent-comparison.md`
 
 #### `multi-agent-systems/`
 Orchestrator-worker, specialist agents, Swarm patterns, communication protocols.
+`README.md` · `orchestrator-worker.md` · `specialist-agents.md` · `swarm-patterns.md` · `peer-to-peer.md` · `communication-protocols.md` · `context-sharing.md` · `evaluation-agent.md` · `real-world-examples.md` · `agent-comparison.md`
 
 #### `llm-apis-and-protocols/`
 Chat Completions, Responses API, Messages API, function calling, extended thinking.
+`README.md` · `chat-completions.md` · `responses-api.md` · `messages-api.md` · `function-calling.md` · `extended-thinking.md` · `embeddings.md` · `batch-api.md` · `rate-limits-and-retries.md` · `agent-comparison.md`
 
 #### `agent-design-patterns/`
 Prompt chaining, routing, parallelization, evaluator-optimizer, simplicity principle.
+`README.md` · `augmented-llm.md` · `prompt-chaining.md` · `routing.md` · `parallelization.md` · `orchestrator-workers.md` · `evaluator-optimizer.md` · `simplicity-principle.md` · `when-to-use-agents.md` · `agent-comparison.md`
 
 ### `notes/`
 Scratchpad for ad-hoc research notes and ideas.
