@@ -450,19 +450,19 @@ platform:
 
 ### Architecture
 
-```
-┌────────────────────────────────────────────┐
-│              Gemini CLI                     │
-├────────────────────────────────────────────┤
-│  Single Model (Gemini 3 Flash default)     │
-│  ├── Function Calling (file, shell, search)│
-│  ├── Streaming (real-time output)          │
-│  ├── Multimodal (images, documents)        │
-│  └── Google Search grounding               │
-├────────────────────────────────────────────┤
-│  Direct Gemini API (Google AI Studio)      │
-│  └── API key authentication                │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph GC["Gemini CLI"]
+        M["Single Model\n(Gemini 3 Flash default)"]
+        M --> FC["Function Calling\n(file, shell, search)"]
+        M --> STR["Streaming\n(real-time output)"]
+        M --> MM["Multimodal\n(images, documents)"]
+        M --> GS["Google Search grounding"]
+        subgraph GAPI["Direct Gemini API (Google AI Studio)"]
+            AK["API key authentication"]
+        end
+    end
+    M --> GAPI
 ```
 
 ### Key Design Decisions

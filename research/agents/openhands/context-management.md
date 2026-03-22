@@ -11,45 +11,22 @@ the full task history.
 The core insight: rather than treating context as a monolithic buffer, OpenHands
 decomposes it into six distinct layers, each with a clear responsibility.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    LLM Context Window                   │
-│  (System prompt + condensed messages + tool responses)  │
-└────────────────────────┬────────────────────────────────┘
-                         │ Message[]
-┌────────────────────────┴────────────────────────────────┐
-│          Layer 3: ConversationMemory                    │
-│   (Event → Message conversion, role alternation,        │
-│    tool call pairing, prompt caching)                   │
-└────────────────────────┬────────────────────────────────┘
-                         │ View (condensed events)
-┌────────────────────────┴────────────────────────────────┐
-│          Layer 4: Condenser System                      │
-│   (10+ strategies: sliding window, LLM summarization,   │
-│    observation masking, pipeline chaining)               │
-└────────────────────────┬────────────────────────────────┘
-                         │ View (full or filtered)
-┌────────────────────────┴────────────────────────────────┐
-│          Layer 2: State.view                            │
-│   (Condensed subset of events the agent sees,           │
-│    tracks forgotten_event_ids)                          │
-└────────────────────────┬────────────────────────────────┘
-                         │ all events
-┌────────────────────────┴────────────────────────────────┐
-│          Layer 1: EventStream                           │
-│   (Complete audit trail, persisted to FileStore,        │
-│    JSON with pagination/caching, never truncated)       │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    LLM["LLM Context Window\n(System prompt + condensed messages + tool responses)"]
+    L3["Layer 3: ConversationMemory\n(Event → Message conversion, role alternation,\ntool call pairing, prompt caching)"]
+    L4["Layer 4: Condenser System\n(10+ strategies: sliding window, LLM summarization,\nobservation masking, pipeline chaining)"]
+    L2["Layer 2: State.view\n(Condensed subset of events the agent sees,\ntracks forgotten_event_ids)"]
+    L1["Layer 1: EventStream\n(Complete audit trail, persisted to FileStore,\nJSON with pagination/caching, never truncated)"]
+    L5["Layer 5: Memory\n(Workspace context, microagent knowledge,\nrepo/runtime info via RecallAction)"]
+    L6["Layer 6: Microagent Knowledge Injection\n(Keyword-triggered skills, repo-specific guidance,\ntask commands)"]
 
-┌─────────────────────────────────────────────────────────┐
-│          Layer 5: Memory                                │
-│   (Workspace context, microagent knowledge,             │
-│    repo/runtime info via RecallAction)                  │
-├─────────────────────────────────────────────────────────┤
-│          Layer 6: Microagent Knowledge Injection        │
-│   (Keyword-triggered skills, repo-specific guidance,    │
-│    task commands)                                       │
-└─────────────────────────────────────────────────────────┘
+    L1 -->|"all events"| L2
+    L2 -->|"View (full or filtered)"| L4
+    L4 -->|"View (condensed events)"| L3
+    L3 -->|"Message[]"| LLM
+    L5 -.->|"inject knowledge"| LLM
+    L6 -.->|"inject knowledge"| LLM
 ```
 
 ---
@@ -419,39 +396,23 @@ User message arrives
 
 The following traces a single agent step through all context layers:
 
-```
-1. Agent.step() is called by the controller
-   │
-2. condenser.condensed_history(state)
-   │
-   ├─ Condenser examines state.view (current visible events)
-   │
-   ├─ Case A: No condensation needed
-   │  └─ Returns View unchanged
-   │
-   └─ Case B: Condensation needed
-      └─ Returns Condensation (CondensationAction)
-         → Controller applies action to state
-         → Controller re-invokes agent.step()
-         → Back to step 2 with updated view
-   │
-3. ConversationMemory.process_events(condensed_view.events)
-   │  → Converts events to Message[]
-   │  → Applies role alternation rules
-   │  → Pairs tool calls with responses
-   │  → Truncates oversized messages
-   │
-4. ConversationMemory.apply_prompt_caching(messages)
-   │  → Marks cache breakpoints for Anthropic models
-   │
-5. LLM.completion(messages)
-   │  → System prompt + condensed history sent to LLM
-   │
-6. LLM response → parsed into Action
-   │
-7. Action added to EventStream
-   │  → State.view updated
-   │  → Memory subscribers notified
+```mermaid
+flowchart TD
+    A["1. Agent.step() called by controller"]
+    B["2. condenser.condensed_history(state)"]
+    CA["Case A: No condensation needed\n→ Returns View unchanged"]
+    CB["Case B: Condensation needed\n→ Returns Condensation (CondensationAction)"]
+    CC["Controller applies action to state\n→ re-invokes agent.step()"]
+    D["3. ConversationMemory.process_events(condensed_view.events)\n→ Converts events to Message[]\n→ Applies role alternation, pairs tool calls, truncates"]
+    E["4. ConversationMemory.apply_prompt_caching(messages)\n→ Marks cache breakpoints for Anthropic models"]
+    F["5. LLM.completion(messages)\n→ System prompt + condensed history sent to LLM"]
+    G["6. LLM response → parsed into Action"]
+    H["7. Action added to EventStream\n→ State.view updated, Memory subscribers notified"]
+
+    A --> B
+    B --> CA --> D
+    B --> CB --> CC --> B
+    D --> E --> F --> G --> H
 ```
 
 ---

@@ -47,20 +47,16 @@ harder to fix than the original mistake.
 
 Verification creates a tight **error → fix → verify** loop:
 
-```
-LLM generates edits
-        │
-        ▼
-   Apply to files
-        │
-        ▼
-   Run linter ──── errors? ──► feed errors back to LLM ──► re-edit
-        │                                                       │
-        ▼ (pass)                                                │
-   Run tests ──── failures? ─► feed failures back to LLM ──► re-edit
-        │                                                       │
-        ▼ (pass)                                                │
-     ✅ Done                                          (bounded retries)
+```mermaid
+flowchart TD
+    A["LLM generates edits"] --> B["Apply to files"]
+    B --> C["Run linter"]
+    C -->|errors| D["Feed errors back to LLM"]
+    D -->|re-edit| A
+    C -->|pass| E["Run tests"]
+    E -->|failures| F["Feed failures back to LLM"]
+    F -->|re-edit, bounded retries| A
+    E -->|pass| G["✅ Done"]
 ```
 
 The critical insight, validated by Anthropic's research on tool-using agents, is
@@ -82,30 +78,24 @@ the **single biggest score improvement** in their benchmark suite.
 Aider is the most mature open-source implementation of the edit-apply-verify
 pattern. Its core loop looks like this:
 
-```
-User message
-    ↓
-Context assembly (system prompt + repo map + files + history)
-    ↓
-LLM call → raw response text
-    ↓
-Parse edits (detect format, extract SEARCH/REPLACE or whole-file blocks)
-    ↓
-Apply edits to working tree
-    ↓
-Git commit (auto, with generated message)
-    ↓
-Lint (if --auto-lint enabled)
-    │
-    ├── errors → send to LLM → re-edit → re-apply → re-lint
-    │
-    ↓ (pass)
-Test (if --auto-test enabled)
-    │
-    ├── failures → send first 50 lines → LLM → re-edit → re-apply → re-test
-    │
-    ↓ (pass)
-Report success to user
+```mermaid
+flowchart TD
+    A["User message"]
+    B["Context assembly\n(system prompt + repo map + files + history)"]
+    C["LLM call → raw response text"]
+    D["Parse edits\n(detect format, extract SEARCH/REPLACE or whole-file blocks)"]
+    E["Apply edits to working tree"]
+    F["Git commit (auto, with generated message)"]
+    G["Lint (if --auto-lint enabled)"]
+    H["Test (if --auto-test enabled)"]
+    I["Report success to user"]
+    LintFail["errors → send to LLM → re-edit → re-apply → re-lint"]
+    TestFail["failures → send first 50 lines → LLM → re-edit → re-apply → re-test"]
+    A --> B --> C --> D --> E --> F --> G
+    G -- pass --> H
+    G -- errors --> LintFail --> G
+    H -- pass --> I
+    H -- failures --> TestFail --> H
 ```
 
 ### Context Assembly
@@ -364,22 +354,13 @@ new model release.
 Aider's architect mode separates *reasoning* from *code editing* into two
 distinct model roles:
 
-```
-User Request
-    ↓
-ARCHITECT MODEL (o3, DeepSeek R1, Gemini 2.5 Pro)
-    │
-    │  Produces: prose solution description, pseudocode,
-    │  step-by-step plan for what to change and why
-    │
-    ↓
-EDITOR MODEL (Claude Sonnet, GPT-4o)
-    │
-    │  Receives: architect's prose + file contents
-    │  Produces: structured SEARCH/REPLACE edits
-    │
-    ↓
-Apply edits → Git commit → Lint → Test
+```mermaid
+flowchart TD
+    UR["User Request"]
+    AM["ARCHITECT MODEL\n(o3, DeepSeek R1, Gemini 2.5 Pro)\nProduces: prose solution description,\npseudocode, step-by-step plan"]
+    EM["EDITOR MODEL\n(Claude Sonnet, GPT-4o)\nReceives: architect's prose + file contents\nProduces: structured SEARCH/REPLACE edits"]
+    AP["Apply edits → Git commit → Lint → Test"]
+    UR --> AM --> EM --> AP
 ```
 
 **Why this works:** Reasoning models (o3, R1) are excellent at *thinking through
@@ -487,29 +468,18 @@ workflow into five explicit phases:
 
 ### 5-Phase Loop
 
-```
-┌─────────────┐
-│  Understand  │  Analyze the request, read relevant files
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│    Plan      │  Create a step-by-step implementation plan
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│  Implement   │  Write code changes according to the plan
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│   Verify     │  Run tests, inspections, compilation checks
-└──────┬──────┘
-       │
-       ├── pass → Done ✅
-       │
-       ↓ fail
-┌─────────────┐
-│  Diagnose    │  Analyze failures, fix, re-verify (up to 3-5 iterations)
-└─────────────┘
+```mermaid
+flowchart TD
+    A["Understand\nAnalyze the request, read relevant files"]
+    B["Plan\nCreate a step-by-step implementation plan"]
+    C["Implement\nWrite code changes according to the plan"]
+    D["Verify\nRun tests, inspections, compilation checks"]
+    E["✅ Done"]
+    F["Diagnose\nAnalyze failures, fix, re-verify\n(up to 3–5 iterations)"]
+    A --> B --> C --> D
+    D -->|pass| E
+    D -->|fail| F
+    F -->|re-verify| D
 ```
 
 ### Verification Phase Details

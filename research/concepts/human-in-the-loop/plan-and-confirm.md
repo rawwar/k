@@ -37,24 +37,15 @@ See also [UX patterns](./ux-patterns.md) for how plans are rendered in terminal 
 
 Agents fall on a spectrum from fully autonomous execution to fully previewed planning:
 
+```mermaid
+flowchart LR
+    A["No Plan<br/>(act immediately)<br/>OpenHands · Mini-SWE<br/>Sandbox absorbs mistakes"]
+    B["Partial Plan<br/>(plan some steps)<br/>Goose · Aider · Gemini CLI<br/>Shows intent, some gates"]
+    C["Full Plan-First<br/>(preview everything)<br/>Codex · Droid<br/>Structured plan with approval gate"]
+    D["Read-Only<br/>(plan only)<br/>Claude Code plan mode<br/>No writes at all"]
+    A --- B --- C --- D
 ```
-No Plan             Partial Plan          Full Plan-First         Read-Only
-(act immediately)   (plan some steps)     (preview everything)    (plan only)
-     │                    │                      │                     │
-     ▼                    ▼                      ▼                     ▼
- ┌─────────┐       ┌───────────┐          ┌───────────┐         ┌───────────┐
- │ OpenHands│       │ Goose     │          │ Codex     │         │ Claude    │
- │ Mini-SWE │       │ Aider     │          │ Droid     │         │ Code      │
- │          │       │ Gemini CLI│          │           │         │ (plan     │
- │ Sandbox  │       │           │          │ Structured│         │  mode)    │
- │ absorbs  │       │ Shows     │          │ plan with │         │           │
- │ mistakes │       │ intent,   │          │ approval  │         │ No writes │
- │          │       │ some gates│          │ gate      │         │ at all    │
- └─────────┘       └───────────┘          └───────────┘         └───────────┘
-
- ◄─── Less friction ──────────────────────────────── More friction ───►
- ◄─── Less oversight ─────────────────────────────── More oversight ──►
-```
+_◄─── Less friction / Less oversight ──────────────── More friction / More oversight ─►_
 
 | Agent                                              | Default Position    | Can Shift To         |
 |----------------------------------------------------|---------------------|----------------------|
@@ -119,12 +110,11 @@ interface PlanStep {
 
 ### Shift+Tab Mode Cycling
 
-```
-  ┌──────────┐    Shift+Tab    ┌──────────────┐    Shift+Tab    ┌──────┐
-  │ default  │ ──────────────► │ acceptEdits  │ ──────────────► │ plan │
-  └──────────┘                 └──────────────┘                 └──────┘
-       ▲                                                            │
-       └────────────────────── Shift+Tab ───────────────────────────┘
+```mermaid
+flowchart LR
+    A[default] -->|"Shift+Tab"| B[acceptEdits]
+    B -->|"Shift+Tab"| C[plan]
+    C -->|"Shift+Tab"| A
 ```
 
 A typical workflow: start in plan mode to analyze → review the plan → switch to
@@ -186,17 +176,17 @@ Codex runs execution inside a sandboxed environment, creating a two-phase safety
 first the plan is reviewed, then execution happens in isolation, and resulting changes are
 shown as diffs before being applied to the real filesystem.
 
-```
-  Plan Phase                    Execute Phase
-  ┌───────────┐                ┌──────────────────┐
-  │ Agent     │    Approval    │ Sandbox          │
-  │ generates │ ──────────►   │ ┌──────────────┐ │
-  │ plan      │    Gate        │ │ Execute in   │ │
-  │           │                │ │ isolation    │ │
-  └───────────┘                │ └──────┬───────┘ │
-                               │        ▼         │
-                               │  Diff → User     │
-                               └──────────────────┘
+```mermaid
+flowchart LR
+    subgraph PlanPhase["Plan Phase"]
+        A["Agent generates plan"]
+    end
+    subgraph ExecPhase["Execute Phase (Sandbox)"]
+        B["Execute in isolation"]
+        C["Show diff to user"]
+        B --> C
+    end
+    PlanPhase -->|"Approval Gate"| ExecPhase
 ```
 
 ---
@@ -208,25 +198,13 @@ An "architect" model designs the plan; an "editor" model implements it.
 
 ### The Architect-Editor Split
 
-```
-User Prompt
-     │
-     ▼
-┌─────────────────┐
-│ Architect Model  │   e.g., o3, Claude Opus
-│ • Analyzes code  │
-│ • Designs plan   │
-│ • Describes what │
-│   to change      │
-└────────┬────────┘
-         │ Natural language plan
-         ▼
-┌─────────────────┐
-│ Editor Model     │   e.g., Claude Sonnet, GPT-4.1
-│ • Reads plan     │
-│ • Generates diffs│
-│ • Applies edits  │
-└─────────────────┘
+```mermaid
+flowchart TD
+    UP["User Prompt"]
+    AM["Architect Model<br/>e.g., o3, Claude Opus<br/>• Analyzes code<br/>• Designs plan<br/>• Describes what to change"]
+    EM["Editor Model<br/>e.g., Claude Sonnet, GPT-4.1<br/>• Reads plan<br/>• Generates diffs<br/>• Applies edits"]
+    UP --> AM
+    AM -->|"Natural language plan"| EM
 ```
 
 ### Configuration
@@ -260,13 +238,12 @@ distinct operating modes.
 
 In **plan mode**, Droid follows a three-phase process:
 
-```
-Phase 1: Analysis          Phase 2: Plan Review       Phase 3: Execution
-┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
-│ Read codebase    │      │ Display plan     │      │ Execute steps    │
-│ Identify changes │ ──►  │ User approves /  │ ──►  │ sequentially     │
-│ Map dependencies │      │ modifies / rejects│      │ Report progress  │
-└──────────────────┘      └──────────────────┘      └──────────────────┘
+```mermaid
+flowchart LR
+    P1["Phase 1: Analysis<br/>Read codebase<br/>Identify changes<br/>Map dependencies"]
+    P2["Phase 2: Plan Review<br/>Display plan<br/>User approves / modifies / rejects"]
+    P3["Phase 3: Execution<br/>Execute steps sequentially<br/>Report progress"]
+    P1 --> P2 --> P3
 ```
 
 In **auto mode**, the agent analyzes and acts in a continuous loop without presenting
@@ -390,20 +367,20 @@ def render_diff_preview(diff_text: str, console) -> None:
 
 When a plan has multiple steps, agents must choose confirmation granularity:
 
-```
-Strategy           Flow                           Best For
-─────────────────────────────────────────────────────────────────
-Confirm-all        Plan ──► [Approve All] ──►     Low-risk plans,
-                   Execute all steps              trusted agents
-
-Confirm-each       Plan ──► Step 1 ──► [y/n]      High-risk plans,
-                          ──► Step 2 ──► [y/n]     unfamiliar agents
-
-Confirm-risky      Plan ──► Safe steps auto ──►   Balanced approach,
-                          ──► Risky step [y/n]     risk-based agents
-
-Batch-confirm      Plan ──► [Group A: approve]    Large refactors,
-                          ──► [Group B: approve]   file-grouped changes
+```mermaid
+flowchart TD
+    subgraph CA["Confirm-all · Low-risk plans, trusted agents"]
+        CA1[Plan] --> CA2["Approve All"] --> CA3["Execute all steps"]
+    end
+    subgraph CE["Confirm-each · High-risk plans, unfamiliar agents"]
+        CE1[Plan] --> CE2["Step 1"] --> CE3["y/n"] --> CE4["Step 2"] --> CE5["y/n "]
+    end
+    subgraph CR["Confirm-risky · Balanced approach, risk-based agents"]
+        CR1[Plan] --> CR2["Safe steps auto"] --> CR3["Risky step: y/n"]
+    end
+    subgraph BC["Batch-confirm · Large refactors, file-grouped changes"]
+        BC1[Plan] --> BC2["Group A: approve"] --> BC3["Group B: approve"]
+    end
 ```
 
 ### Batch Approval Implementation

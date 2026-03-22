@@ -71,40 +71,34 @@ See [permission-prompts.md](./permission-prompts.md) for architecture deep-dives
 
 ### Classification
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│                     Permission Model Taxonomy                        │
-├──────────────────┬────────────────────────────────────────────────────┤
-│                  │                                                    │
-│  Rule-based      │  Claude Code (glob rules, 5 modes)                │
-│  Permissions     │  Codex (3-valued policy + MDM)                    │
-│                  │  Goose (4-inspector pipeline)                     │
-│                  │  Gemini CLI (event-driven bus)                    │
-│                  │                                                    │
-├──────────────────┼────────────────────────────────────────────────────┤
-│                  │                                                    │
-│  Prompt-per-     │  OpenCode (channel-based prompts)                 │
-│  Action          │  Ante (session-scoped)                            │
-│                  │  ForgeCode (session-scoped)                       │
-│                  │  Pi Coding Agent (basic prompts)                  │
-│                  │  Warp (inline confirmation)                       │
-│                  │  Droid (configurable)                             │
-│                  │                                                    │
-├──────────────────┼────────────────────────────────────────────────────┤
-│                  │                                                    │
-│  Sandbox-based   │  OpenHands (container isolation)                  │
-│  Isolation       │  Codex (network sandbox)                          │
-│                  │  Gemini CLI (multi-tier sandbox)                  │
-│                  │                                                    │
-├──────────────────┼────────────────────────────────────────────────────┤
-│                  │                                                    │
-│  Minimal /       │  Aider (auto-approve, rely on git)                │
-│  None            │  Capy (user judgment)                             │
-│                  │  Mini-SWE-Agent (autonomous)                      │
-│                  │  Sage Agent (lightweight)                         │
-│                  │  TongAgents (multi-agent delegation)              │
-│                  │                                                    │
-└──────────────────┴────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph RB["Rule-based Permissions"]
+        RB1["Claude Code (glob rules, 5 modes)"]
+        RB2["Codex (3-valued policy + MDM)"]
+        RB3["Goose (4-inspector pipeline)"]
+        RB4["Gemini CLI (event-driven bus)"]
+    end
+    subgraph PP["Prompt-per-Action"]
+        PP1["OpenCode (channel-based prompts)"]
+        PP2["Ante (session-scoped)"]
+        PP3["ForgeCode (session-scoped)"]
+        PP4["Pi Coding Agent (basic prompts)"]
+        PP5["Warp (inline confirmation)"]
+        PP6["Droid (configurable)"]
+    end
+    subgraph SB["Sandbox-based Isolation"]
+        SB1["OpenHands (container isolation)"]
+        SB2["Codex (network sandbox)"]
+        SB3["Gemini CLI (multi-tier sandbox)"]
+    end
+    subgraph MN["Minimal / None"]
+        MN1["Aider (auto-approve, rely on git)"]
+        MN2["Capy (user judgment)"]
+        MN3["Mini-SWE-Agent (autonomous)"]
+        MN4["Sage Agent (lightweight)"]
+        MN5["TongAgents (multi-agent delegation)"]
+    end
 ```
 
 ### Permission Sophistication Scoring
@@ -248,28 +242,13 @@ review the agent's intended approach before execution begins. See
 
 The agents with full planning support share a common architectural pattern:
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Plan-and-Confirm Flow                │
-│                                                       │
-│   User Request                                        │
-│       │                                               │
-│       ▼                                               │
-│   ┌─────────┐    ┌──────────┐    ┌───────────┐       │
-│   │ PLAN    │───▶│ REVIEW   │───▶│ EXECUTE   │       │
-│   │ Phase   │    │ Phase    │    │ Phase     │       │
-│   │         │    │          │    │           │       │
-│   │ Agent   │    │ Human    │    │ Agent     │       │
-│   │ reasons │    │ approves │    │ acts per  │       │
-│   │ & plans │    │ or edits │    │ plan      │       │
-│   └─────────┘    └──────────┘    └───────────┘       │
-│                       │                               │
-│                       ▼                               │
-│               ┌──────────────┐                        │
-│               │  REJECT /    │                        │
-│               │  MODIFY      │──── back to PLAN       │
-│               └──────────────┘                        │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["User Request"] --> B["PLAN Phase<br/>(Agent reasons & plans)"]
+    B --> C["REVIEW Phase<br/>(Human approves or edits)"]
+    C --> D["EXECUTE Phase<br/>(Agent acts per plan)"]
+    C --> E["REJECT / MODIFY"]
+    E -->|back to PLAN| B
 ```
 
 Agents with partial planning (Aider, Goose, Warp) implement a lighter variant where
@@ -421,42 +400,38 @@ to external tooling (containers, IDE, git).
 Agents cluster into four distinct HITL architecture patterns. These patterns are more
 predictive of an agent's safety characteristics than any single feature.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                  HITL Architecture Patterns                         │
-│                                                                     │
-│  ┌─────────────────────┐       ┌─────────────────────┐             │
-│  │  PERMISSION-FIRST   │       │   SANDBOX-FIRST     │             │
-│  │                     │       │                     │             │
-│  │  Claude Code        │       │  OpenHands          │             │
-│  │  Codex              │       │  Codex (network)    │             │
-│  │  Goose              │       │  Gemini CLI (tier)  │             │
-│  │  Gemini CLI         │       │                     │             │
-│  │  OpenCode           │       │  Safety via         │             │
-│  │  Droid              │       │  isolation, not     │             │
-│  │  Warp               │       │  interactive        │             │
-│  │                     │       │  prompts            │             │
-│  │  Safety via human   │       │                     │             │
-│  │  approval gates     │       └─────────────────────┘             │
-│  │                     │                                            │
-│  └─────────────────────┘       ┌─────────────────────┐             │
-│                                │   PLAN-FIRST        │             │
-│  ┌─────────────────────┐       │                     │             │
-│  │  MINIMAL-HITL       │       │  Claude Code*       │             │
-│  │                     │       │  Codex*             │             │
-│  │  Aider              │       │  Droid              │             │
-│  │  Capy               │       │  Junie CLI          │             │
-│  │  Mini-SWE-Agent     │       │  Aider (architect)  │             │
-│  │  Sage Agent         │       │                     │             │
-│  │  TongAgents         │       │  Safety via         │             │
-│  │  Pi Coding Agent    │       │  plan review        │             │
-│  │                     │       │  before execution   │             │
-│  │  Safety via user    │       │                     │             │
-│  │  judgment + git     │       │  * also permission- │             │
-│  │                     │       │    first             │             │
-│  └─────────────────────┘       └─────────────────────┘             │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph PF["PERMISSION-FIRST — Safety via human approval gates"]
+        PF1["Claude Code"]
+        PF2["Codex"]
+        PF3["Goose"]
+        PF4["Gemini CLI"]
+        PF5["OpenCode"]
+        PF6["Droid"]
+        PF7["Warp"]
+    end
+    subgraph SF["SANDBOX-FIRST — Safety via isolation, not interactive prompts"]
+        SF1["OpenHands"]
+        SF2["Codex (network)"]
+        SF3["Gemini CLI (tier)"]
+    end
+    subgraph PL["PLAN-FIRST — Safety via plan review before execution"]
+        PL1["Claude Code *"]
+        PL2["Codex *"]
+        PL3["Droid"]
+        PL4["Junie CLI"]
+        PL5["Aider (architect)"]
+        PL6["* also permission-first"]
+    end
+    subgraph MH["MINIMAL-HITL — Safety via user judgment + git"]
+        MH1["Aider"]
+        MH2["Capy"]
+        MH3["Mini-SWE-Agent"]
+        MH4["Sage Agent"]
+        MH5["TongAgents"]
+        MH6["Pi Coding Agent"]
+    end
 ```
 
 **Note:** Some agents appear in multiple groups. Claude Code and Codex are both

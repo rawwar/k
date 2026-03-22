@@ -163,15 +163,15 @@ class AgentLoop:
 
 Distinct from dollar-cost budget — the model's context window fills up:
 
-```
-┌──────────────────────────────────────────────┐
-│               Context Window (128K)           │
-├──────────────────────────────────────────────┤
-│ System prompt          │    ~2K tokens        │
-│ Conversation history   │    grows each turn   │
-│ Tool results           │    can be huge        │
-│ Available space        │    shrinks each turn  │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CW["Context Window — 128K tokens"]
+        SP["System prompt — ~2K tokens"]
+        CH["Conversation history — grows each turn"]
+        TR["Tool results — can be huge"]
+        AS["Available space — shrinks each turn"]
+    end
+    SP ~~~ CH ~~~ TR ~~~ AS
 ```
 
 When the window fills:
@@ -207,19 +207,12 @@ condition — a human override.
 
 ### Interrupt Hierarchy
 
-```
-Level 0: Soft redirect
-  └─ User types while agent works (Claude Code)
-  └─ Agent sees message and adjusts approach
-
-Level 1: Single interrupt (Ctrl+C / Esc)
-  └─ Cancel current operation
-  └─ Preserve all context
-  └─ Return to user for new instructions
-
-Level 2: Double interrupt (Ctrl+C × 2)
-  └─ Force quit (Codex exits program entirely)
-  └─ May lose unsaved context
+```mermaid
+flowchart TD
+    L0["Level 0: Soft redirect\nUser types while agent works — Claude Code\nAgent sees message and adjusts approach"]
+    L1["Level 1: Single interrupt — Ctrl+C / Esc\nCancel current operation\nPreserve all context\nReturn to user for new instructions"]
+    L2["Level 2: Double interrupt — Ctrl+C × 2\nForce quit — Codex exits program entirely\nMay lose unsaved context"]
+    L0 --> L1 --> L2
 ```
 
 ### Claude Code's Notable Approach
@@ -392,26 +385,14 @@ def check_empty_response(actions: list, k: int = 3) -> bool:
 
 #### Stuck Detection Flow
 
-```
-                    ┌─────────────┐
-                    │  Agent Step  │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │ StuckDetector│
-                    │  (4 checks) │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-         Not Stuck     Stuck       Stuck
-              │       (recoverable) (terminal)
-              │            │            │
-              ▼            ▼            ▼
-          Continue    Inject hint   Raise error
-                     "Try a         and stop
-                      different
-                      approach"
+```mermaid
+flowchart TD
+    AS["Agent Step"]
+    SD["StuckDetector\n4 checks"]
+    AS --> SD
+    SD -->|"not stuck"| CO["Continue"]
+    SD -->|"stuck — recoverable"| IH["Inject hint\nTry a different approach"]
+    SD -->|"stuck — terminal"| RE["Raise error\nand stop"]
 ```
 
 ### Recovery Options When Stuck Is Detected
@@ -472,18 +453,14 @@ completion quality.
 
 ### Aider: Lint/Test as Implicit Verification
 
-```
-Edit code → auto-lint → auto-test → check results
-    │                                      │
-    │         ┌────── pass ◄──────────────┘
-    │         │
-    │         └────── fail → retry (bounded)
-    │                          │
-    │                     max retries?
-    │                     ├── no → loop back to edit
-    │                     └── yes → present results with errors
-    ▼
-  Done (if --auto-test enabled and tests pass)
+```mermaid
+flowchart TD
+    E["Edit code"] --> L["auto-lint"] --> T["auto-test"] --> R{"check results"}
+    R -->|"pass"| D["Done\nif --auto-test enabled and tests pass"]
+    R -->|"fail"| RT["retry — bounded"]
+    RT --> MR{"max retries?"}
+    MR -->|"no"| E
+    MR -->|"yes"| PE["present results with errors"]
 ```
 
 - If `--auto-test` enabled and tests fail → iterate (bounded retries)
@@ -499,16 +476,12 @@ Junie treats verification as a **first-class phase**, not an afterthought:
 3. **If failures** → diagnostic loop (analyze → fix → re-verify)
 4. **3–5 iterations** before escalating to user
 
-```
-┌──────────┐    ┌──────────┐    ┌──────────┐
-│Implement │───▶│  Verify  │───▶│   Done   │
-└──────────┘    └────┬─────┘    └──────────┘
-                     │ fail
-                     ▼
-                ┌──────────┐
-                │ Diagnose │
-                │  & Fix   │──── (max 3-5 cycles)
-                └──────────┘
+```mermaid
+flowchart TD
+    I["Implement"] --> V["Verify"]
+    V -->|"pass"| D["Done"]
+    V -->|"fail"| DF["Diagnose & Fix\nmax 3–5 cycles"]
+    DF --> V
 ```
 
 ---
@@ -627,20 +600,15 @@ def execute_with_timeout(tool_call, timeout=300):
 
 ### Timeout Hierarchy
 
-```
-┌─────────────────────────────────────────────────┐
-│ Session timeout (e.g., 30 min for CI/CD)        │
-│  ┌─────────────────────────────────────────────┐ │
-│  │ Turn timeout (e.g., 5 min per LLM call)     │ │
-│  │  ┌─────────────────────────────────────────┐ │ │
-│  │  │ Tool timeout (e.g., 300s per tool exec) │ │ │
-│  │  │  ┌─────────────────────────────────────┐ │ │ │
-│  │  │  │ Subprocess timeout (e.g., 60s)      │ │ │ │
-│  │  │  └─────────────────────────────────────┘ │ │ │
-│  │  └─────────────────────────────────────────┘ │ │
-│  └─────────────────────────────────────────────┘ │
-│                                                   │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Session["Session timeout — e.g. 30 min for CI/CD"]
+        subgraph Turn["Turn timeout — e.g. 5 min per LLM call"]
+            subgraph Tool["Tool timeout — e.g. 300s per tool exec"]
+                SP["Subprocess timeout — e.g. 60s"]
+            end
+        end
+    end
 ```
 
 | Level | Typical Value | Agent Example |

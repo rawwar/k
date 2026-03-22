@@ -72,17 +72,19 @@ This is the central reference for the entire testing-and-verification concept ar
 
 The most fundamental distinction in how agents approach verification is whether the *model* decides to verify, the *framework* requires it, or the *user* configures it.
 
-```
-Model-Driven ◄────────────────────────────────────────────────► Framework-Enforced
-  (agent decides when to verify)                    (runtime requires verification)
-
-  ┌─────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-  │mini-SWE │ OpenCode │  Claude  │  Codex   │  Aider   │  Goose   │  Junie   │  Droid   │ForgeCode │
-  │         │          │   Code   │          │          │          │   CLI    │          │          │
-  └─────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
-       │                     │                     │                     │                     │
-   No verify           Model chooses          User flags           Plan step             Runtime
-   capability          to run tests          (--auto-test)       (VERIFY phase)         enforced
+```mermaid
+flowchart LR
+    subgraph MD["Model-Driven\n(agent decides when to verify)"]
+        A["mini-SWE\n(No verify capability)"]
+        B["OpenCode / Claude Code / Codex\n(Model chooses to run tests)"]
+    end
+    subgraph UC["User-Configured"]
+        C["Aider (--auto-test)\nGoose (User flags)"]
+    end
+    subgraph FE["Framework-Enforced\n(runtime requires verification)"]
+        D["Junie CLI (VERIFY plan step)\nDroid / ForgeCode (Runtime enforced)"]
+    end
+    B --> C --> D
 ```
 
 ### Why This Spectrum Matters
@@ -145,18 +147,9 @@ Ranked from most to least sophisticated testing infrastructure, based on source-
 
 Rollback — the ability to undo bad changes — is critical for autonomous operation. An agent that can't undo its mistakes must be supervised more closely.
 
-```
-No Rollback ◄──────────────────────────────────────────────► Full State Reconstruction
-
-  ┌─────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-  │  Sage   │  Droid   │  Aider   │  Junie   │  Claude  │  Codex   │OpenHands │
-  │  Ante   │  Warp    │  (git)   │  (git+   │  (snap+  │ (Ghost+  │ (event   │
-  │ OpenCode│  Goose   │          │  regress)│  rewind) │ Thread)  │ sourcing)│
-  │  mini   │  Pi      │          │          │          │          │          │
-  └─────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
-       │           │           │           │           │           │
-    Nothing    Reset only   Code only   Code +      Code +     Full state
-                                       detection   convo      replay
+```mermaid
+flowchart LR
+    A["Sage / Ante\nOpenCode / mini-SWE\n(Nothing)"] --> B["Droid / Warp\nGoose / Pi\n(Reset only)"] --> C["Aider\n(Code only, git)"] --> D["Junie CLI\n(Code + regression\ndetection)"] --> E["Claude Code\n(Code + convo,\nsnapshot + rewind)"] --> F["Codex + OpenHands\n(Full state replay:\nGhost + event sourcing)"]
 ```
 
 ### Detailed Rollback Comparison
@@ -177,23 +170,19 @@ No Rollback ◄─────────────────────�
 
 ### Key Insight: The Rollback–Autonomy Correlation
 
-```
-                    Autonomy Level
-                         ▲
-                         │
-              OpenHands ●│
-                         │         ● Codex
-                         │
-                         │    ● Claude Code
-                         │
-                  Droid ● │         ● Junie CLI
-                         │
-                  Aider ● │
-                         │    ● ForgeCode
-                         │
-              mini-SWE ● │
-                         │
-                         └──────────────────────► Rollback Sophistication
+```mermaid
+quadrantChart
+    title Rollback-Autonomy Correlation
+    x-axis "Low Rollback" --> "High Rollback Sophistication"
+    y-axis "Low Autonomy" --> "High Autonomy Level"
+    OpenHands: [0.05, 0.92]
+    Codex: [0.82, 0.85]
+    "Claude Code": [0.45, 0.68]
+    "Junie CLI": [0.82, 0.55]
+    Droid: [0.05, 0.55]
+    Aider: [0.05, 0.40]
+    ForgeCode: [0.45, 0.25]
+    "mini-SWE": [0.05, 0.10]
 ```
 
 Agents with better rollback mechanisms can be trusted to operate with less supervision. OpenHands' event sourcing enables its resolver mode — fully autonomous issue resolution — because any mistake can be reconstructed and analyzed. Codex's snapshot system enables its `exec` mode for the same reason.
@@ -220,20 +209,21 @@ CI/CD integration represents the frontier of agent capability — agents are evo
 
 ### The CI/CD Maturity Model
 
-```
-Level 0: No CI/CD        Level 1: Scriptable       Level 2: Headless        Level 3: CI-Native
-(interactive only)       (can be automated)        (designed for pipes)     (built for CI/CD)
-                                                                           
-┌──────────────┐        ┌──────────────┐         ┌──────────────┐        ┌──────────────┐
-│  Sage Agent  │        │    Aider     │         │ Claude Code  │        │    Droid     │
-│  TongAgents  │        │    Goose     │         │ Gemini CLI   │        │              │
-│    Capy      │        │  Pi Agent    │         │   Codex      │        │              │
-│  OpenCode    │        │    Warp      │         │  OpenHands   │        │              │
-│  ForgeCode   │        │              │         │              │        │              │
-│    Ante      │        │              │         │              │        │              │
-│  Junie CLI   │        │              │         │              │        │              │
-│  mini-SWE    │        │              │         │              │        │              │
-└──────────────┘        └──────────────┘         └──────────────┘        └──────────────┘
+```mermaid
+flowchart LR
+    subgraph L0["Level 0: No CI/CD (interactive only)"]
+        A["Sage Agent / TongAgents\nCapy / OpenCode\nForgeCode / Ante\nJunie CLI / mini-SWE"]
+    end
+    subgraph L1["Level 1: Scriptable (can be automated)"]
+        B["Aider / Goose\nPi Agent / Warp"]
+    end
+    subgraph L2["Level 2: Headless (designed for pipes)"]
+        C["Claude Code / Gemini CLI\nCodex / OpenHands"]
+    end
+    subgraph L3["Level 3: CI-Native (built for CI/CD)"]
+        D["Droid"]
+    end
+    A --> B --> C --> D
 ```
 
 **Key Observation:** There is a stark gap between Level 2 and Level 3. Only Droid is truly CI-native — designed from the ground up to be a CI participant rather than a coding assistant that can be scripted into CI. Claude Code and Gemini CLI are close but still carry their interactive-first heritage.
@@ -290,17 +280,9 @@ Self-review — the agent reviewing its own output before presenting it — is i
 
 ### The Self-Review Effectiveness Hierarchy
 
-```
-Least Effective                                              Most Effective
-      │                                                            │
-      ▼                                                            ▼
-┌──────────┐  ┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐
-│   None   │  │ Model-Driven │  │   Loop   │  │ Enforced │  │  Structured  │
-│          │  │              │  │  (Aider) │  │(ForgeCode│  │   + IDE      │
-│ OpenCode │  │ Claude Code  │  │          │  │  Droid)  │  │ (Junie CLI)  │
-│ mini-SWE │  │   Codex      │  │          │  │          │  │              │
-│   Sage   │  │  OpenHands   │  │          │  │          │  │              │
-└──────────┘  └──────────────┘  └──────────┘  └──────────┘  └──────────────┘
+```mermaid
+flowchart LR
+    A["None\n\nOpenCode\nmini-SWE\nSage"] --> B["Model-Driven\n\nClaude Code\nCodex\nOpenHands"] --> C["Loop-Based\n(Aider)"] --> D["Enforced\n(ForgeCode\nDroid)"] --> E["Structured + IDE\n(Junie CLI)"]
 ```
 
 **Key Observation:** The most effective self-review combines structural enforcement (the agent *must* review) with rich verification data (IDE diagnostics, structured test results). Junie CLI is the only agent that achieves both — its VERIFY plan step is mandatory, and it has access to IDE-level inspection data. ForgeCode achieves enforcement but lacks the IDE integration depth.
@@ -313,20 +295,15 @@ Agents don't just differ in *what* verification they do — they differ in *how 
 
 ### Pattern 1: Edit-Apply-Lint-Test (Aider)
 
-```
-┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│  Model   │───▶│  Apply  │───▶│  Lint   │───▶│  Test   │───▶│ Commit  │
-│ generates│    │  edit   │    │ (tree-  │    │ (user   │    │ (git)   │
-│   edit   │    │         │    │ sitter) │    │  cmd)   │    │         │
-└─────────┘    └─────────┘    └────┬────┘    └────┬────┘    └─────────┘
-                                   │              │
-                                   │   ◄──────────┘
-                                   ▼         (on failure)
-                              ┌─────────┐
-                              │  Model  │
-                              │  fixes  │
-                              │  error  │
-                              └─────────┘
+```mermaid
+flowchart LR
+    A["Model\ngenerates edit"] --> B["Apply edit"]
+    B --> C["Lint\n(tree-sitter)"]
+    C --> D["Test\n(user cmd)"]
+    D --> E["Commit (git)"]
+    C -->|on failure| F["Model\nfixes error"]
+    D -->|on failure| F
+    F --> C
 ```
 
 **Characteristics:**
@@ -339,20 +316,12 @@ Agents don't just differ in *what* verification they do — they differ in *how 
 
 ### Pattern 2: Edit-Verify-Enforce (ForgeCode)
 
-```
-┌─────────┐    ┌─────────┐    ┌──────────────┐    ┌─────────┐
-│  Model   │───▶│  Apply  │───▶│   Verify     │───▶│  Next   │
-│ generates│    │  edit   │    │   Skill      │    │  step   │
-│   edit   │    │         │    │ (REQUIRED)   │    │         │
-└─────────┘    └─────────┘    └──────┬───────┘    └─────────┘
-                                     │
-                                     │ (failure)
-                                     ▼
-                               ┌───────────┐
-                               │ Bounded   │
-                               │ retry or  │
-                               │ escalate  │
-                               └───────────┘
+```mermaid
+flowchart LR
+    A["Model\ngenerates edit"] --> B["Apply edit"]
+    B --> C["Verify Skill\n(REQUIRED)"]
+    C --> D["Next step"]
+    C -->|failure| E["Bounded retry\nor escalate"]
 ```
 
 **Characteristics:**
@@ -364,21 +333,13 @@ Agents don't just differ in *what* verification they do — they differ in *how 
 
 ### Pattern 3: Understand-Plan-Implement-Verify (Junie CLI)
 
-```
-┌───────────┐    ┌──────────┐    ┌───────────┐    ┌──────────────┐
-│UNDERSTAND │───▶│   PLAN   │───▶│IMPLEMENT  │───▶│   VERIFY     │
-│  (analyze │    │  (steps  │    │  (code +  │    │  (structured │
-│   codebase│    │   + test │    │   tests)  │    │   TestResult)│
-│   context)│    │   plan)  │    │           │    │              │
-└───────────┘    └──────────┘    └───────────┘    └──────┬───────┘
-                                                         │
-                                                         │ (regression detected)
-                                                         ▼
-                                                   ┌───────────┐
-                                                   │  Re-plan  │
-                                                   │  with test│
-                                                   │  context  │
-                                                   └───────────┘
+```mermaid
+flowchart LR
+    A["UNDERSTAND\n(analyze codebase context)"] --> B["PLAN\n(steps + test plan)"]
+    B --> C["IMPLEMENT\n(code + tests)"]
+    C --> D["VERIFY\n(structured TestResult)"]
+    D -->|regression detected| E["Re-plan\nwith test context"]
+    E --> B
 ```
 
 **Characteristics:**
@@ -391,20 +352,12 @@ Agents don't just differ in *what* verification they do — they differ in *how 
 
 ### Pattern 4: Edit-Review-Commit (Codex)
 
-```
-┌─────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────┐
-│  Model   │───▶│  Sandboxed  │───▶│  Op::Review  │───▶│ Commit  │
-│ generates│    │  execution  │    │  (first-class│    │ (with   │
-│   patch  │    │  (isolated) │    │   operation) │    │ snapshot│
-└─────────┘    └─────────────┘    └──────┬───────┘    └─────────┘
-                                         │
-                                         │ (rejection)
-                                         ▼
-                                   ┌───────────┐
-                                   │ Rollback  │
-                                   │ via Ghost │
-                                   │ Snapshot  │
-                                   └───────────┘
+```mermaid
+flowchart LR
+    A["Model\ngenerates patch"] --> B["Sandboxed execution\n(isolated)"]
+    B --> C["Op::Review\n(first-class operation)"]
+    C --> D["Commit\n(with snapshot)"]
+    C -->|rejection| E["Rollback via\nGhost Snapshot"]
 ```
 
 **Characteristics:**
@@ -417,20 +370,12 @@ Agents don't just differ in *what* verification they do — they differ in *how 
 
 ### Pattern 5: Write-Test-Ship (Capy)
 
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Captain    │───▶│    Build     │───▶│   Captain    │
-│   (writes   │    │   (tests in  │    │  (validates  │
-│    spec)     │    │    fresh VM) │    │   vs spec)   │
-└──────────────┘    └──────────────┘    └──────┬───────┘
-                                               │
-                                               │ (spec mismatch)
-                                               ▼
-                                         ┌───────────┐
-                                         │ New task  │
-                                         │ cycle     │
-                                         │ (VM reset)│
-                                         └───────────┘
+```mermaid
+flowchart LR
+    A["Captain\n(writes spec)"] --> B["Build\n(tests in fresh VM)"]
+    B --> C["Captain\n(validates vs spec)"]
+    C -->|spec mismatch| D["New task cycle\n(VM reset)"]
+    D --> A
 ```
 
 **Characteristics:**

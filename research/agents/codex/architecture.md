@@ -249,8 +249,9 @@ model/provider unless explicitly overridden.
 
 Codex uses a **layered TOML configuration** system with strict precedence:
 
-```
-MDM (lowest) → System → User (~/.codex/config.toml) → Project → SessionFlags (highest)
+```mermaid
+flowchart LR
+    A["MDM (lowest)"] --> B["System"] --> C["User<br/>~/.codex/config.toml"] --> D["Project"] --> E["SessionFlags (highest)"]
 ```
 
 ### Config Layer Stack

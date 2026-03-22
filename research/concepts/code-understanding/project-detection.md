@@ -13,23 +13,14 @@ Project detection is the first step in code understanding. Before an agent can s
 
 ### The Detection Hierarchy
 
-```
-┌──────────────────────────────────────────┐
-│ 1. Language Detection                     │  What languages are used?
-│    └── File extensions, shebangs          │
-├──────────────────────────────────────────┤
-│ 2. Framework Detection                    │  React? Django? Express?
-│    └── Package manifests, imports         │
-├──────────────────────────────────────────┤
-│ 3. Build System Detection                 │  npm? cargo? make?
-│    └── Build files, scripts              │
-├──────────────────────────────────────────┤
-│ 4. Project Structure Detection            │  Monorepo? Workspace?
-│    └── Directory layout, workspace files │
-├──────────────────────────────────────────┤
-│ 5. Convention Detection                   │  Coding style, patterns
-│    └── Config files, CLAUDE.md, linters  │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["1. Language Detection<br/>File extensions, shebangs<br/>→ What languages are used?"]
+    B["2. Framework Detection<br/>Package manifests, imports<br/>→ React? Django? Express?"]
+    C["3. Build System Detection<br/>Build files, scripts<br/>→ npm? cargo? make?"]
+    D["4. Project Structure Detection<br/>Directory layout, workspace files<br/>→ Monorepo? Workspace?"]
+    E["5. Convention Detection<br/>Config files, CLAUDE.md, linters<br/>→ Coding style, patterns"]
+    A --> B --> C --> D --> E
 ```
 
 ### Agent Approaches to Project Detection

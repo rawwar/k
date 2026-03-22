@@ -34,41 +34,20 @@ interactive debugging assumes the human is present and willing to engage.
 
 The collaborative debugging loop follows a predictable escalation pattern:
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                 COLLABORATIVE DEBUGGING LOOP                   │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌──────────┐    ┌─────────────┐    ┌──────────────┐          │
-│  │  Agent   │───▶│ Agent reads │───▶│ Agent forms  │          │
-│  │hits error│    │ stacktrace, │    │ hypothesis   │          │
-│  └──────────┘    │ checks logs │    └──────┬───────┘          │
-│                  └─────────────┘           │                  │
-│                                            ▼                  │
-│                                  ┌──────────────────┐         │
-│                                  │ Agent attempts   │◀──┐     │
-│                                  │ autonomous fix   │   │     │
-│                                  └────────┬─────────┘   │     │
-│                                           │             │     │
-│                                 ┌─────────▼─────────┐   │     │
-│                                 │  Did fix work?    │   │     │
-│                                 └────┬─────────┬────┘   │     │
-│                                 yes  │         │ no     │     │
-│                                      ▼         ▼        │     │
-│                                 ┌────────┐ ┌────────┐   │     │
-│                                 │ Done ✅│ │Retry < │───┘     │
-│                                 └────────┘ │limit?  │         │
-│                                            └───┬────┘         │
-│                                                │ no           │
-│                                                ▼              │
-│  ┌─────────────────────────────────────────────────────┐      │
-│  │            ESCALATION TO HUMAN                      │      │
-│  │  ┌────────────┐  ┌────────────┐  ┌──────────────┐  │      │
-│  │  │Agent shows │─▶│Human gives │─▶│Agent retries │──┘      │
-│  │  │work & asks │  │guidance    │  │with guidance │         │
-│  │  └────────────┘  └────────────┘  └──────────────┘         │
-│  └─────────────────────────────────────────────────────┘      │
-└────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Agent hits error"] --> B["Agent reads stacktrace, checks logs"]
+    B --> C["Agent forms hypothesis"]
+    C --> D["Agent attempts autonomous fix"]
+    D --> E{"Did fix work?"}
+    E -- yes --> F["Done ✅"]
+    E -- no --> G{"Retry < limit?"}
+    G -- yes --> D
+    G -- no --> H["Escalation to Human"]
+    H --> I["Agent shows work & asks"]
+    I --> J["Human gives guidance"]
+    J --> K["Agent retries with guidance"]
+    K --> D
 ```
 
 The key architectural question: **when does the agent transition from autonomous
@@ -201,31 +180,13 @@ hypothesis, (4) a specific question. A bad escalation dumps a raw stack trace.
 Transparency is the foundation of effective collaborative debugging. When the
 human can see what the agent is doing, they can intervene early.
 
-```
-┌──────────────────────────────────────────────────────────┐
-│             INTERMEDIATE RESULTS DISPLAY                  │
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌─────────────────┐                                     │
-│  │ Error Detection  │──▶ "Found TypeError in api.ts:42"  │
-│  └────────┬────────┘                                     │
-│           ▼                                              │
-│  ┌─────────────────┐    "Reading api.ts, types.ts,       │
-│  │ File Examination │──▶  handlers/user.ts..."           │
-│  └────────┬────────┘                                     │
-│           ▼                                              │
-│  ┌─────────────────┐    "I think the error is because    │
-│  │ Hypothesis       │──▶  UserInput type doesn't include │
-│  └────────┬────────┘     the 'role' field from v2.3"     │
-│           ▼                                              │
-│  ┌─────────────────┐    "Applying fix: adding 'role'     │
-│  │ Fix Attempt      │──▶  to UserInput interface..."     │
-│  └────────┬────────┘                                     │
-│           ▼                                              │
-│  ┌─────────────────┐    "Running tests... 47/48 pass.    │
-│  │ Verification     │──▶  1 failure in auth.test.ts:89"  │
-│  └─────────────────┘                                     │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Error Detection"] -->|"Found TypeError in api.ts:42"| B["File Examination"]
+    B -->|"Reading api.ts, types.ts, handlers/user.ts..."| C["Hypothesis"]
+    C -->|"UserInput type missing 'role' field from v2.3"| D["Fix Attempt"]
+    D -->|"Applying fix: adding 'role' to UserInput interface..."| E["Verification"]
+    E -->|"Running tests... 47/48 pass, 1 failure in auth.test.ts:89"| F(["Complete"])
 ```
 
 Agents that stream their reasoning (Claude Code with extended thinking, Gemini CLI)
@@ -299,38 +260,25 @@ human and agent iteratively narrow down the problem.
 
 ### Sequence Diagram: API 500 Error Debugging
 
-```
-Human                              Agent                         System
-  │                                  │                              │
-  │  "The API returns 500            │                              │
-  │   errors on /users"              │                              │
-  │─────────────────────────────────▶│                              │
-  │                                  │  grep logs for 500 errors    │
-  │                                  │─────────────────────────────▶│
-  │                                  │◀──── error log entries ──────│
-  │                                  │  read src/handlers/users.ts  │
-  │                                  │─────────────────────────────▶│
-  │                                  │◀──── file contents ──────────│
-  │  "Handler isn't validating       │                              │
-  │   null inputs. Adding fix."      │                              │
-  │◀─────────────────────────────────│                              │
-  │  [human approves edit]           │                              │
-  │─────────────────────────────────▶│                              │
-  │                                  │  edit users.ts, run tests    │
-  │                                  │─────────────────────────────▶│
-  │                                  │◀── 47/48 pass, 1 fail ──────│
-  │  "Integration test fails —       │                              │
-  │   Redis connection refused."     │                              │
-  │◀─────────────────────────────────│                              │
-  │  "That test needs Redis.         │                              │
-  │   Skip it for now."              │                              │
-  │─────────────────────────────────▶│                              │
-  │                                  │  npm test -- --grep unit     │
-  │                                  │─────────────────────────────▶│
-  │                                  │◀──── 47/47 pass ────────────│
-  │  "All unit tests pass. Want      │                              │
-  │   me to add integration config?" │                              │
-  │◀─────────────────────────────────│                              │
+```mermaid
+sequenceDiagram
+    participant Human
+    participant Agent
+    participant System
+    Human->>Agent: The API returns 500 errors on /users
+    Agent->>System: grep logs for 500 errors
+    System-->>Agent: error log entries
+    Agent->>System: read src/handlers/users.ts
+    System-->>Agent: file contents
+    Agent-->>Human: Handler isn't validating null inputs. Adding fix.
+    Human->>Agent: [human approves edit]
+    Agent->>System: edit users.ts, run tests
+    System-->>Agent: 47/48 pass, 1 fail
+    Agent-->>Human: Integration test fails — Redis connection refused.
+    Human->>Agent: That test needs Redis. Skip it for now.
+    Agent->>System: npm test -- --grep unit
+    System-->>Agent: 47/47 pass
+    Agent-->>Human: All unit tests pass. Want me to add integration config?
 ```
 
 **Key observations:** The human provided domain knowledge the agent couldn't infer
@@ -348,30 +296,16 @@ Test failures are the most common debugging scenario for coding agents.
 
 ### The Agent Test-Debug Loop
 
-```
-  ┌─────────────┐
-  │  Run Tests  │
-  └──────┬──────┘
-         ▼
-  ┌──────────────┐  pass   ┌────────┐
-  │ All passing? │────────▶│ Done ✅│
-  └──────┬───────┘         └────────┘
-         │ fail
-         ▼
-  ┌───────────────────┐
-  │ Read failure output│──▶ assertion errors, stack traces
-  └────────┬──────────┘
-           ▼
-  ┌───────────────────┐
-  │ Trace to source   │──▶ find failing line, read context
-  └────────┬──────────┘
-           ▼
-  ┌───────────────────┐
-  │ Classify cause    │
-  │  bug in code? ────│──▶ Fix the code
-  │  bug in test? ────│──▶ Fix the test
-  │  env issue?  ─────│──▶ Escalate to human
-  └───────────────────┘
+```mermaid
+flowchart TD
+    A["Run Tests"] --> B{"All passing?"}
+    B -- pass --> C["Done ✅"]
+    B -- fail --> D["Read failure output"]
+    D -->|"assertion errors, stack traces"| E["Trace to source"]
+    E -->|"find failing line, read context"| F["Classify cause"]
+    F -- "bug in code?" --> G["Fix the code"]
+    F -- "bug in test?" --> H["Fix the test"]
+    F -- "env issue?" --> I["Escalate to human"]
 ```
 
 ### Test Failure Classification
@@ -403,16 +337,11 @@ often requires the system access that sandboxes restrict.
 - ✅ Full debugging tools (gdb, strace, tcpdump), internal networking
 - ❌ Higher resource footprint, risk of state mutation
 
-```
-Security ◀──────────────────────────────────────▶ Debuggability
-
-  Codex         Claude Code       Goose         OpenHands
-  (strict       (permission-      (extension-   (full
-   sandbox)      gated)            based)        container)
-    │               │                │               │
-    ▼               ▼                ▼               ▼
-  Very safe      Safe with        Flexible       Maximum debug
-  but limited    oversight        but complex    power, higher risk
+```mermaid
+flowchart LR
+    A["Codex (strict sandbox, very safe but limited)"] --> B["Claude Code (permission-gated, safe with oversight)"]
+    B --> C["Goose (extension-based, flexible but complex)"]
+    C --> D["OpenHands (full container, maximum debug power, higher risk)"]
 ```
 
 Capy (`../../agents/capy/`), ForgeCode (`../../agents/forgecode/`), and Warp

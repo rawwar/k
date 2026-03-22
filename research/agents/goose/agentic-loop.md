@@ -71,53 +71,29 @@ pub struct ReplyContext {
 
 ### The Loop
 
-```
-loop {
-    ┌─────────────────────────────────────────────────┐
-    │ 1. CHECK CANCELLATION                           │
-    │    if cancel_token.is_cancelled() → break       │
-    │                                                 │
-    │ 2. CHECK FINAL OUTPUT (recipe mode)             │
-    │    if final_output_tool has output → yield, exit│
-    │                                                 │
-    │ 3. TURN LIMIT                                   │
-    │    turns_taken += 1                             │
-    │    if turns_taken > max_turns (1000) → exit     │
-    │                                                 │
-    │ 4. INJECT MOIM CONTEXT                          │
-    │    Dynamic per-turn context from extensions      │
-    │                                                 │
-    │ 5. STREAM LLM RESPONSE                          │
-    │    stream_response_from_provider()               │
-    │                                                 │
-    │ 6. BACKGROUND: tool-pair summarization           │
-    │    maybe_summarize_tool_pairs() (async task)     │
-    │                                                 │
-    │ 7. PROCESS STREAM                                │
-    │    for each (response, usage) in stream:         │
-    │      ├── Update session metrics                  │
-    │      ├── Categorize tool requests                │
-    │      ├── Yield AgentEvent::Message               │
-    │      ├── If no tool calls → text response, done  │
-    │      └── If tool calls → execute (see below)     │
-    │                                                 │
-    │ 8. ERROR HANDLING                                │
-    │    ├── ContextLengthExceeded → compact & retry   │
-    │    ├── CreditsExhausted → notify, break          │
-    │    ├── NetworkError → error message, break       │
-    │    └── Other → error message, break              │
-    │                                                 │
-    │ 9. POST-ITERATION                                │
-    │    ├── Refresh tools if extensions changed        │
-    │    ├── Refresh prompt if new hints found          │
-    │    ├── Handle retry logic (recipe mode)           │
-    │    ├── Await tool-pair summarization              │
-    │    └── Persist messages to SessionManager         │
-    │                                                 │
-    │ 10. LOOP OR EXIT                                 │
-    │     If tools were called → continue loop         │
-    │     If text-only response → exit                 │
-    └─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[1. Check Cancellation] -->|cancelled| Z1[Break]
+    A -->|continue| B["2. Check Final Output (recipe mode)"]
+    B -->|output ready| Z2[Yield & Exit]
+    B -->|continue| C[3. Turn Limit: turns_taken++]
+    C -->|"> max_turns (1000)"| Z3[Exit with message]
+    C -->|continue| D[4. Inject MOIM Context]
+    D --> E[5. Stream LLM Response]
+    E --> F["6. Background: maybe_summarize_tool_pairs()"]
+    F --> G[7. Process Stream]
+    G -->|no tool calls| Z4[Text response — done]
+    G -->|tool calls| H["Execute tools (see below)"]
+    H --> I{8. Error?}
+    I -->|ContextLengthExceeded| J[Compact & Retry]
+    J --> E
+    I -->|CreditsExhausted| Z5[Notify & Break]
+    I -->|NetworkError| Z6[Error & Break]
+    I -->|Other| Z7[Error & Break]
+    I -->|none| K[9. Post-Iteration]
+    K --> L{10. Tools called?}
+    L -->|yes — loop| A
+    L -->|no| Z8[Exit loop]
 ```
 
 ### Max Turns
@@ -318,56 +294,46 @@ This runs concurrently with the reply loop and doesn't block the response.
 
 ## Flow Diagram
 
-```
-User Message
-    │
-    ▼
-reply()
-    ├── Handle elicitations (short-circuit)
-    ├── Handle slash commands (short-circuit)
-    ├── Persist message
-    ├── Check auto-compaction → maybe compact
-    │
-    ▼
-reply_internal()
-    │
-    ▼
-prepare_reply_context()
-    ├── Fix conversation ordering
-    ├── Gather tools from ExtensionManager
-    ├── Build system prompt (base + goosehints)
-    └── Determine summarization cutoff
-    │
-    ▼
-┌─► LOOP START
-│   │
-│   ├── Inject MOIM context
-│   │
-│   ├── stream_response_from_provider()
-│   │   └── provider.stream(system, messages, tools)
-│   │
-│   ├── Process stream chunks:
-│   │   ├── Text only → yield Message event
-│   │   └── Tool calls → categorize → inspect → approve
-│   │       │
-│   │       ├── dispatch_tool_call()
-│   │       │   └── extension_manager.dispatch_tool_call()
-│   │       │
-│   │       └── Collect results via tokio::select!
-│   │
-│   ├── Error handling:
-│   │   ├── ContextLengthExceeded → compact → retry
-│   │   └── Other errors → yield error, break
-│   │
-│   ├── Refresh tools if extensions changed
-│   ├── Handle retry logic (recipe mode)
-│   ├── Await tool-pair summarization
-│   ├── Persist all new messages
-│   │
-│   └── If tools called → LOOP
-│       If text-only → EXIT
-│
-└── Stream complete
+```mermaid
+flowchart TD
+    UM[User Message] --> R["reply()"]
+    R --> E1[Handle elicitations]
+    E1 -->|short-circuit| D1[Return early]
+    E1 -->|continue| SC[Handle slash commands]
+    SC -->|short-circuit| D2[Return early]
+    SC -->|continue| PM[Persist message]
+    PM --> AC{Auto-compaction needed?}
+    AC -->|yes| CP["compact_messages() → HistoryReplaced"]
+    CP --> RI
+    AC -->|no| RI["reply_internal()"]
+    RI --> PRC["prepare_reply_context()"]
+    PRC --> G1[Fix conversation ordering]
+    G1 --> G2[Gather tools from ExtensionManager]
+    G2 --> G3["Build system prompt (base + goosehints)"]
+    G3 --> G4[Determine summarization cutoff]
+    G4 --> LOOP
+
+    LOOP([LOOP START]) --> MOIM[Inject MOIM context]
+    MOIM --> SP["stream_response_from_provider()"]
+    SP --> PS[Process stream chunks]
+    PS -->|text only| ME[Yield Message event]
+    ME --> POST
+    PS -->|tool calls| CAT[Categorize → Inspect → Approve]
+    CAT --> DTC["dispatch_tool_call()"]
+    DTC --> EM["extension_manager.dispatch_tool_call()"]
+    EM --> CR["Collect results via tokio::select!"]
+    CR --> ERR{Error?}
+    ERR -->|ContextLengthExceeded| CPE[Compact → Retry]
+    CPE --> LOOP
+    ERR -->|Other errors| EE[Yield error, break]
+    ERR -->|none| POST[Post-Iteration]
+    POST --> RT[Refresh tools if changed]
+    RT --> RL[Handle retry logic]
+    RL --> AWS[Await tool-pair summarization]
+    AWS --> PERS[Persist all new messages]
+    PERS --> CHK{Tools called?}
+    CHK -->|yes| LOOP
+    CHK -->|no| DONE[Stream complete]
 ```
 
 ## Key Design Decisions

@@ -49,26 +49,22 @@ The Language Server Protocol, created by Microsoft for VS Code, standardizes the
 
 LSP uses JSON-RPC over stdio or TCP. The protocol is stateful — the client (agent) must maintain a session with the server:
 
-```
-Agent                                 Language Server
-  │                                        │
-  │──── initialize ──────────────────────▶│  Capabilities negotiation
-  │◀─── initialize result ───────────────│
-  │                                        │
-  │──── textDocument/didOpen ────────────▶│  Open a file
-  │◀─── textDocument/publishDiagnostics ──│  Server sends errors
-  │                                        │
-  │──── textDocument/definition ─────────▶│  Where is this symbol?
-  │◀─── Location[] ──────────────────────│  File + position
-  │                                        │
-  │──── textDocument/references ─────────▶│  Who uses this symbol?
-  │◀─── Location[] ──────────────────────│  All usage locations
-  │                                        │
-  │──── textDocument/didChange ──────────▶│  File was edited
-  │◀─── textDocument/publishDiagnostics ──│  Updated diagnostics
-  │                                        │
-  │──── shutdown ────────────────────────▶│  Graceful shutdown
-  │──── exit ────────────────────────────▶│
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant LS as Language Server
+    A->>LS: initialize
+    LS-->>A: initialize result (capabilities)
+    A->>LS: textDocument/didOpen
+    LS-->>A: textDocument/publishDiagnostics (errors)
+    A->>LS: textDocument/definition
+    LS-->>A: Location[] (file + position)
+    A->>LS: textDocument/references
+    LS-->>A: Location[] (all usage locations)
+    A->>LS: textDocument/didChange
+    LS-->>A: textDocument/publishDiagnostics (updated)
+    A->>LS: shutdown
+    A->>LS: exit
 ```
 
 ### JSON-RPC Examples
@@ -265,24 +261,18 @@ java -jar plugins/org.eclipse.equinox.launcher_*.jar \
 
 ### Architecture Pattern
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Coding Agent                      │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌──────────────┐    ┌──────────────┐               │
-│  │ LSP Client   │    │ Tool Router  │               │
-│  │ Manager      │◀──▶│              │               │
-│  └──────┬───────┘    └──────────────┘               │
-│         │                                            │
-│  ┌──────┴───────────────────────────────────┐       │
-│  │        Language Server Pool               │       │
-│  ├──────────┬──────────┬──────────┬─────────┤       │
-│  │ tsserver │ pyright  │  gopls   │rust-    │       │
-│  │          │          │          │analyzer │       │
-│  └──────────┴──────────┴──────────┴─────────┘       │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CodingAgent["Coding Agent"]
+        TR["Tool Router"] <--> LM["LSP Client Manager"]
+        LM --> Pool
+        subgraph Pool["Language Server Pool"]
+            TS["tsserver"]
+            PY["pyright"]
+            GO["gopls"]
+            RA["rust-analyzer"]
+        end
+    end
 ```
 
 ### Minimal LSP Client Implementation
@@ -427,8 +417,9 @@ class GotoDefinitionTool:
 
 Claude Code uses LSP diagnostics indirectly — it can read compiler/linter output to detect errors after edits:
 
-```
-Agent makes edit → File saved → Linter/compiler runs → Agent reads diagnostics
+```mermaid
+flowchart LR
+    A["Agent makes edit"] --> B["File saved"] --> C["Linter/compiler runs"] --> D["Agent reads diagnostics"]
 ```
 
 This is a limited form of LSP integration: the agent benefits from language server intelligence but only reactively (after errors occur), not proactively (to understand code before editing).

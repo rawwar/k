@@ -37,26 +37,18 @@ Three concrete benefits emerge:
 
 Across all coding agents we studied, specialist roles cluster into six categories:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     SPECIALIST ROLES                            │
-├──────────────┬──────────────┬──────────────┬───────────────────┤
-│   RESEARCH   │   PLANNING   │ IMPLEMENTATION│   VERIFICATION   │
-│              │              │              │                   │
-│  Explorer    │  Architect   │  Coder       │  Reviewer         │
-│  Researcher  │  Planner     │  Implementer │  Tester           │
-│  Analyst     │  Strategist  │  Builder     │  Evaluator        │
-│              │              │              │  Observer          │
-├──────────────┴──────────────┴──────────────┴───────────────────┤
-│              CROSS-CUTTING SPECIALISTS                         │
-├──────────────────────────┬────────────────────────────────────┤
-│   ORCHESTRATION          │   DOMAIN-SPECIFIC                  │
-│                          │                                    │
-│  Coordinator             │  Security Reviewer                 │
-│  Meta-Agent              │  Performance Analyst               │
-│  Task Router             │  Documentation Writer              │
-│                          │  Migration Specialist              │
-└──────────────────────────┴────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Core["Core Specialist Roles"]
+        R["RESEARCH\nExplorer | Researcher | Analyst"]
+        P["PLANNING\nArchitect | Planner | Strategist"]
+        I["IMPLEMENTATION\nCoder | Implementer | Builder"]
+        V["VERIFICATION\nReviewer | Tester | Evaluator | Observer"]
+    end
+    subgraph CrossCutting["Cross-Cutting Specialists"]
+        O["ORCHESTRATION\nCoordinator | Meta-Agent | Task Router"]
+        D["DOMAIN-SPECIFIC\nSecurity Reviewer | Performance Analyst\nDocumentation Writer | Migration Specialist"]
+    end
 ```
 
 ---
@@ -79,32 +71,17 @@ does not have write tools in its tool set. Sage cannot generate user-facing mess
 These are not prompt instructions that the LLM might ignore — they are hard boundaries
 enforced by the runtime.
 
-```
-User types ":muse refactor the auth module"
-  │
-  ▼
-┌─────────┐     ┌─────────┐     ┌─────────┐
-│  MUSE   │────►│  SAGE   │────►│  MUSE   │
-│ (plan)  │     │(research)│     │ (plan)  │
-│         │     │         │     │         │
-│ Read    │     │ Read    │     │ Creates │
-│ codebas │     │ 50 files│     │ step-by │
-│ structl │     │ analyze │     │ step    │
-│         │     │ deps    │     │ plan    │
-└─────────┘     └────┬────┘     └────┬────┘
-                     │               │
-              Returns summary   Plan passed to
-              (not raw data)    Forge for execution
-                                     │
-                                     ▼
-                               ┌─────────┐
-                               │  FORGE  │
-                               │ (impl)  │
-                               │         │
-                               │ Read +  │
-                               │ Write   │
-                               │ Execute │
-                               └─────────┘
+```mermaid
+flowchart TD
+    U["User: ':muse refactor the auth module'"]
+    M1["MUSE (plan)\nReads codebase structure"]
+    S["SAGE (research)\nReads 50 files\nAnalyzes deps"]
+    M2["MUSE (plan)\nCreates step-by-step plan"]
+    F["FORGE (impl)\nRead + Write\nExecute"]
+    U --> M1
+    M1 --> S
+    S -->|"Returns summary\n(not raw data)"| M2
+    M2 -->|"Plan passed to\nForge for execution"| F
 ```
 
 **ForgeCode's progressive reasoning budget** adds another dimension of specialization:
@@ -157,24 +134,15 @@ class Build:
 Claude Code's sub-agent types represent **model-tiered specialization** — the same
 underlying architecture but different models, tools, and permissions per role:
 
-```
-┌────────────────────────────────────────┐
-│         MAIN AGENT (Sonnet/Opus)       │
-│  Full tools, full context, full model  │
-├────────────┬──────────┬────────────────┤
-│ Sub-Agent  │ Sub-Agent│ Sub-Agent      │
-│  EXPLORE   │  PLAN    │ GENERAL-PURPOSE│
-│            │          │                │
-│ Model:     │ Model:   │ Model:         │
-│  Haiku     │  Parent  │  Parent        │
-│            │          │                │
-│ Tools:     │ Tools:   │ Tools:         │
-│  Read-only │  Read    │  All           │
-│  Grep,Glob │  only    │                │
-│            │          │                │
-│ Cost:      │ Purpose: │ Purpose:       │
-│  Low       │  Analyze │  Complex tasks │
-└────────────┴──────────┴────────────────┘
+```mermaid
+flowchart TD
+    MA["Main Agent (Sonnet/Opus)\nFull tools, full context, full model"]
+    EX["Sub-Agent: EXPLORE\nModel: Haiku\nTools: Read-only, Grep, Glob\nCost: Low"]
+    PL["Sub-Agent: PLAN\nModel: Parent\nTools: Read only\nPurpose: Analyze"]
+    GP["Sub-Agent: GENERAL-PURPOSE\nModel: Parent\nTools: All\nPurpose: Complex tasks"]
+    MA --> EX
+    MA --> PL
+    MA --> GP
 ```
 
 **The Haiku optimization:** Explore sub-agents use Claude Haiku — a smaller, faster,
@@ -257,23 +225,17 @@ suggests a sophisticated multi-agent system.
 
 **Speculative architecture based on BIGAI research patterns:**
 
-```
-┌──────────────────────────────┐
-│     ORCHESTRATOR             │
-│  (cognitive control model)   │
-├──────────────────────────────┤
-│                              │
-│  ┌────────┐  ┌────────┐     │
-│  │Planning│  │ Domain │     │
-│  │ Agent  │  │ Expert │     │
-│  └────────┘  └────────┘     │
-│                              │
-│  ┌────────┐  ┌────────┐     │
-│  │Execution│  │Verify  │     │
-│  │ Agent  │  │ Agent  │     │
-│  └────────┘  └────────┘     │
-│                              │
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+    ORC["Orchestrator\n(cognitive control model)"]
+    PL["Planning Agent"]
+    DE["Domain Expert"]
+    EX["Execution Agent"]
+    VE["Verify Agent"]
+    ORC --> PL
+    ORC --> DE
+    ORC --> EX
+    ORC --> VE
 ```
 
 **Model-agnostic design:** TongAgents achieves very different scores across models
@@ -470,18 +432,11 @@ migration_agent = Agent(
 Aider implements a notable variant — **two-model specialization** where a reasoning
 model describes the solution and a code-editing model translates it into file edits:
 
-```
-┌──────────────────────┐     ┌──────────────────────┐
-│   ARCHITECT MODEL    │     │   EDITOR MODEL       │
-│   (o1, o3, R1)       │────►│   (Sonnet, GPT-4o)   │
-│                      │     │                      │
-│   Describes solution │     │   Translates to      │
-│   in natural language│     │   file edits         │
-│                      │     │                      │
-│   "Move the auth     │     │   --- a/routes/auth  │
-│    middleware to a    │     │   +++ b/routes/auth  │
-│    separate module"  │     │   @@ -10,5 +10,8 @@  │
-└──────────────────────┘     └──────────────────────┘
+```mermaid
+flowchart LR
+    AR["Architect Model (o1, o3, R1)\nDescribes solution in natural language:\n'Move the auth middleware\nto a separate module'"]
+    ED["Editor Model (Sonnet, GPT-4o)\nTranslates to file edits:\n--- a/routes/auth\n+++ b/routes/auth\n@@ -10,5 +10,8 @@"]
+    AR -->|"description"| ED
 ```
 
 **Benchmark impact:** o1-preview alone scored 79.7% on SWE-bench. With architect

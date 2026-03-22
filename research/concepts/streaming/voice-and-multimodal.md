@@ -350,17 +350,13 @@ Beyond text: voice coding, multimodal inputs, and future streaming modalities.
 
 ### Voice + Code Agent Pipeline
 
-```
-┌─────────┐    ┌───────────┐    ┌─────────┐    ┌──────────┐
-│ Mic/Audio│───>│ Whisper / │───>│ LLM /   │───>│ Code Edit│
-│ Capture  │    │ STT Engine│    │ Agent   │    │ & Apply  │
-└─────────┘    └───────────┘    └─────────┘    └──────────┘
-                                     │
-                                     ▼
-                               ┌──────────┐
-                               │ TTS /    │───> Speaker
-                               │ Voice Out│
-                               └──────────┘
+```mermaid
+flowchart LR
+    A["Mic / Audio Capture"] --> B["Whisper / STT Engine"]
+    B --> C["LLM / Agent"]
+    C --> D["Code Edit & Apply"]
+    C --> E["TTS / Voice Out"]
+    E --> F["Speaker"]
 ```
 
 ### Multimodal Context Assembly

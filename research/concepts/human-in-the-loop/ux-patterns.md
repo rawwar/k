@@ -197,14 +197,11 @@ incrementally—is one of the hardest UX problems in terminal agent design.
 
 ### The Rendering Pipeline
 
-```
-┌──────────┐    ┌────────────┐    ┌──────────────┐    ┌──────────┐
-│ LLM API  │───▶│ Token      │───▶│ Markdown     │───▶│ Terminal  │
-│ (SSE /   │    │ Buffer     │    │ Parser       │    │ Renderer  │
-│ WebSocket)│    │            │    │ (incremental)│    │ (ANSI)   │
-└──────────┘    └────────────┘    └──────────────┘    └──────────┘
-     tokens         batched           parsed              styled
-     1-by-1         chunks            AST nodes            output
+```mermaid
+flowchart LR
+    A["LLM API<br/>(SSE / WebSocket)"] -->|"tokens 1-by-1"| B["Token Buffer"]
+    B -->|"batched chunks"| C["Markdown Parser<br/>(incremental)"]
+    C -->|"parsed AST nodes"| D["Terminal Renderer<br/>(ANSI)"]
 ```
 
 ### The Incremental Markdown Problem
@@ -284,13 +281,14 @@ entire line as added/deleted:
 
 ### Diff Rendering Architecture
 
-```
-┌───────────────┐     ┌──────────────┐     ┌──────────────────┐
-│ Original File │────▶│ Diff Engine  │────▶│ Renderer         │
-└───────────────┘     │ (Myers / PD) │     │ ├─ Unified       │
-┌───────────────┐     └──────────────┘     │ ├─ Side-by-side  │
-│ Modified File │───────────┘              │ └─ Inline word   │
-└───────────────┘                          └──────────────────┘
+```mermaid
+flowchart LR
+    A["Original File"] --> C["Diff Engine<br/>(Myers / PD)"]
+    B["Modified File"] --> C
+    C --> D["Renderer"]
+    D --> E["Unified"]
+    D --> F["Side-by-side"]
+    D --> G["Inline word"]
 ```
 
 ### Diff Style by Agent

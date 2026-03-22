@@ -7,57 +7,17 @@
 
 Gemini CLI's agentic loop follows the standard pattern of terminal coding agents:
 
-```
-User Input
-    │
-    v
-┌──────────────────────────────────────────────────────────────┐
-│                      AGENTIC LOOP                            │
-│                                                              │
-│   ┌─────────────┐     ┌──────────────────┐                  │
-│   │   Prompt     │────>│ Content Generator │                 │
-│   │  Assembly    │     │  (API Request)    │                 │
-│   └─────────────┘     └────────┬─────────┘                  │
-│                                │                             │
-│                                v                             │
-│                    ┌──────────────────┐                      │
-│                    │  Model Response  │                      │
-│                    │  (stream)        │                      │
-│                    └────────┬─────────┘                      │
-│                             │                                │
-│                    ┌────────v─────────┐                      │
-│                    │  Has tool calls? │                      │
-│                    └────────┬─────────┘                      │
-│                      yes /     \ no                        │
-│                         /       \                          │
-│               ┌────────v──┐  ┌──v──────────┐                │
-│               │   Tool     │  │  Turn       │                │
-│               │  Scheduler │  │  Complete   │                │
-│               └────────┬───┘  └─────────────┘                │
-│                        │                                     │
-│               ┌────────v───────┐                             │
-│               │ Confirmation   │                             │
-│               │ Bus (if needed)│                             │
-│               └────────┬───────┘                             │
-│                        │                                     │
-│               ┌────────v───────┐                             │
-│               │ Tool Execution │                             │
-│               │ (in sandbox    │                             │
-│               │  if configured)│                             │
-│               └────────┬───────┘                             │
-│                        │                                     │
-│                        │ (results fed back as function       │
-│                        │  response to next iteration)        │
-│                        │                                     │
-│               ┌────────v───────┐                             │
-│               │ Loop back to   │                             │
-│               │ Content Gen    │                             │
-│               └────────────────┘                             │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-    │
-    v
-Final Response to User
+```mermaid
+flowchart TD
+    A["User Input"] --> B["Prompt Assembly"]
+    B --> C["Content Generator<br/>(API Request)"]
+    C --> D["Model Response<br/>(stream)"]
+    D --> E{Has tool calls?}
+    E -- no --> DONE["Turn Complete → Final Response to User"]
+    E -- yes --> F["Tool Scheduler"]
+    F --> G["Confirmation Bus<br/>(if needed)"]
+    G --> H["Tool Execution<br/>(in sandbox if configured)"]
+    H --> |"results fed back as function_response"| C
 ```
 
 ## Turn Processing (turn.ts)
@@ -183,21 +143,24 @@ The scheduler determines execution order:
 
 ### Parallel Execution
 
-```
-┌──────────────────────────────────────────┐
-│           Tool Scheduler                  │
-│                                           │
-│   Batch 1 (parallel, no confirmation):   │
-│   ├── read_file("src/main.ts")           │
-│   ├── read_file("src/utils.ts")          │
-│   └── grep_search("TODO")               │
-│                                           │
-│   Batch 2 (sequential, confirmation):    │
-│   └── run_shell_command("npm test")      │
-│       └── [user confirmation required]   │
-│                                           │
-│   All results -> function_response parts  │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    TS["Tool Scheduler"]
+
+    subgraph PAR["Batch 1 – parallel, no confirmation"]
+        B1["read_file('src/main.ts')"]
+        B2["read_file('src/utils.ts')"]
+        B3["grep_search('TODO')"]
+    end
+
+    subgraph SEQ["Batch 2 – sequential, confirmation required"]
+        C1["run_shell_command('npm test')"] --> C2["user confirmation required"]
+    end
+
+    TS --> PAR
+    TS --> SEQ
+    PAR --> R["All results → function_response parts"]
+    C2 --> R
 ```
 
 ### Error Handling
@@ -214,22 +177,19 @@ The confirmation bus integrates with the tool scheduler:
 
 ### Confirmation Decision Tree
 
-```
-Tool Call
-    │
-    ├── Is tool read-only? ──── yes ──> Execute immediately
-    │
-    ├── Is tool auto-approved  ─ yes ──> Execute immediately
-    │   (policy/settings)?
-    │
-    ├── Is headless mode? ───── yes ──> Apply headless policy
-    │                                    (reject/approve/pattern)
-    │
-    └── Prompt user ──────────────────> Wait for confirmation
-        │
-        ├── User approves ────────────> Execute
-        ├── User rejects ─────────────> Return rejection to model
-        └── User modifies ────────────> Execute modified version
+```mermaid
+flowchart TD
+    A["Tool Call"] --> B{Read-only?}
+    B -- yes --> EXEC["Execute immediately"]
+    B -- no --> C{"Auto-approved<br/>(policy/settings)?"}
+    C -- yes --> EXEC
+    C -- no --> D{Headless mode?}
+    D -- yes --> E["Apply headless policy<br/>(reject / approve / pattern)"]
+    D -- no --> F["Prompt user"]
+    F --> G{User decision}
+    G -- approves --> EXEC
+    G -- rejects --> REJ["Return rejection to model"]
+    G -- modifies --> MOD["Execute modified version"]
 ```
 
 ### Confirmation UI
@@ -256,34 +216,17 @@ When the model calls `enter_plan_mode`:
 
 ### Plan Mode Workflow
 
-```
-User: "Refactor the authentication system"
-    │
-    v
-Model calls enter_plan_mode
-    │
-    v
-┌─── Plan Mode (read-only) ────────────────────────────┐
-│                                                        │
-│   read_file("src/auth/login.ts")                      │
-│   grep_search("authenticate")                         │
-│   read_file("src/auth/session.ts")                    │
-│   glob("src/auth/**/*.ts")                            │
-│   google_web_search("best practices JWT refresh")     │
-│                                                        │
-│   Model synthesizes findings into a plan              │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-    │
-    v
-Model calls exit_plan_mode with plan summary
-    │
-    v
-Plan presented to user for approval
-    │
-    ├── User approves -> Agent executes plan (mutating tools re-enabled)
-    ├── User modifies -> Agent adjusts and re-presents
-    └── User rejects -> Agent abandons plan
+```mermaid
+flowchart TD
+    A["User: 'Refactor the authentication system'"] --> B["Model calls enter_plan_mode"]
+    B --> C["Plan Mode – read-only research<br/>read_file · grep_search · glob · google_web_search<br/>Model synthesizes findings into a plan"]
+    C --> D["Model calls exit_plan_mode with plan summary"]
+    D --> E["Plan presented to user for approval"]
+    E --> F{User decision}
+    F -- approves --> G["Agent executes plan<br/>(mutating tools re-enabled)"]
+    F -- modifies --> H["Agent adjusts and re-presents"]
+    H --> E
+    F -- rejects --> I["Agent abandons plan"]
 ```
 
 ### Plan Mode Benefits
@@ -299,24 +242,13 @@ Gemini CLI supports sub-agents through the `complete_task` tool and the `agents/
 
 ### Sub-Agent Architecture
 
-```
-Main Agent
-    │
-    ├── Encounters complex task requiring decomposition
-    │
-    ├── Creates sub-agent with specific task description
-    │   ├── Sub-agent has its own conversation context
-    │   ├── Sub-agent has access to tools (configurable subset)
-    │   ├── Sub-agent operates within parent's sandbox
-    │   └── Sub-agent uses complete_task to signal completion
-    │
-    ├── Sub-agent executes independently
-    │   ├── Own agentic loop (same architecture as main)
-    │   ├── Own tool calls and confirmations
-    │   └── Own turn management
-    │
-    └── Sub-agent result returned to main agent
-        └── Main agent continues with sub-agent's output
+```mermaid
+flowchart TD
+    MA["Main Agent"] --> T["Encounters complex task requiring decomposition"]
+    T --> SA["Creates sub-agent with task-scoped context<br/>and configurable tool subset<br/>operates in parent's sandbox"]
+    SA --> SL["Sub-agent runs own agentic loop<br/>(tool calls, confirmations, turn management)"]
+    SL --> CT["Sub-agent calls complete_task<br/>with result summary"]
+    CT --> MA2["Main agent continues with sub-agent output"]
 ```
 
 ### complete_task Tool

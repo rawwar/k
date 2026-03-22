@@ -16,59 +16,32 @@ You have built a complete safety system for your coding agent. Let's step back a
 
 Here is the full safety pipeline that every tool call passes through before it reaches execution:
 
-```text
-LLM requests tool call
-        |
-        v
-+-------------------+
-|   Plan Mode       |  If active: capture the action, return simulated result.
-|   Interceptor     |  If not: pass through.
-+-------------------+
-        |
-        v
-+-------------------+
-|   Permission      |  Check: does the current permission level allow
-|   Gate            |  this category of operation?
-+-------------------+  Denied -> return error to LLM
-        |
-        v
-+-------------------+
-|   Allowlist /     |  Check: is the specific command or path permitted
-|   Denylist        |  by the filter rules?
-+-------------------+  Blocked -> return error to LLM
-        |
-        v
-+-------------------+
-|   Dangerous Op    |  Score: how risky is this operation based on
-|   Detection       |  heuristic analysis?
-+-------------------+  High risk -> route to approval
-        |
-        v
-+-------------------+
-|   Approval        |  If required: show details, wait for user response.
-|   System          |  Denied -> return error to LLM.
-+-------------------+  Approved -> continue.
-        |
-        v
-+-------------------+
-|   File            |  Before any write: capture file state for
-|   Checkpoints     |  potential rollback.
-+-------------------+
-        |
-        v
-+-------------------+
-|   Sandbox         |  Execute the command inside OS-level sandbox
-|   Execution       |  restricting filesystem and network access.
-+-------------------+
-        |
-        v
-+-------------------+
-|   Audit           |  Record the tool call, parameters, and outcome
-|   Logger          |  in the structured audit log.
-+-------------------+
-        |
-        v
-    Return result to LLM
+```mermaid
+flowchart TD
+    START["LLM requests tool call"]
+    PLAN["Plan Mode Interceptor\nIf active: capture action, return simulated result\nIf not: pass through"]
+    PERM["Permission Gate\nCheck permission level allows this operation"]
+    FILTER["Allowlist / Denylist\nCheck if command or path is permitted"]
+    DETECT["Dangerous Op Detection\nScore operation risk via heuristic analysis"]
+    APPROVAL["Approval System\nShow details, wait for user response"]
+    CHECK["File Checkpoints\nCapture file state for potential rollback"]
+    SANDBOX["Sandbox Execution\nExecute inside OS-level sandbox"]
+    AUDIT["Audit Logger\nRecord tool call, parameters, and outcome"]
+    RESULT["Return result to LLM"]
+    ERR1["Return error to LLM"]
+    ERR2["Return error to LLM"]
+    ERR3["Return error to LLM"]
+
+    START --> PLAN --> PERM
+    PERM -->|Denied| ERR1
+    PERM -->|Allowed| FILTER
+    FILTER -->|Blocked| ERR2
+    FILTER -->|Allowed| DETECT
+    DETECT -->|High risk| APPROVAL
+    DETECT -->|Low risk| CHECK
+    APPROVAL -->|Denied| ERR3
+    APPROVAL -->|Approved| CHECK
+    CHECK --> SANDBOX --> AUDIT --> RESULT
 ```
 
 Each layer is independent. Removing any single layer weakens the system but does not destroy it. This is the defining characteristic of defense in depth.

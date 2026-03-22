@@ -6,22 +6,13 @@ Context management is one of Aider's strongest technical contributions. The chal
 
 ## The Three Layers of Context
 
-```
-┌─────────────────────────────────────────────────┐
-│  Layer 1: ADDED FILES (full content)             │
-│  Files the user explicitly /add'd to the chat    │
-│  These are editable by the LLM                   │
-│  Highest token cost, highest fidelity             │
-├─────────────────────────────────────────────────┤
-│  Layer 2: REPO MAP (ranked summary)              │
-│  Tree-sitter extracted symbols from ALL files    │
-│  Graph-ranked by importance/relevance            │
-│  Token-budgeted to fit available context          │
-├─────────────────────────────────────────────────┤
-│  Layer 3: CHAT HISTORY                           │
-│  Previous conversation messages                   │
-│  Summarized when too long                         │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: Added Files — full content\nFiles explicitly /add'd to the chat\nEditable by the LLM · highest token cost, highest fidelity"]
+    L2["Layer 2: Repo Map — ranked summary\nTree-sitter extracted symbols from ALL files\nGraph-ranked by importance/relevance\nToken-budgeted to fit available context"]
+    L3["Layer 3: Chat History\nPrevious conversation messages\nSummarized when too long"]
+
+    L1 --> L2 --> L3
 ```
 
 ## Repo-Map: Deep Dive
@@ -67,10 +58,16 @@ Edge = file A references a symbol defined in file B
 ```
 
 For example:
-```
-app.py ──references──→ models.py (uses User class)
-app.py ──references──→ utils.py (uses validate_email)
-tests/test_app.py ──references──→ app.py (tests endpoints)
+```mermaid
+flowchart LR
+    app["app.py"]
+    models["models.py"]
+    utils["utils.py"]
+    tests["tests/test_app.py"]
+
+    app -->|"references (User class)"| models
+    app -->|"references (validate_email)"| utils
+    tests -->|"references (tests endpoints)"| app
 ```
 
 #### Step 3: Graph Ranking (PageRank-style)

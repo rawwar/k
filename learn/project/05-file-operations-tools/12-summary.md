@@ -85,33 +85,23 @@ The Rust implementations are more verbose because of explicit error handling, bu
 
 Here is how the file tools fit into the overall agent architecture:
 
-```
-┌──────────────────────────────────────────────────┐
-│                  Agentic Loop                     │
-│  (Chapter 3)                                     │
-│                                                  │
-│  ┌────────────────────────────────────────────┐  │
-│  │           Tool Registry (Ch 4)             │  │
-│  │                                            │  │
-│  │  ┌──────────┐ ┌──────────┐ ┌───────────┐  │  │
-│  │  │ ReadFile │ │WriteFile │ │ EditFile  │  │  │
-│  │  └────┬─────┘ └────┬─────┘ └─────┬─────┘  │  │
-│  │       │             │             │        │  │
-│  │  ┌────┴─────────────┴─────────────┴────┐   │  │
-│  │  │        Path Resolution Layer        │   │  │
-│  │  │   (canonicalize, boundary check)    │   │  │
-│  │  └────┬────────────────────────────────┘   │  │
-│  │       │                                    │  │
-│  │  ┌────┴────────────────────────────────┐   │  │
-│  │  │         Safety Checker              │   │  │
-│  │  │  (blocklist, read-only, size limit) │   │  │
-│  │  └────┬────────────────────────────────┘   │  │
-│  │       │                                    │  │
-│  │  ┌────┴────────────────────────────────┐   │  │
-│  │  │    std::fs (with atomic writes)     │   │  │
-│  │  └────────────────────────────────────-┘   │  │
-│  └────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph LOOP["Agentic Loop"]
+        subgraph REGISTRY["Tool Registry (Ch 4)"]
+            RF["ReadFile"]
+            WF["WriteFile"]
+            EF["EditFile"]
+        end
+
+        PATH["Path Resolution Layer\ncanonicalize, boundary check"]
+        SAFETY["Safety Checker\nblocklist, read-only, size limit"]
+        FS["std::fs\nwith atomic writes"]
+    end
+
+    RF & WF & EF --> PATH
+    PATH --> SAFETY
+    SAFETY --> FS
 ```
 
 Every file operation flows through three layers: path resolution, safety checking, and then the actual filesystem call. This layered design means you can add new file tools (copy, move, delete) and they automatically get path safety and permission checking by using the same infrastructure.

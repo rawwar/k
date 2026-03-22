@@ -179,15 +179,15 @@ const useStreaming = (apiCall) => {
 
 The React component lifecycle maps to streaming as follows:
 
-```
-Token arrives from LLM API
-  → setState({ content: prev + token })
-    → React schedules re-render
-      → Reconciliation: diff previous vs new tree
-        → Only the <Text> with streaming content changed
-          → Yoga recomputes layout for changed subtree
-            → ANSI output for active region only
-              → Write to stdout (overwrites active region)
+```mermaid
+flowchart TD
+    A["Token arrives from LLM API"] --> B["setState({ content: prev + token })"]
+    B --> C["React schedules re-render"]
+    C --> D["Reconciliation: diff previous vs new tree"]
+    D --> E["Only the Text node with streaming content changed"]
+    E --> F["Yoga recomputes layout for changed subtree"]
+    F --> G["ANSI output for active region only"]
+    G --> H["Write to stdout (overwrites active region)"]
 ```
 
 Performance characteristics:

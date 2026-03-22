@@ -32,20 +32,15 @@ and [UX Patterns](./ux-patterns.md).
 Agents occupy different positions on the trust spectrum, from zero-trust (every action
 requires human approval) to full-trust (fully autonomous operation):
 
-```
-Zero Trust                                                         Full Trust
-     │                                                                  │
-     ▼                                                                  ▼
- ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐  ┌───────┐
- │ Strict │  │  Per-  │  │ Rule-  │  │ Risk-  │  │Sandbox │  │ Full  │
- │ Prompt │  │ Action │  │ Based  │  │ Aware  │  │ Isola- │  │ Auto  │
- ├────────┤  ├────────┤  ├────────┤  ├────────┤  ├────────┤  ├───────┤
- │OpenCode│  │Gemini  │  │Claude  │  │ Goose  │  │Open-   │  │ Aider │
- │Junie   │  │CLI     │  │Code    │  │(Smart) │  │Hands   │  │Forge- │
- │        │  │Warp    │  │Codex   │  │        │  │Capy    │  │ Code  │
- └────────┘  └────────┘  └────────┘  └────────┘  └────────┘  └───────┘
-  Safest       Safe       Balanced     Smart       Safe via    Fastest
-  Slowest      Tedious    Flexible     complex    isolation   Riskiest
+```mermaid
+flowchart LR
+    ZT(["Zero Trust"]) --> A["Strict Prompt\n(OpenCode, Junie)\nSafest / Slowest"]
+    A --> B["Per-Action\n(Gemini CLI, Warp)\nSafe / Tedious"]
+    B --> C["Rule-Based\n(Claude Code, Codex)\nBalanced / Flexible"]
+    C --> D["Risk-Aware\n(Goose Smart)\nSmart"]
+    D --> E["Sandbox Isolation\n(OpenHands, Capy)\nSafe via isolation"]
+    E --> F["Full Auto\n(Aider, ForgeCode)\nFastest / Riskiest"]
+    F --> FT(["Full Trust"])
 ```
 
 **Where each agent falls:**
@@ -106,12 +101,11 @@ actions are auto-*denied* rather than prompted. Ideal for CI-like deterministic 
 
 Claude Code lets users ratchet trust mid-conversation via **Shift+Tab**:
 
-```
-  ┌──────────┐     Shift+Tab     ┌──────────────┐     Shift+Tab     ┌────────┐
-  │ default  │ ──────────────▶   │ acceptEdits  │ ──────────────▶   │  plan  │
-  └──────────┘                   └──────────────┘                   └────────┘
-       ▲                                                                │
-       └────────────────────── Shift+Tab ───────────────────────────────┘
+```mermaid
+flowchart LR
+    A["default"] -->|"Shift+Tab"| B["acceptEdits"]
+    B -->|"Shift+Tab"| C["plan"]
+    C -->|"Shift+Tab"| A
 ```
 
 This per-task ratcheting avoids the all-or-nothing trap: start in `plan` to review,
@@ -121,23 +115,24 @@ Shift+Tab into `acceptEdits` for safe changes, back to `default` for commands.
 
 Claude Code's trust system uses defense-in-depth:
 
-```
-Layer 1: Permission Rules
-  ├── Glob-pattern allow/deny lists
-  ├── Mode-based defaults (plan, acceptEdits, etc.)
-  └── Session-scoped approvals
-          │
-          ▼
-Layer 2: OS-Level Sandboxing
-  ├── macOS Seatbelt profiles (file system + network)
-  ├── Linux seccomp filters, namespace isolation
-  └── Container isolation for CI
-          │
-          ▼
-Layer 3: Hooks (Pre/Post Execution)
-  ├── PreToolUse: custom validation before any tool call
-  ├── PostToolUse: audit, revert, or log after execution
-  └── Organization-specific policy enforcement scripts
+```mermaid
+flowchart TD
+    subgraph L1["Layer 1: Permission Rules"]
+        L1A["Glob-pattern allow/deny lists"]
+        L1B["Mode-based defaults (plan, acceptEdits, etc.)"]
+        L1C["Session-scoped approvals"]
+    end
+    subgraph L2["Layer 2: OS-Level Sandboxing"]
+        L2A["macOS Seatbelt profiles (file system + network)"]
+        L2B["Linux seccomp filters, namespace isolation"]
+        L2C["Container isolation for CI"]
+    end
+    subgraph L3["Layer 3: Hooks (Pre/Post Execution)"]
+        L3A["PreToolUse: custom validation before any tool call"]
+        L3B["PostToolUse: audit, revert, or log after execution"]
+        L3C["Organization-specific policy enforcement scripts"]
+    end
+    L1 --> L2 --> L3
 ```
 
 Each layer operates independently. Compromising one layer does not grant unrestricted access.
@@ -278,12 +273,13 @@ modifications outside project root → risky; previously denied commands → ris
 
 Every action in Goose passes through four sequential inspectors:
 
-```
-Action → SecurityInspector → AdversaryInspector → PermissionInspector → RepetitionInspector → Decision
-              │                    │                     │                      │
-         Dangerous            Prompt               Per-tool              Loop
-         pattern              injection             config              detection
-         matching             detection             + mode
+```mermaid
+flowchart LR
+    A["Action"] --> B["SecurityInspector\nDangerous pattern\nmatching"]
+    B --> C["AdversaryInspector\nPrompt injection\ndetection"]
+    C --> D["PermissionInspector\nPer-tool config\n+ mode"]
+    D --> E["RepetitionInspector\nLoop detection"]
+    E --> F["Decision"]
 ```
 
 Each inspector returns `Proceed`, `Confirm(reason)`, or `Block(reason)`. Results are

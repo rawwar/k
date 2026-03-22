@@ -80,28 +80,21 @@ performance while being dramatically cheaper to run:
 
 ### How MoE Works
 
-```
-                    ┌──────────────────────────────┐
-                    │       Input Tokens            │
-                    └──────────┬───────────────────┘
-                               │
-                    ┌──────────▼───────────────────┐
-                    │       Router Network          │
-                    │  (selects active experts)     │
-                    └──────────┬───────────────────┘
-                               │
-          ┌────────────────────┼────────────────────┐
-          │                    │                    │
-    ┌─────▼─────┐       ┌─────▼─────┐       ┌─────▼─────┐
-    │ Expert 1  │       │ Expert 2  │       │ Expert 8  │
-    │ (active)  │       │ (active)  │       │ (inactive)│
-    └─────┬─────┘       └─────┬─────┘       └───────────┘
-          │                    │
-          └────────┬───────────┘
-                   │
-          ┌────────▼────────┐
-          │  Combine Output │
-          └─────────────────┘
+```mermaid
+flowchart TD
+    IT["Input Tokens"]
+    RN["Router Network\n(selects active experts)"]
+    E1["Expert 1\n(active)"]
+    E2["Expert 2\n(active)"]
+    E8["Expert 8\n(inactive)"]
+    CO["Combine Output"]
+
+    IT --> RN
+    RN --> E1
+    RN --> E2
+    RN --> E8
+    E1 --> CO
+    E2 --> CO
 ```
 
 **Key insight:** DeepSeek-V3.2 has 671B total parameters but only activates ~37B

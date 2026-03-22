@@ -36,30 +36,23 @@ beginning, not dynamically throughout execution.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        ROUTING PATTERN                              │
-│                                                                     │
-│                        ┌──────────────┐                             │
-│                   ┌───▶│  Handler A   │───┐                         │
-│                   │    │ (Simple edit) │   │                         │
-│  ┌───────┐  ┌────┴───┐└──────────────┘   │    ┌──────────┐        │
-│  │ Input  │─▶│Classifi│                   ├───▶│  Output  │        │
-│  │        │  │  er    │┌──────────────┐   │    │          │        │
-│  └───────┘  └────┬───┘│  Handler B   │───┘    └──────────┘        │
-│                   │    │(Refactoring) │   │                         │
-│                   │    └──────────────┘   │                         │
-│                   │    ┌──────────────┐   │                         │
-│                   └───▶│  Handler C   │───┘                         │
-│                        │(Exploration) │                              │
-│                        └──────────────┘                              │
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Classifier: Determines which handler best fits the input   │   │
-│  │  • LLM-based classification   • Rule-based routing          │   │
-│  │  • Confidence thresholds      • Multi-dimensional scoring   │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph RP["ROUTING PATTERN"]
+        IN["Input"]
+        CL["Classifier\n• LLM-based classification\n• Rule-based routing\n• Confidence thresholds\n• Multi-dimensional scoring"]
+        HA["Handler A\n(Simple edit)"]
+        HB["Handler B\n(Refactoring)"]
+        HC["Handler C\n(Exploration)"]
+        OUT["Output"]
+        IN --> CL
+        CL --> HA
+        CL --> HB
+        CL --> HC
+        HA --> OUT
+        HB --> OUT
+        HC --> OUT
+    end
 ```
 
 The architecture has three components:
@@ -78,17 +71,16 @@ The foundation of routing is **accurate classification**. The classifier must
 examine the input and determine which handler will produce the best result.
 Classification can happen along multiple dimensions:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   CLASSIFICATION DIMENSIONS                  │
-│                                                             │
-│  Task Type        │ bug_fix | feature | refactor | question │
-│  Complexity       │ simple | moderate | complex             │
-│  Scope            │ single_file | multi_file | cross_repo   │
-│  Domain           │ frontend | backend | infra | docs       │
-│  Risk Level       │ low | medium | high | critical          │
-│  Model Required   │ small/fast | medium | large/powerful    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CD["CLASSIFICATION DIMENSIONS"]
+        TT["Task Type: bug_fix | feature | refactor | question"]
+        CX["Complexity: simple | moderate | complex"]
+        SC["Scope: single_file | multi_file | cross_repo"]
+        DOM["Domain: frontend | backend | infra | docs"]
+        RL["Risk Level: low | medium | high | critical"]
+        MR["Model Required: small/fast | medium | large/powerful"]
+    end
 ```
 
 ### Specialized Handler Selection
@@ -175,14 +167,12 @@ async def classify_hybrid(task: str, context: TaskContext) -> TaskCategory:
 
 ### Confidence-Based Routing with Fallbacks
 
-```
-┌──────────────┐
-│  Classifier  │
-│ Confidence?  │
-└──────┬───────┘
-       ├── High (>0.9) ──── Direct to specialized handler
-       ├── Medium (0.6-0.9) ── Specialized handler + extra validation
-       └── Low (<0.6) ──── General-purpose handler (no routing)
+```mermaid
+flowchart TD
+    CL["Classifier\nConfidence?"]
+    CL -->|"High (>0.9)"| DH["Direct to specialized handler"]
+    CL -->|"Medium (0.6-0.9)"| MH["Specialized handler\n+ extra validation"]
+    CL -->|"Low (<0.6)"| GH["General-purpose handler\n(no routing)"]
 ```
 
 ---
@@ -194,21 +184,14 @@ based on task complexity.**
 
 ### The Model Spectrum
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    MODEL ROUTING                         │
-│                                                         │
-│  Task Complexity    Model Selection                      │
-│  ───────────────    ─────────────────────                │
-│  Trivial            → Small/Fast (Haiku, GPT-4o-mini)   │
-│  Simple             → Medium (Sonnet, GPT-4o)           │
-│  Complex            → Large (Opus, o1, o3)              │
-│  Research           → Reasoning (o1-pro, Opus)          │
-│                                                         │
-│  Cost:    $0.25/M ──────────────────────── $15/M        │
-│  Speed:   Fast ─────────────────────────── Slow         │
-│  Quality: Good enough ──────────────────── Best         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph MR["MODEL ROUTING"]
+        T1["Trivial → Small/Fast\n(Haiku, GPT-4o-mini)\n$0.25/M · Fast · Good enough"]
+        T2["Simple → Medium\n(Sonnet, GPT-4o)"]
+        T3["Complex → Large\n(Opus, o1, o3)"]
+        T4["Research → Reasoning\n(o1-pro, Opus)\n$15/M · Slow · Best"]
+    end
 ```
 
 ### ForgeCode's Model Routing
@@ -247,18 +230,12 @@ Beyond model selection, routing determines the **entire execution strategy**.
 
 ### Simple Edit vs Complex Refactor
 
-```
-┌─────────────┐
-│   Router    │
-│ Complexity? │
-└──────┬──────┘
-       │
-       ├── Simple ───▶  Single LLM call, no planning, direct edit
-       │
-       ├── Moderate ──▶  Plan → Implement → Test cycle
-       │
-       └── Complex ───▶  Deep analysis, detailed planning,
-                          incremental implementation, full test suite
+```mermaid
+flowchart TD
+    RT["Router\nComplexity?"]
+    RT -->|Simple| S["Single LLM call,\nno planning, direct edit"]
+    RT -->|Moderate| M["Plan → Implement\n→ Test cycle"]
+    RT -->|Complex| C["Deep analysis, detailed planning,\nincremental implementation,\nfull test suite"]
 ```
 
 ### Routing by Task Type
@@ -293,15 +270,15 @@ async def route_by_task_type(task: str, classification: TaskType):
 
 ForgeCode routes tasks to different specialized sub-agents:
 
-```
-┌────────────────────────────────────────────────────────┐
-│  User Task ──▶ Router ──┬──▶ Forge (Implementation)    │
-│                         ├──▶ Muse (Creative/Design)    │
-│                         └──▶ Sage (Analysis/Research)   │
-│                                                        │
-│  Each sub-agent has its own system prompt, tool set,   │
-│  and model configuration.                              │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph FC["ForgeCode"]
+        UT["User Task"] --> RT["Router"]
+        RT --> FG["Forge\n(Implementation)"]
+        RT --> MU["Muse\n(Creative/Design)"]
+        RT --> SG["Sage\n(Analysis/Research)"]
+        NOTE["Each sub-agent has its own system prompt,\ntool set, and model configuration."]
+    end
 ```
 
 ### Claude Code: Implicit LLM-Native Routing
@@ -314,16 +291,27 @@ and router are the same model.
 
 Goose implements a **security-focused routing pipeline**:
 
-```
-┌────────────────────────────────────────────────────────┐
-│  Tool Call ──▶ Security Layer ──┬──▶ BLOCK (dangerous) │
-│               Adversary Layer ──┤──▶ BLOCK (adversarial)│
-│               Permission Layer ─┤──▶ ASK USER           │
-│               Repetition Layer ─┴──▶ ALLOW (proceed)    │
-│                                                        │
-│  Each layer is a specialized classifier examining      │
-│  tool calls from a specific security perspective.      │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph GS["Goose Security Routing"]
+        TC["Tool Call"]
+        SEC["Security Layer"]
+        ADV["Adversary Layer"]
+        PERM["Permission Layer"]
+        REP["Repetition Layer"]
+        BLOCK1["BLOCK\n(dangerous)"]
+        BLOCK2["BLOCK\n(adversarial)"]
+        ASK["ASK USER"]
+        ALLOW["ALLOW\n(proceed)"]
+        TC --> SEC
+        SEC -->|dangerous| BLOCK1
+        SEC --> ADV
+        ADV -->|adversarial| BLOCK2
+        ADV --> PERM
+        PERM -->|needs approval| ASK
+        PERM --> REP
+        REP --> ALLOW
+    end
 ```
 
 ### Gemini CLI: Progressive Skill Disclosure
@@ -513,9 +501,16 @@ The router should be **lightweight** — sub-100ms for clear-cut cases.
 
 ### Routing vs Prompt Chaining
 
-```
-Routing:          Input → Classify → [Handler A OR Handler B]
-Prompt Chaining:  Input → Step A → Step B → Step C (always same path)
+```mermaid
+flowchart LR
+    subgraph RO["Routing"]
+        I1["Input"] --> CL["Classify"]
+        CL -->|"path A"| HA["Handler A"]
+        CL -->|"path B"| HB["Handler B"]
+    end
+    subgraph PC["Prompt Chaining"]
+        I2["Input"] --> SA["Step A"] --> SB["Step B"] --> SC["Step C"]
+    end
 ```
 
 Routing introduces **branching**; chaining is strictly sequential.
@@ -523,16 +518,31 @@ They combine naturally: the router selects which chain to execute.
 
 ### Routing vs Orchestrator-Workers
 
-```
-Routing:              Classify ONCE, dispatch to ONE handler
-Orchestrator-Workers: DYNAMICALLY spawn MULTIPLE workers
+```mermaid
+flowchart LR
+    subgraph RO["Routing"]
+        I1["Input"] --> CL["Classify ONCE"] --> H1["ONE handler"]
+    end
+    subgraph OW["Orchestrator-Workers"]
+        I2["Input"] --> OR["Orchestrator\n(dynamic)"]
+        OR --> W1["Worker 1"]
+        OR --> W2["Worker 2"]
+        OR --> W3["Worker N"]
+    end
 ```
 
 ### Routing vs Parallelization
 
-```
-Routing:          Input → ONE handler (selected)
-Parallelization:  Input → ALL handlers (simultaneously)
+```mermaid
+flowchart LR
+    subgraph RO["Routing"]
+        I1["Input"] --> S["ONE handler\n(selected)"]
+    end
+    subgraph PA["Parallelization"]
+        I2["Input"] --> H1["Handler A"]
+        I2 --> H2["Handler B"]
+        I2 --> H3["Handler C"]
+    end
 ```
 
 ---

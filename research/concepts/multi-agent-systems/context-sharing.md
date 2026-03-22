@@ -63,17 +63,11 @@ Multi-agent systems solve this by **distributing context across multiple windows
 The most common pattern — Agent A works, produces a summary, passes the summary
 (not the raw data) to Agent B.
 
-```
-┌────────────┐                    ┌────────────┐
-│ Researcher  │                    │ Planner     │
-│             │                    │             │
-│ Reads 50    │   Summary only     │ Receives    │
-│ files       │───────────────────►│ "The auth   │
-│ Analyzes    │   (not 50 files)   │ module uses │
-│ patterns    │                    │ passport.js │
-│ Traces deps │                    │ with 15     │
-│             │                    │ routes..."  │
-└────────────┘                    └────────────┘
+```mermaid
+flowchart LR
+    R["Researcher\nReads 50 files\nAnalyzes patterns\nTraces deps"]
+    P["Planner\nReceives summary\nof key findings"]
+    R -->|"Summary only\n(not 50 files)"| P
 ```
 
 **ForgeCode's bounded context** is the exemplar of this pattern. Each agent
@@ -199,22 +193,17 @@ class EventStream:
 Agents communicate through the file system — writing plans, specs, or results
 to files that other agents read.
 
-```
-┌─────────────┐     writes     ┌─────────────────────┐
-│ Planner      │───────────────►│ .agent/plan.md      │
-└─────────────┘                └──────────┬──────────┘
-                                          │ reads
-                               ┌──────────▼──────────┐
-                               │ Implementer          │
-                               └──────────┬──────────┘
-                                          │ writes
-                               ┌──────────▼──────────┐
-                               │ .agent/changes.diff  │
-                               └──────────┬──────────┘
-                                          │ reads
-                               ┌──────────▼──────────┐
-                               │ Reviewer              │
-                               └──────────────────────┘
+```mermaid
+flowchart TD
+    PL["Planner"]
+    F1[".agent/plan.md"]
+    IM["Implementer"]
+    F2[".agent/changes.diff"]
+    RV["Reviewer"]
+    PL -->|"writes"| F1
+    F1 -->|"reads"| IM
+    IM -->|"writes"| F2
+    F2 -->|"reads"| RV
 ```
 
 **Used by:**
@@ -314,18 +303,15 @@ def prepare_worker_context(task, worker_role, full_context):
 
 Instead of giving workers all context upfront, provide it progressively as needed:
 
-```
-Worker starts with: minimal context
-  │
-  │  Worker encounters: "I need to know how auth works"
-  │
-  │  Worker calls: search_code("auth") → gets relevant context
-  │
-  │  Worker encounters: "I need the database schema"
-  │
-  │  Worker calls: read_file("schema.prisma") → gets schema
-  │
-  Worker ends with: exactly the context it needed
+```mermaid
+flowchart TD
+    W["Worker starts with minimal context"]
+    E1["Encounters: needs auth knowledge"]
+    T1["Calls search_code('auth')\n→ gets relevant context"]
+    E2["Encounters: needs database schema"]
+    T2["Calls read_file('schema.prisma')\n→ gets schema"]
+    Done["Worker ends with exactly\nthe context it needed"]
+    W --> E1 --> T1 --> E2 --> T2 --> Done
 ```
 
 **Claude Code's explore sub-agent** implements this naturally — the sub-agent
@@ -366,18 +352,11 @@ better context-sharing strategies.
 
 ### What Gets Lost
 
-```
-┌────────────────────────────┐    Boundary    ┌────────────────────────────┐
-│ Agent A (full context)      │───────────────►│ Agent B (received context)  │
-│                            │                │                            │
-│ ✓ Task understanding       │ → preserved    │ ✓ Task understanding       │
-│ ✓ Key findings             │ → preserved    │ ✓ Key findings             │
-│ ✗ Reasoning trace          │ → LOST         │ ✗ Why A chose this path    │
-│ ✗ Explored dead ends       │ → LOST         │ ✗ What didn't work         │
-│ ✗ File contents (raw)      │ → LOST         │ ✗ Exact code patterns      │
-│ ✗ Intermediate thoughts    │ → LOST         │ ✗ Nuances and caveats      │
-│ ✗ Tool call history        │ → LOST         │ ✗ What tools were tried    │
-└────────────────────────────┘                └────────────────────────────┘
+```mermaid
+flowchart LR
+    A["Agent A (full context)\n✓ Task understanding\n✓ Key findings\n✗ Reasoning trace\n✗ Explored dead ends\n✗ File contents (raw)\n✗ Intermediate thoughts\n✗ Tool call history"]
+    B["Agent B (received context)\n✓ Task understanding\n✓ Key findings\n✗ Why A chose this path\n✗ What didn't work\n✗ Exact code patterns\n✗ Nuances and caveats\n✗ What tools were tried"]
+    A -->|"Boundary\n(partial information)"| B
 ```
 
 ### Mitigating Context Loss
@@ -439,20 +418,18 @@ Better:     "The auth middleware is in src/middleware/auth.ts.
 Goose implements a unique context-sharing pattern called **MOIM** (Model-Oriented
 Information Management) — per-turn context injection from all extensions:
 
-```
-Before each LLM call:
-┌──────────────────────────────────────────┐
-│  Goose collects context from ALL         │
-│  active extensions:                      │
-│                                          │
-│  developer extension → file context      │
-│  memory extension    → relevant memories │
-│  summon extension    → sub-agent status  │
-│  analyze extension   → analysis results  │
-│                                          │
-│  All injected into the prompt for this   │
-│  turn only (not persisted in history)    │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    LLM["LLM Call (each turn)"]
+    Dev["developer extension\n→ file context"]
+    Mem["memory extension\n→ relevant memories"]
+    Sum["summon extension\n→ sub-agent status"]
+    Ana["analyze extension\n→ analysis results"]
+    Dev --> LLM
+    Mem --> LLM
+    Sum --> LLM
+    Ana --> LLM
+    LLM --> Note["Injected for this turn only\n(not persisted in history)"]
 ```
 
 Additionally, Goose uses **background tool-pair summarization** — when tool results

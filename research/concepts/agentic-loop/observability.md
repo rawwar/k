@@ -32,8 +32,11 @@ left guessing.
 
 In traditional software, observability is built around deterministic paths:
 
-```
-Request → Handler → Database → Response
+```mermaid
+flowchart LR
+    A["Request"] --> B["Handler"]
+    B --> C["Database"]
+    C --> D["Response"]
 ```
 
 Each step is predictable. The same input produces the same output. Tracing tools
@@ -44,18 +47,18 @@ picture of what happened.
 
 Agent execution is fundamentally different:
 
-```
-User message
-  → LLM call (non-deterministic)
-    → Tool call A (side effects)
-      → Result A
-    → Tool call B (side effects)
-      → Result B
-  → LLM call (non-deterministic, conditioned on A+B results)
-    → Tool call C
-      → Result C
-  → LLM call (non-deterministic)
-    → Final response
+```mermaid
+flowchart TD
+    U["User message"] --> L1["LLM call (non-deterministic)"]
+    L1 --> TA["Tool call A (side effects)"]
+    L1 --> TB["Tool call B (side effects)"]
+    TA --> RA["Result A"]
+    TB --> RB["Result B"]
+    RA & RB --> L2["LLM call (non-deterministic,\nconditioned on A+B results)"]
+    L2 --> TC["Tool call C"]
+    TC --> RC["Result C"]
+    RC --> L3["LLM call (non-deterministic)"]
+    L3 --> FR["Final response"]
 ```
 
 Key differences that make agent observability harder:
@@ -211,16 +214,13 @@ for AI/ML traces that extend OpenTelemetry with AI-specific attributes.
 
 Phoenix follows the OpenTelemetry collector pattern:
 
-```
-Agent Code
-  │
-  ├── OpenInference Instrumentor (auto-instruments LLM calls)
-  │     │
-  │     └── OpenTelemetry SDK (creates spans with AI attributes)
-  │           │
-  │           └── OTLP Exporter → Phoenix Collector (localhost:6006)
-  │                                    │
-  │                                    └── Storage + UI
+```mermaid
+flowchart TD
+    AC["Agent Code"]
+    AC --> OI["OpenInference Instrumentor\nauto-instruments LLM calls"]
+    OI --> OT["OpenTelemetry SDK\ncreates spans with AI attributes"]
+    OT --> EX["OTLP Exporter → Phoenix Collector\nlocalhost:6006"]
+    EX --> SU["Storage + UI"]
 ```
 
 Setup is minimal:
@@ -363,43 +363,15 @@ For agents, OTel provides the foundational primitives:
 
 A typical coding agent trace looks like this:
 
-```
-trace: agent_run (id=abc123, task="fix auth bug")
-│
-├── span: llm_call
-│   ├── attr: model = "gpt-4"
-│   ├── attr: tokens_in = 1500
-│   ├── attr: tokens_out = 200
-│   ├── attr: latency_ms = 1840
-│   └── attr: cost_usd = 0.057
-│
-├── span: tool_execution
-│   ├── attr: tool = "bash"
-│   ├── attr: command = "grep -r 'NullPointer' src/"
-│   ├── attr: duration_ms = 340
-│   ├── attr: exit_code = 0
-│   └── span: subprocess
-│       ├── attr: cmd = "grep -r 'NullPointer' src/"
-│       ├── attr: stdout = "src/auth.py:42: raise NullPointer..."
-│       └── attr: exit_code = 0
-│
-├── span: llm_call
-│   ├── attr: model = "gpt-4"
-│   ├── attr: tokens_in = 2100
-│   ├── attr: tokens_out = 150
-│   └── attr: cost_usd = 0.072
-│
-├── span: tool_execution
-│   ├── attr: tool = "edit"
-│   ├── attr: file = "src/auth.py"
-│   ├── attr: lines_changed = 3
-│   └── attr: duration_ms = 12
-│
-└── span: llm_call
-    ├── attr: model = "gpt-4"
-    ├── attr: tokens_in = 2400
-    ├── attr: tokens_out = 50
-    └── attr: cost_usd = 0.075
+```mermaid
+flowchart TD
+    TR["trace: agent_run\nid=abc123 | task=fix auth bug"]
+    TR --> LLM1["span: llm_call\nmodel=gpt-4 | tokens_in=1500 | tokens_out=200\nlatency_ms=1840 | cost_usd=0.057"]
+    TR --> TOOL1["span: tool_execution\ntool=bash | command=grep -r NullPointer src/\nduration_ms=340 | exit_code=0"]
+    TOOL1 --> SUB["span: subprocess\ncmd=grep -r NullPointer src/\nstdout=src/auth.py:42: raise NullPointer...\nexit_code=0"]
+    TR --> LLM2["span: llm_call\nmodel=gpt-4 | tokens_in=2100 | tokens_out=150\ncost_usd=0.072"]
+    TR --> TOOL2["span: tool_execution\ntool=edit | file=src/auth.py\nlines_changed=3 | duration_ms=12"]
+    TR --> LLM3["span: llm_call\nmodel=gpt-4 | tokens_in=2400 | tokens_out=50\ncost_usd=0.075"]
 ```
 
 ### OpenInference Specification
@@ -536,34 +508,28 @@ When running agents at scale:
 
 A systematic approach to debugging agent failures:
 
-```
-1. Identify the failed task
-   └── What was the expected outcome vs actual outcome?
-
-2. Load the trace/trajectory
-   └── Open in LangSmith / Phoenix / Logfire / read trajectory file
-
-3. Find the first wrong step
-   └── Scan the trace chronologically
-   └── Where does agent behavior first diverge from correct?
-
-4. Examine the model's input at that step
-   └── What messages did the model see?
-   └── What tool results were in context?
-   └── Was the relevant information present?
-
-5. Diagnose the root cause
-   └── Information was present but model ignored it → prompt issue
-   └── Information was missing → tool/search issue
-   └── Information was wrong → tool execution issue
-   └── Model hallucinated despite good input → model limitation
-
-6. Apply the fix
-   └── Prompt issue → improve system prompt or few-shot examples
-   └── Tool issue → fix tool implementation or add new tool
-   └── Search issue → improve search strategy
-   └── Model issue → try different model or add guardrails
-   └── Loop issue → improve loop termination logic
+```mermaid
+flowchart TD
+    S1["1. Identify the failed task\nExpected outcome vs actual outcome?"]
+    S2["2. Load the trace / trajectory\nLangSmith / Phoenix / Logfire / trajectory file"]
+    S3["3. Find the first wrong step\nScan trace chronologically"]
+    S4["4. Examine the model's input at that step\nMessages seen | Tool results in context | Info present?"]
+    S5["5. Diagnose the root cause"]
+    S6["6. Apply the fix"]
+    D1["Info present but ignored → prompt issue"]
+    D2["Info missing → tool/search issue"]
+    D3["Info wrong → tool execution issue"]
+    D4["Hallucinated despite good input → model limitation"]
+    F1["Improve system prompt or few-shot examples"]
+    F2["Fix tool implementation or add new tool\nor improve search strategy"]
+    F3["Try different model or add guardrails"]
+    F4["Improve loop termination logic"]
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    S5 --> D1 & D2 & D3 & D4
+    D1 --> F1
+    D2 & D3 --> F2
+    D4 --> F3
+    S6 --> F1 & F2 & F3 & F4
 ```
 
 ### Agent-Specific Debug Tools

@@ -35,12 +35,9 @@ LLM API providers enforce several types of rate limits simultaneously. You must 
 
 Most providers use a **sliding window** approach. The window is not aligned to clock minutes — it tracks the rolling 60-second period ending at the current time. Some providers use **fixed windows** aligned to clock boundaries, which can cause burst issues at window edges.
 
-```
-Timeline: ──────────────────────────────────────────────────►
-                    |◄── 60 second sliding window ──►|
-                    ▲                                  ▲
-              oldest counted                      current time
-              request in window                   (new request)
+```mermaid
+flowchart LR
+    A["Oldest counted request\nin window"] -->|"60 second sliding window"| B["Current time\n(new request)"]
 ```
 
 ### OpenAI Rate Limit Tiers
@@ -299,18 +296,13 @@ The circuit breaker pattern prevents your application from repeatedly calling a 
 
 ### States
 
-```
-                    failure threshold reached
-     ┌────────┐  ─────────────────────────────►  ┌────────┐
-     │ CLOSED │                                   │  OPEN  │
-     │(normal)│  ◄─────────────────────────────   │(reject)│
-     └────────┘    probe succeeds (via half-open)  └────────┘
-          ▲                                            │
-          │         recovery timeout expires            │
-          │              ┌───────────┐                  │
-          └──────────────│ HALF-OPEN │◄─────────────────┘
-            probe        │  (probe)  │
-            succeeds     └───────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+    CLOSED --> OPEN : failure threshold reached
+    OPEN --> HALF_OPEN : recovery timeout expires
+    HALF_OPEN --> CLOSED : probe succeeds
+    HALF_OPEN --> OPEN : probe fails
 ```
 
 **Closed (Normal Operation):**
@@ -480,9 +472,9 @@ def send_request(messages):
 
 The leaky bucket processes requests at a fixed rate, queuing excess requests:
 
-```
-Queue ──► [req4][req3][req2][req1] ──► Process at fixed rate ──► API
-                                         (1 request per 12ms)
+```mermaid
+flowchart LR
+    A[Queue] --> B["req4 · req3 · req2 · req1"] --> C["Process at fixed rate\n(1 request per 12ms)"] --> D[API]
 ```
 
 This smooths out bursts and ensures a steady request rate. It's ideal for batch processing where latency is less critical.

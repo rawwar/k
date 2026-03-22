@@ -123,11 +123,9 @@ get `@@` line numbers wrong, so Aider matches on content instead.
 
 A two-model pipeline separating planning from execution:
 
-```
-┌─────────────────┐    natural language     ┌──────────────────┐
-│  Reasoning Model │ ── change description ─→│  Editing Model   │
-│  (o1, o3, R1)   │                         │  (Claude, GPT-4) │
-└─────────────────┘                         └──────────────────┘
+```mermaid
+flowchart LR
+    A["Reasoning Model<br/>(o1, o3, R1)"] -->|"natural language change description"| B["Editing Model<br/>(Claude, GPT-4)"]
 ```
 
 The reasoning model describes changes in natural language; the editing model produces

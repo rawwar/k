@@ -435,25 +435,19 @@ models ranging from 4K to 2M tokens.
 
 ### Context Window Sizes
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Context Window Sizes                       │
-├──────────────────────┬──────────────────────────────────────┤
-│  Model               │  Context Window                      │
-├──────────────────────┼──────────────────────────────────────┤
-│  GPT-4               │  8K tokens                           │
-│  GPT-4 Turbo         │  128K tokens                         │
-│  GPT-4o              │  128K tokens                         │
-│  o1 / o3             │  200K tokens                         │
-│  Claude 3.5 Sonnet   │  200K tokens                         │
-│  Claude 4 Sonnet     │  200K tokens                         │
-│  Gemini 1.5 Pro      │  1M–2M tokens                        │
-│  Gemini 2.5 Pro      │  1M tokens                           │
-│  Llama 3 (70B)       │  8K–128K tokens (varies by quant)    │
-│  DeepSeek Coder V2   │  128K tokens                         │
-│  Mistral Large       │  128K tokens                         │
-└──────────────────────┴──────────────────────────────────────┘
-```
+| Model | Context Window |
+|---|---|
+| GPT-4 | 8K tokens |
+| GPT-4 Turbo | 128K tokens |
+| GPT-4o | 128K tokens |
+| o1 / o3 | 200K tokens |
+| Claude 3.5 Sonnet | 200K tokens |
+| Claude 4 Sonnet | 200K tokens |
+| Gemini 1.5 Pro | 1M–2M tokens |
+| Gemini 2.5 Pro | 1M tokens |
+| Llama 3 (70B) | 8K–128K tokens (varies by quant) |
+| DeepSeek Coder V2 | 128K tokens |
+| Mistral Large | 128K tokens |
 
 ### Dynamic max_tokens Calculation
 
@@ -474,24 +468,14 @@ def calculate_max_output_tokens(model_context_limit, current_prompt_tokens, rese
 
 ### Context Window Allocation
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                  Context Window Allocation                    │
-│  ┌────────────────────────────────────┐ ─┐                   │
-│  │ System Prompt + Tool Definitions   │  │ Fixed (cached)    │
-│  │ (~2K–8K tokens)                    │  │                   │
-│  ├────────────────────────────────────┤ ─┘                   │
-│  │ Project Context (CLAUDE.md, etc.)  │  ← Semi-static      │
-│  ├────────────────────────────────────┤                      │
-│  │ Conversation History               │  ← Grows each turn  │
-│  │ (messages + tool calls + results)  │                      │
-│  ├────────────────────────────────────┤                      │
-│  │ Current File Contents              │  ← Varies by task   │
-│  ├────────────────────────────────────┤                      │
-│  │ ═══ Reserved for Output ═══       │  ← max_tokens budget │
-│  │ (4K–16K tokens)                    │                      │
-│  └────────────────────────────────────┘                      │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SP["System Prompt + Tool Definitions (~2K–8K tokens)<br/>← Fixed (cached)"]
+    PC["Project Context (CLAUDE.md, etc.)<br/>← Semi-static"]
+    CH["Conversation History<br/>(messages + tool calls + results)<br/>← Grows each turn"]
+    FC["Current File Contents<br/>← Varies by task"]
+    RO["Reserved for Output (4K–16K tokens)<br/>← max_tokens budget"]
+    SP --> PC --> CH --> FC --> RO
 ```
 
 ### Truncation Strategies

@@ -36,43 +36,27 @@ handle a bounded piece of work.
 
 ## Core Architecture
 
-```
-                    ┌─────────────────────────┐
-                    │      User Request        │
-                    └────────────┬────────────┘
-                                 │
-                                 ▼
-                    ┌─────────────────────────┐
-                    │      ORCHESTRATOR        │
-                    │                         │
-                    │  • Analyze task          │
-                    │  • Decompose into parts  │
-                    │  • Dispatch to workers   │
-                    │  • Aggregate results     │
-                    │  • Handle errors         │
-                    └──┬──────┬──────┬────────┘
-                       │      │      │
-              ┌────────┘      │      └────────┐
-              ▼               ▼               ▼
-     ┌────────────┐  ┌────────────┐  ┌────────────┐
-     │  Worker A   │  │  Worker B   │  │  Worker C   │
-     │             │  │             │  │             │
-     │  Research   │  │  Implement  │  │  Test       │
-     │  files      │  │  changes    │  │  changes    │
-     └──────┬─────┘  └──────┬─────┘  └──────┬─────┘
-            │               │               │
-            ▼               ▼               ▼
-     ┌────────────┐  ┌────────────┐  ┌────────────┐
-     │  Summary    │  │  Diff       │  │  Results    │
-     └──────┬─────┘  └──────┬─────┘  └──────┬─────┘
-            │               │               │
-            └───────┬───────┘───────┬───────┘
-                    │               │
-                    ▼               ▼
-              ┌─────────────────────────┐
-              │   ORCHESTRATOR          │
-              │   Synthesize & Respond  │
-              └─────────────────────────┘
+```mermaid
+flowchart TD
+    UR["User Request"]
+    ORC["Orchestrator\n• Analyze task\n• Decompose into parts\n• Dispatch to workers\n• Aggregate results\n• Handle errors"]
+    WA["Worker A\nResearch files"]
+    WB["Worker B\nImplement changes"]
+    WC["Worker C\nTest changes"]
+    SA["Summary"]
+    SD["Diff"]
+    SR["Results"]
+    ORC2["Orchestrator\nSynthesize & Respond"]
+    UR --> ORC
+    ORC --> WA
+    ORC --> WB
+    ORC --> WC
+    WA --> SA
+    WB --> SD
+    WC --> SR
+    SA --> ORC2
+    SD --> ORC2
+    SR --> ORC2
 ```
 
 ### The Orchestrator's Responsibilities
@@ -253,14 +237,15 @@ communication between the orchestrator and workers. This allows multiple fronten
 ForgeCode's three-agent model (Forge, Muse, Sage) is an orchestrator-worker system
 with **bounded context** as the core innovation:
 
-```
-User → Forge (orchestrator/implementer)
-         │
-         ├──► Sage (research worker)
-         │     └── researches 50 files → returns relevant findings only
-         │
-         └──► Muse (planning worker)
-               └── receives filtered findings → produces implementation plan
+```mermaid
+flowchart TD
+    U["User"]
+    F["Forge\n(orchestrator/implementer)"]
+    S["Sage (research worker)\nresearches 50 files → returns relevant findings only"]
+    M["Muse (planning worker)\nreceives filtered findings → produces implementation plan"]
+    U --> F
+    F --> S
+    F --> M
 ```
 
 **Bounded context flow:**
@@ -415,20 +400,12 @@ Capy uses a unique approach — the Captain (orchestrator) produces a **spec doc
 that serves as the sole interface to the Build agent (worker). The Build agent cannot
 ask clarifying questions, so the spec must be comprehensive:
 
-```
-Captain produces:
-┌──────────────────────────────────┐
-│  SPEC: Add JWT Authentication    │
-│                                  │
-│  Goal: Replace session-based...  │
-│  Files to modify: [list]         │
-│  New files to create: [list]     │
-│  Testing requirements: [list]    │
-│  Acceptance criteria: [list]     │
-└──────────────────────────────────┘
-        │
-        ▼
-Build agent receives spec → executes autonomously → produces PR
+```mermaid
+flowchart TD
+    CAP["Captain produces spec"]
+    SPEC["SPEC: Add JWT Authentication\nGoal: Replace session-based...\nFiles to modify: list\nNew files to create: list\nTesting requirements: list\nAcceptance criteria: list"]
+    BUILD["Build agent\nreceives spec → executes autonomously → produces PR"]
+    CAP --> SPEC --> BUILD
 ```
 
 ---

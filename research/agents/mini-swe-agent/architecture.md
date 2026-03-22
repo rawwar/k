@@ -4,34 +4,23 @@
 
 ## High-Level Architecture
 
-```
-+-----------------------------------------------------------+
-|                    DefaultAgent                            |
-|                   (~100 lines)                             |
-|                                                            |
-|  messages: list[dict]   <- append-only linear history      |
-|  cost: float            <- cumulative API spend            |
-|  n_calls: int           <- step counter                    |
-|                                                            |
-|  +-----------------------------------------------------+  |
-|  |              run(task) loop                          |  |
-|  |                                                      |  |
-|  |   +----------+    +------------------+               |  |
-|  |   | query()  |--->| execute_actions() |              |  |
-|  |   +----------+    +------------------+               |  |
-|  |        |                   |                          |  |
-|  |        v                   v                          |  |
-|  |   +----------+    +------------------+               |  |
-|  |   |  Model   |    |   Environment    |               |  |
-|  |   +----------+    +------------------+               |  |
-|  +-----------------------------------------------------+  |
-+-----------------------------------------------------------+
-         |                        |
-         v                        v
-   +-----------+          +--------------+
-   |  LiteLLM  |          | subprocess   |
-   |  (any LM) |          | .run(cmd)    |
-   +-----------+          +--------------+
+```mermaid
+flowchart TD
+    subgraph DA["DefaultAgent (~100 lines)"]
+        subgraph loop["run(task) loop"]
+            Q["query()"]
+            EA["execute_actions()"]
+        end
+        M["Model"]
+        E["Environment"]
+    end
+    LLM["LiteLLM (any LM)"]
+    SP["subprocess.run(cmd)"]
+
+    Q --> M
+    EA --> E
+    M --> LLM
+    E --> SP
 ```
 
 ## Component Overview
@@ -239,23 +228,26 @@ Because the history is linear, the trajectory IS the complete, faithful record o
 
 ## Deployment Topology
 
-```
-+-------------------------------------------+
-|           mini-swe-agent                   |
-|                                            |
-|  DefaultAgent <-- config (YAML)            |
-|       |                                    |
-|       +-- LitellmModel                     |
-|       |      +-- litellm.completion()      |
-|       |           +-- Any LM provider      |
-|       |                                    |
-|       +-- Environment (swappable)          |
-|              +-- LocalEnvironment          |
-|              +-- DockerEnvironment         |
-|              +-- SingularityEnvironment    |
-|              +-- BubblewrapEnvironment     |
-|              +-- ContreeEnvironment        |
-+-------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph MSA["mini-swe-agent"]
+        DA["DefaultAgent ← config (YAML)"]
+        LM["LitellmModel"]
+        LC["litellm.completion()"]
+        LP["Any LM provider"]
+        subgraph ENV["Environment (swappable)"]
+            LE["LocalEnvironment"]
+            DE["DockerEnvironment"]
+            SE["SingularityEnvironment"]
+            BE["BubblewrapEnvironment"]
+            CE["ContreeEnvironment"]
+        end
+    end
+
+    DA --> LM
+    LM --> LC
+    LC --> LP
+    DA --> ENV
 ```
 
 The entire system is configured via a single YAML file (`default.yaml`) that specifies the system prompt, instance prompt, environment variables, observation templates, and model parameters.

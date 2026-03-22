@@ -8,58 +8,17 @@ ForgeCode does not use a single agentic loop. It orchestrates across three sub-a
 
 ### Typical Task Lifecycle
 
-```
-User prompt (via `:` in ZSH)
-       │
-       ▼
-┌─────────────────────────────────┐
-│  1. Entry-Point Discovery       │  ← ForgeCode Services
-│     Semantic search identifies  │     (before any agent runs)
-│     the most relevant files     │
-└──────────────┬──────────────────┘
-               │
-       ▼
-┌─────────────────────────────────┐
-│  2. Skill Routing               │  ← ForgeCode Services
-│     Task profile → load the     │     selects appropriate skills
-│     right skill (test, debug,   │
-│     refactor, etc.)             │
-└──────────────┬──────────────────┘
-               │
-       ▼
-┌─────────────────────────────────┐
-│  3. Active Agent Processes      │
-│     MUSE (plan) or FORGE (impl) │
-│     ┌───────────────────────┐   │
-│     │ Agent Loop:           │   │
-│     │  • Reason about task  │   │
-│     │  • Call tools          │   │
-│     │  • Update todo state   │   │
-│     │  • Delegate to SAGE    │   │
-│     │    for research        │   │
-│     └───────────┬───────────┘   │
-│                 │               │
-│     ┌───────────▼───────────┐   │
-│     │ Tool-Call Correction  │   │  ← ForgeCode Services
-│     │ (intercept & fix)     │   │     (before every dispatch)
-│     └───────────┬───────────┘   │
-│                 │               │
-│     ┌───────────▼───────────┐   │
-│     │ Tool Execution        │   │
-│     │ (shell, edit, search) │   │
-│     └───────────────────────┘   │
-└──────────────┬──────────────────┘
-               │
-       ▼
-┌─────────────────────────────────┐
-│  4. Verification Enforcement    │  ← ForgeCode Services
-│     Runtime injects reviewer    │     (before task completion)
-│     mode if agent hasn't        │
-│     called verification skill   │
-└──────────────┬──────────────────┘
-               │
-       ▼
-   Task Complete (or iterate)
+```mermaid
+flowchart TD
+    A["User prompt (via : in ZSH)"] --> B
+    B["1. Entry-Point Discovery<br/>Semantic search identifies most relevant files<br/>(ForgeCode Services — before any agent runs)"] --> C
+    C["2. Skill Routing<br/>Task profile → load right skill<br/>(ForgeCode Services)"] --> D
+    D["3. Agent Loop<br/>Reason · Call tools · Update todo state · Delegate to SAGE<br/>(MUSE or FORGE)"] --> E
+    E["Tool-Call Correction<br/>Intercept &amp; fix<br/>(ForgeCode Services — before every dispatch)"] --> F
+    F["Tool Execution<br/>shell, edit, search"] --> G{Task done?}
+    G -- no --> D
+    G -- yes --> H
+    H["4. Verification Enforcement<br/>Injects reviewer mode if verification skill not called<br/>(ForgeCode Services — before task completion)"] --> I["Task Complete"]
 ```
 
 ## Phase 1: Pre-Agent Setup

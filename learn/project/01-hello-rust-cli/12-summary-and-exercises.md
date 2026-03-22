@@ -38,37 +38,32 @@ This program:
 
 Here is how every concept from this chapter connects:
 
-```
-                    Chapter 1 Concept Map
-  ┌──────────────────────────────────────────────────┐
-  │                                                  │
-  │  Cargo.toml          cargo run                   │
-  │  (dependencies) ───→ (build + execute)           │
-  │       │                    │                     │
-  │       v                    v                     │
-  │  clap, rustyline     src/main.rs                 │
-  │  (crate ecosystem)   (entry point)               │
-  │                            │                     │
-  │              ┌─────────────┼─────────────┐       │
-  │              v             v             v       │
-  │         CLI Parsing    REPL Loop    Modules      │
-  │         (clap derive)  (loop +      (mod, pub,   │
-  │              │          match)       use)         │
-  │              v             │                     │
-  │         Struct types       v                     │
-  │         (Variables    Command                    │
-  │          & Types)     Dispatch                   │
-  │                       (Functions                 │
-  │                        + Enums)                  │
-  │                            │                     │
-  │                            v                     │
-  │                      Error Handling              │
-  │                      (Result, Option, ?)         │
-  │                            │                     │
-  │                            v                     │
-  │                      User Input                  │
-  │                      (stdin, rustyline)           │
-  └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    CARGO["Cargo.toml\ndependencies"]
+    RUN["cargo run\nbuild + execute"]
+    CRATES["clap, rustyline\ncrate ecosystem"]
+    MAIN["src/main.rs\nentry point"]
+    CLI["CLI Parsing\nclap derive"]
+    REPL["REPL Loop\nloop + match"]
+    MODS["Modules\nmod, pub, use"]
+    STRUCTS["Struct types\nVariables and Types"]
+    DISPATCH["Command Dispatch\nFunctions + Enums"]
+    ERRORS["Error Handling\nResult, Option, ?"]
+    INPUT["User Input\nstdin, rustyline"]
+
+    CARGO --> RUN
+    CARGO --> CRATES
+    RUN --> MAIN
+    CRATES --> MAIN
+    MAIN --> CLI
+    MAIN --> REPL
+    MAIN --> MODS
+    CLI --> STRUCTS
+    REPL --> DISPATCH
+    STRUCTS --> DISPATCH
+    DISPATCH --> ERRORS
+    ERRORS --> INPUT
 ```
 
 Every topic builds on the ones before it. CLI parsing requires understanding structs and types. The REPL loop uses functions, pattern matching, and error handling. Modules organize everything into a maintainable structure.

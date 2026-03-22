@@ -16,20 +16,21 @@ You have learned how to split screen space with layouts and render widgets into 
 
 A production coding agent typically needs these regions:
 
-```
-+-----------------------------------------------+
-|  Title / Breadcrumb Bar                        |
-+-------------------------------+----------------+
-|                               |                |
-|   Conversation Pane           |  Tool Output   |
-|   (scrollable)                |  Sidebar       |
-|                               |  (optional)    |
-|                               |                |
-+-------------------------------+----------------+
-|  Input Box (multi-line)                        |
-+-----------------------------------------------+
-|  Status Bar (model, tokens, mode)              |
-+-----------------------------------------------+
+```mermaid
+flowchart TD
+    TITLE["Title / Breadcrumb Bar"]
+
+    subgraph CONTENT["Content Area"]
+        CONV["Conversation Pane\nscrollable"]
+        SIDEBAR["Tool Output Sidebar\noptional"]
+    end
+
+    INPUT["Input Box\nmulti-line"]
+    STATUS["Status Bar\nmodel, tokens, mode"]
+
+    TITLE --> CONTENT
+    CONTENT --> INPUT
+    INPUT --> STATUS
 ```
 
 Let's implement this layout as a reusable struct:

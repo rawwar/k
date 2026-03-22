@@ -24,58 +24,16 @@
 
 Claude Code is described in official docs as an **"agentic harness"** around Claude models. The harness provides tools, context management, and the execution environment that turn a language model into a capable coding agent.
 
-```
-User Input
-    │
-    ▼
-┌──────────────────────────────────┐
-│         Ink TUI Layer            │
-│  • React component tree          │
-│  • Input handling (prompts,      │
-│    keyboard shortcuts like Esc,  │
-│    Shift+Tab, Ctrl+O)           │
-│  • Diff rendering, spinners     │
-│  • Permission prompt dialogs     │
-└──────────┬───────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────┐
-│       Session Manager            │
-│  • Conversation history (JSONL)  │
-│  • Checkpoint / rewind system    │
-│  • Session resume / fork         │
-│  • Context window tracking       │
-└──────────┬───────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────┐
-│        Agentic Loop              │
-│  • Sends messages to Claude API  │
-│  • Receives tool_use responses   │
-│  • Executes tools locally        │
-│  • Feeds results back to API     │
-│  • Repeats until task complete   │
-└──────────┬───────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────┐
-│        Tool System               │
-│  • Built-in tools (Read, Edit,   │
-│    Bash, Grep, Glob, WebFetch)  │
-│  • MCP tool bridge               │
-│  • Sub-agent tool (Agent)        │
-│  • Permission enforcement layer  │
-└──────────┬───────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────┐
-│     Permission / Safety Layer    │
-│  • allow / ask / deny rules      │
-│  • Sandbox enforcement (OS-level)│
-│  • Hooks (PreToolUse,            │
-│    PostToolUse, etc.)           │
-│  • Settings precedence chain     │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    UI["User Input"]
+    A["Ink TUI Layer<br/>• React component tree<br/>• Input handling (Esc, Shift+Tab, Ctrl+O)<br/>• Diff rendering, spinners<br/>• Permission prompt dialogs"]
+    B["Session Manager<br/>• Conversation history (JSONL)<br/>• Checkpoint / rewind system<br/>• Session resume / fork<br/>• Context window tracking"]
+    C["Agentic Loop<br/>• Sends messages to Claude API<br/>• Receives tool_use responses<br/>• Executes tools locally<br/>• Feeds results back to API<br/>• Repeats until task complete"]
+    D["Tool System<br/>• Built-in tools (Read, Edit, Bash, Grep, Glob, WebFetch)<br/>• MCP tool bridge<br/>• Sub-agent tool (Agent)<br/>• Permission enforcement layer"]
+    E["Permission / Safety Layer<br/>• allow / ask / deny rules<br/>• Sandbox enforcement (OS-level)<br/>• Hooks (PreToolUse, PostToolUse, etc.)<br/>• Settings precedence chain"]
+
+    UI --> A --> B --> C --> D --> E
 ```
 
 ## Component Details

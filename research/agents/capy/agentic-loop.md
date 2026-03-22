@@ -61,16 +61,13 @@ Build then works **autonomously and asynchronously**:
 
 The feedback loop is **synchronous and interactive**:
 
-```
-User ←→ Captain
-  │         │
-  │  "What auth provider?"  │
-  │◄────────────────────────│
-  │  "Use OAuth2 with Google" │
-  │────────────────────────►│
-  │                         │
-  │  "Here's the spec..."   │
-  │◄────────────────────────│
+```mermaid
+sequenceDiagram
+    participant User
+    participant Captain
+    Captain->>User: "What auth provider?"
+    User->>Captain: "Use OAuth2 with Google"
+    Captain->>User: "Here's the spec..."
 ```
 
 Captain can ask multiple rounds of clarifying questions before producing the final spec.
@@ -79,11 +76,10 @@ Captain can ask multiple rounds of clarifying questions before producing the fin
 
 The feedback loop is **asynchronous and one-directional**:
 
-```
-Build ──► Code changes ──► Tests ──► PR
-  │
-  └─ User monitors progress in Capy dashboard
-     but cannot intervene mid-execution
+```mermaid
+flowchart LR
+    Build --> C["Code Changes"] --> Tests --> PR["Pull Request"]
+    Build -. "User monitors in Capy dashboard\n(cannot intervene mid-execution)" .-> PR
 ```
 
 If Build's output is unsatisfactory, the user creates a **new task** with feedback, potentially triggering another Captain → Build cycle. This is more like a code review loop than an interactive debugging session.

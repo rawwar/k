@@ -357,28 +357,13 @@ NeMo Guardrails is a programmable safety framework that adds **rails** (constrai
 
 **Layered rail architecture**:
 
-```
-User Input
-    │
-    ▼
-┌─────────────┐
-│ Input Rails │  ← Block prompt injection, jailbreaks, off-topic queries
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Dialog Rails│  ← Enforce conversation flow, topic boundaries
-└──────┬──────┘
-       │
-       ▼
-┌──────────────┐
-│ Output Rails │  ← Filter hallucinations, PII, harmful content
-└──────┬───────┘
-       │
-       ▼
-┌────────────────┐
-│ Execution Rails│  ← Validate tool calls before execution
-└────────────────┘
+```mermaid
+flowchart TD
+    I["User Input"] --> IR
+    IR["Input Rails<br/>Block prompt injection, jailbreaks, off-topic queries"] --> DR
+    DR["Dialog Rails<br/>Enforce conversation flow, topic boundaries"] --> OR
+    OR["Output Rails<br/>Filter hallucinations, PII, harmful content"] --> ER
+    ER["Execution Rails<br/>Validate tool calls before execution"]
 ```
 
 **Key properties**:

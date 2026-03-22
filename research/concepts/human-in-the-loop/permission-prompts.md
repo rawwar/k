@@ -26,19 +26,14 @@ of five major agents in detail, then synthesizes design recommendations.
 
 Agents occupy different positions on the permission spectrum:
 
-```
-No Prompts      Per-Action       Category-Based     Risk-Based        Full Sandbox
-(auto-approve)  Prompts          Permissions        Prompting         (isolated env)
-     │               │               │                  │                  │
-     ▼               ▼               ▼                  ▼                  ▼
-  ┌───────┐    ┌───────────┐   ┌───────────┐    ┌───────────┐     ┌───────────┐
-  │ Aider │    │ OpenCode  │   │ Claude    │    │ Goose     │     │ OpenHands │
-  │       │    │           │   │ Code      │    │ (Smart)   │     │           │
-  │ Trust │    │ Every     │   │ Rules by  │    │ AI judges │     │ Container │
-  │ user  │    │ write op  │   │ tool type │    │ risk of   │     │ isolation │
-  │ fully │    │ prompts   │   │ and path  │    │ each cmd  │     │ replaces  │
-  │       │    │           │   │           │    │           │     │ prompts   │
-  └───────┘    └───────────┘   └───────────┘    └───────────┘     └───────────┘
+```mermaid
+flowchart LR
+    A["No Prompts (auto-approve)\n\nAider\nTrust user fully"]
+    B["Per-Action Prompts\n\nOpenCode\nEvery write op prompts"]
+    C["Category-Based Permissions\n\nClaude Code\nRules by tool type and path"]
+    D["Risk-Based Prompting\n\nGoose (Smart)\nAI judges risk of each cmd"]
+    E["Full Sandbox (isolated env)\n\nOpenHands\nContainer isolation\nreplaces prompts"]
+    A --> B --> C --> D --> E
 ```
 
 **Key trade-offs at each position:**
@@ -150,23 +145,12 @@ Session-level approvals          ← Temporary, current session only
 
 Claude Code doesn't rely on permission prompts alone:
 
-```
-Layer 1: Permission Rules
-  ├── Glob-pattern allow/deny lists
-  ├── Mode-based defaults (plan, acceptEdits, etc.)
-  └── Session-scoped approvals
-          │
-          ▼
-Layer 2: OS-Level Sandboxing
-  ├── macOS Seatbelt profiles (file system + network restrictions)
-  ├── Linux seccomp filters
-  └── Container isolation for CI
-          │
-          ▼
-Layer 3: Hooks (Pre/Post Execution)
-  ├── PreToolUse hooks: run before any tool invocation
-  ├── PostToolUse hooks: run after, can revert
-  └── Custom scripts for organization-specific policies
+```mermaid
+flowchart TD
+    L1["Layer 1: Permission Rules\nGlob-pattern allow/deny lists\nMode-based defaults (plan, acceptEdits, etc.)\nSession-scoped approvals"]
+    L2["Layer 2: OS-Level Sandboxing\nmacOS Seatbelt profiles (file system + network restrictions)\nLinux seccomp filters\nContainer isolation for CI"]
+    L3["Layer 3: Hooks (Pre/Post Execution)\nPreToolUse hooks: run before any tool invocation\nPostToolUse hooks: run after, can revert\nCustom scripts for organization-specific policies"]
+    L1 --> L2 --> L3
 ```
 
 **Hook example** (pre-tool validation):
@@ -332,41 +316,15 @@ examining the action from a different angle.
 
 ### The 4 Inspectors
 
-```
-Action Request
-      │
-      ▼
-┌─────────────────────┐
-│ 1. SecurityInspector │  Checks for dangerous patterns:
-│                      │  rm -rf, curl|bash, chmod 777,
-│                      │  credential access, etc.
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ 2. AdversaryInspector│  Detects prompt injection attempts:
-│                      │  commands embedded in file contents,
-│                      │  suspicious tool-use patterns,
-│                      │  social engineering of the agent.
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ 3. PermissionInspect │  Checks user-configured permissions:
-│                      │  per-tool allow/ask/deny rules,
-│                      │  mode-based defaults (Smart mode).
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ 4. RepetitionInspect │  Detects infinite loops:
-│                      │  same command repeated N times,
-│                      │  oscillating edits, retry storms.
-└──────────┬──────────┘
-           │
-           ▼
-    Final Decision:
-    Proceed / Prompt / Block
+```mermaid
+flowchart TD
+    A([Action Request])
+    B["1. SecurityInspector\nChecks for dangerous patterns:\nrm -rf, curl|bash, chmod 777,\ncredential access, etc."]
+    C["2. AdversaryInspector\nDetects prompt injection attempts:\ncommands embedded in file contents,\nsuspicious tool-use patterns,\nsocial engineering of the agent."]
+    D["3. PermissionInspector\nChecks user-configured permissions:\nper-tool allow/ask/deny rules,\nmode-based defaults (Smart mode)."]
+    E["4. RepetitionInspector\nDetects infinite loops:\nsame command repeated N times,\noscillating edits, retry storms."]
+    F(["Final Decision: Proceed / Prompt / Block"])
+    A --> B --> C --> D --> E --> F
 ```
 
 **Decision merging:** Each inspector returns one of `Proceed`, `Confirm(reason)`, or
@@ -459,23 +417,17 @@ func (t *Tool) Execute(ctx context.Context, input string) (string, error) {
 ```
 
 **Architecture:**
-```
-Tool goroutine          TUI goroutine           User
-     │                       │                    │
-     │  PermissionRequest    │                    │
-     ├──────────────────────►│                    │
-     │  (via pub/sub topic)  │   Dialog rendered  │
-     │                       ├───────────────────►│
-     │                       │                    │
-     │      (blocked on      │   User presses     │
-     │       channel)        │   y/n/a            │
-     │                       │◄───────────────────┤
-     │  PermissionResponse   │                    │
-     │◄──────────────────────┤                    │
-     │  (via response chan)   │                    │
-     │                       │                    │
-     ▼                       ▼                    ▼
-  Continue or abort
+```mermaid
+sequenceDiagram
+    participant T as Tool goroutine
+    participant UI as TUI goroutine
+    participant U as User
+    T->>UI: PermissionRequest (via pub/sub topic)
+    Note over T: blocked on channel
+    UI->>U: Dialog rendered
+    U->>UI: User presses y/n/a
+    UI->>T: PermissionResponse (via response chan)
+    Note over T: Continue or abort
 ```
 
 ### Permission Levels
@@ -530,18 +482,23 @@ central event bus, decoupling the tool execution layer from the UI and policy la
 
 ### Event-Driven Architecture
 
-```
-┌──────────────┐     ┌─────────────────┐     ┌──────────────────┐
-│ Tool Layer   │     │  Event Bus      │     │  Consumers       │
-│              │     │                 │     │                  │
-│ BashTool ────┼────►│ ConfirmEvent ───┼────►│ PolicyEngine     │
-│ EditTool ────┤     │ ActionEvent     │     │   ├─ Auto-approve│
-│ WriteTool ───┤     │ ResultEvent     │     │   ├─ Block       │
-│              │     │                 │     │   └─ Prompt      │
-│              │     │                 │     │ UIRenderer       │
-│              │     │                 │     │   ├─ Interactive │
-│              │     │                 │     │   └─ Headless    │
-└──────────────┘     └─────────────────┘     └──────────────────┘
+```mermaid
+flowchart LR
+    subgraph TL["Tool Layer"]
+        BashTool
+        EditTool
+        WriteTool
+    end
+    subgraph EB["Event Bus"]
+        ConfirmEvent["ConfirmEvent"]
+        ActionEvent["ActionEvent"]
+        ResultEvent["ResultEvent"]
+    end
+    subgraph Cons["Consumers"]
+        PE["PolicyEngine\nAuto-approve / Block / Prompt"]
+        UI["UIRenderer\nInteractive / Headless"]
+    end
+    TL --> EB --> Cons
 ```
 
 **Event flow:**

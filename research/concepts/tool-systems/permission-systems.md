@@ -305,35 +305,17 @@ in autonomous mode. This is not a single gate — it is a pipeline.
 
 ### Pipeline Architecture
 
-```
-                    Tool Call
-                       │
-                       ▼
-            ┌─────────────────────┐
-            │  SecurityInspector  │──── BLOCK ──→ Action Denied
-            │  (pattern matching) │
-            └──────────┬──────────┘
-                       │ PASS
-                       ▼
-            ┌─────────────────────┐
-            │ AdversaryInspector  │──── BLOCK ──→ Action Denied
-            │ (injection detect)  │
-            └──────────┬──────────┘
-                       │ PASS
-                       ▼
-            ┌─────────────────────┐
-            │ PermissionInspector │──── BLOCK ──→ User Prompt
-            │ (per-tool rules)    │
-            └──────────┬──────────┘
-                       │ PASS
-                       ▼
-            ┌─────────────────────┐
-            │ RepetitionInspector │──── BLOCK ──→ Declined Response
-            │  (loop detection)   │
-            └──────────┬──────────┘
-                       │ PASS
-                       ▼
-                  Tool Executes
+```mermaid
+flowchart TD
+    TC["Tool Call"] --> SI
+    SI["SecurityInspector<br/>(pattern matching)"] -->|BLOCK| AD1["Action Denied"]
+    SI -->|PASS| AI
+    AI["AdversaryInspector<br/>(injection detect)"] -->|BLOCK| AD2["Action Denied"]
+    AI -->|PASS| PI
+    PI["PermissionInspector<br/>(per-tool rules)"] -->|BLOCK| UP["User Prompt"]
+    PI -->|PASS| RI
+    RI["RepetitionInspector<br/>(loop detection)"] -->|BLOCK| DR["Declined Response"]
+    RI -->|PASS| TE["Tool Executes"]
 ```
 
 ### Tier 1: SecurityInspector
@@ -658,15 +640,13 @@ In the agent context:
 
 Most coding agents implicitly use a capability-like model:
 
-```
-Session Start
-    │
-    ├── Agent receives: read capability (all files)
-    ├── Agent receives: write capability (src/**)
-    ├── Agent receives: execute capability (npm run *)
-    │
-    └── Agent does NOT receive: network capability
-        Agent does NOT receive: system capability
+```mermaid
+flowchart TD
+    S["Session Start"] --> R["read capability — all files"]
+    S --> W["write capability — src/**"]
+    S --> E["execute capability — npm run *"]
+    S --> N1["no network capability"]
+    S --> N2["no system capability"]
 ```
 
 The agent can only exercise capabilities it has been granted. New capabilities can be

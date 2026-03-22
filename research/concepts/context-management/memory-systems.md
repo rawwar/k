@@ -207,33 +207,27 @@ RAM in an operating system, giving the agent tools to manage its own memory expl
 
 ### The OS Analogy
 
-```
-┌─────────────────────────────────────────┐
-│           Letta/MemGPT Architecture      │
-├─────────────────────────────────────────┤
-│                                         │
-│  Context Window = "RAM"                 │
-│  ┌───────────────────────────────────┐  │
-│  │ System Prompt (OS kernel)         │  │
-│  │ Core Memory (working set)         │  │
-│  │ Recent Messages (stack)           │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  Archival Memory = "Disk"               │
-│  ┌───────────────────────────────────┐  │
-│  │ Vector-indexed facts              │  │
-│  │ Past conversations                │  │
-│  │ User information                  │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  Agent Tools = "System Calls"           │
-│  ├── core_memory_append()               │
-│  ├── core_memory_replace()              │
-│  ├── archival_memory_insert()           │
-│  ├── archival_memory_search()           │
-│  └── conversation_search()              │
-│                                         │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CTX["Context Window = &quot;RAM&quot;"]
+        SP["System Prompt (OS kernel)"]
+        CM["Core Memory (working set)"]
+        RM["Recent Messages (stack)"]
+    end
+    subgraph ARCH["Archival Memory = &quot;Disk&quot;"]
+        VI["Vector-indexed facts"]
+        PC["Past conversations"]
+        UI["User information"]
+    end
+    subgraph TOOLS["Agent Tools = &quot;System Calls&quot;"]
+        T1["core_memory_append()"]
+        T2["core_memory_replace()"]
+        T3["archival_memory_insert()"]
+        T4["archival_memory_search()"]
+        T5["conversation_search()"]
+    end
+    CTX <-->|"manage"| TOOLS
+    ARCH <-->|"insert / search"| TOOLS
 ```
 
 ### Memory Types

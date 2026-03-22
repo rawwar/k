@@ -6,29 +6,29 @@ OpenCode follows a clean, idiomatic Go architecture organized around the `intern
 
 The architecture can be summarized as:
 
-```
-User Input (TUI/CLI)
-    │
-    ▼
-┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
-│  cmd/root   │────▶│  internal/   │────▶│  internal/llm/   │
-│  (Cobra)    │     │  app/app     │     │  agent/agent     │
-└─────────────┘     └──────────────┘     └──────────────────┘
-                           │                      │
-                    ┌──────┴──────┐         ┌─────┴──────┐
-                    │             │         │            │
-                    ▼             ▼         ▼            ▼
-              ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌─────────┐
-              │ session  │ │ message  │ │provider │ │  tools  │
-              │ service  │ │ service  │ │ layer   │ │ layer   │
-              └──────────┘ └──────────┘ └─────────┘ └─────────┘
-                    │             │         │            │
-                    └──────┬──────┘         │            │
-                           ▼                ▼            ▼
-                    ┌──────────┐     ┌──────────┐ ┌──────────┐
-                    │  SQLite  │     │ LLM APIs │ │ FS/Shell │
-                    │   (db)   │     │          │ │   /LSP   │
-                    └──────────┘     └──────────┘ └──────────┘
+```mermaid
+flowchart TD
+    UI["User Input (TUI/CLI)"]
+    Root["cmd/root (Cobra)"]
+    App["internal/app/app"]
+    Agent["internal/llm/agent/agent"]
+    Session["session service"]
+    Message["message service"]
+    Provider["provider layer"]
+    Tools["tools layer"]
+    SQLite["SQLite (db)"]
+    LLMAPIs["LLM APIs"]
+    FSShell["FS/Shell/LSP"]
+
+    UI --> Root --> App --> Agent
+    App --> Session
+    App --> Message
+    Agent --> Provider
+    Agent --> Tools
+    Session --> SQLite
+    Message --> SQLite
+    Provider --> LLMAPIs
+    Tools --> FSShell
 ```
 
 ## Package Organization
@@ -198,45 +198,24 @@ The `Request()` method **blocks** the tool execution goroutine until the TUI use
 
 ## Data Flow: User Input → LLM → Tool Execution → Output
 
-```
-1. User types message in TUI editor
-       │
-2. TUI sends message to App.CoderAgent.Run(sessionID, content)
-       │
-3. Agent creates user message in DB (via message.Service)
-       │
-4. Agent enters processGeneration() loop:
-       │
-       ├── Builds message history from DB
-       │
-       ├── ◄─── LOOP START ───►
-       │     │
-       │     ├── Calls provider.StreamResponse(ctx, messages, tools)
-       │     │     │
-       │     │     ├── Provider converts messages → API format
-       │     │     ├── Streams SSE events from LLM
-       │     │     └── Emits ProviderEvent channel
-       │     │
-       │     ├── processEvent() handles each event:
-       │     │     ├── EventContentDelta → append to assistant message
-       │     │     ├── EventThinkingDelta → append reasoning content
-       │     │     ├── EventToolUseStart → add tool call to message
-       │     │     ├── EventToolUseStop → finalize tool call
-       │     │     └── EventComplete → finalize message + track usage
-       │     │
-       │     ├── After stream completes, execute tools sequentially:
-       │     │     ├── Find matching BaseTool by name
-       │     │     ├── If tool needs permission → permission.Request() blocks
-       │     │     ├── tool.Run(ctx, toolCall) → ToolResponse
-       │     │     └── Collect all ToolResults
-       │     │
-       │     ├── If FinishReason == ToolUse:
-       │     │     ├── Append assistant message + tool results to history
-       │     │     └── Continue loop ◄───
-       │     │
-       │     └── Else: return AgentEvent{Done: true}
-       │
-5. Result published via pubsub → TUI updates display
+```mermaid
+flowchart TD
+    A["User types message in TUI editor"]
+    B["TUI: App.CoderAgent.Run(sessionID, content)"]
+    C["Agent creates user message in DB"]
+    D["Agent enters processGeneration() loop"]
+    E["Build message history from DB"]
+    F["Call provider.StreamResponse(ctx, messages, tools)"]
+    G["processEvent() per stream event"]
+    H["Execute tools sequentially"]
+    I{{"FinishReason == ToolUse?"}}
+    J["Append results → continue loop"]
+    K["Return AgentEvent(Done: true)"]
+    L["Publish via pubsub → TUI updates display"]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I
+    I -->|Yes| J --> E
+    I -->|No| K --> L
 ```
 
 ## Service Wiring (App Initialization)

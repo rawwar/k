@@ -557,21 +557,17 @@ summary returns.
 
 **ForgeCode three-agent pipeline:**
 
+```mermaid
+flowchart LR
+    Sage["**Sage (Planner)**\nAnalyzes problem\nContext: problem + repo overview"]
+    Muse["**Muse (Architect)**\nDesigns solution\nContext: plan + relevant files"]
+    Forge["**Forge (Builder)**\nWrites code\nContext: spec + target files"]
+    Sage -->|"plan"| Muse
+    Muse -->|"spec"| Forge
 ```
-  Sage (Planner)          Muse (Architect)         Forge (Builder)
-  ┌──────────┐            ┌──────────┐            ┌──────────┐
-  │ Analyzes │   plan     │ Designs  │  spec      │ Writes   │
-  │ problem  │──────────► │ solution │──────────► │ code     │
-  │          │            │          │            │          │
-  │ Context: │            │ Context: │            │ Context: │
-  │ problem  │            │ plan +   │            │ spec +   │
-  │ + repo   │            │ relevant │            │ target   │
-  │ overview │            │ files    │            │ files    │
-  └──────────┘            └──────────┘            └──────────┘
 
-  Each agent has a FRESH context containing only what it needs.
-  No agent carries the full accumulated history.
-```
+Each agent has a FRESH context containing only what it needs.
+No agent carries the full accumulated history.
 
 **Capy's Captain-Build boundary:**
 
@@ -599,23 +595,15 @@ navigate without reading full contents upfront.
 
 **Aider's pipeline:**
 
-```
-Repository files
-       │
-       ▼
-  tree-sitter parsing (extract definitions + references)
-       │
-       ▼
-  Build reference graph (who calls whom)
-       │
-       ▼
-  PageRank scoring (which files are most central)
-       │
-       ▼
-  Token budget allocation (fit map within budget)
-       │
-       ▼
-  Repo-map output (signatures + structure, no bodies)
+```mermaid
+flowchart TD
+    RF["Repository files"]
+    TS["tree-sitter parsing\n(extract definitions + references)"]
+    BG["Build reference graph\n(who calls whom)"]
+    PR["PageRank scoring\n(which files are most central)"]
+    TB["Token budget allocation\n(fit map within budget)"]
+    RM["Repo-map output\n(signatures + structure, no bodies)"]
+    RF --> TS --> BG --> PR --> TB --> RM
 ```
 
 **Why it prevents compaction:**
@@ -668,29 +656,14 @@ configurable pipeline that chains multiple condenser stages sequentially.
 
 ### Architecture
 
-```
-Raw event history
-       │
-       ▼
-┌──────────────┐
-│   Stage 1    │  ObservationCondenser
-│   (Masking)  │  Replace old tool outputs with placeholders
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│   Stage 2    │  AmortizedForgettingCondenser
-│  (Thinning)  │  Probabilistically drop older events
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│   Stage 3    │  LLMSummarizingCondenser
-│  (Summary)   │  If still over budget, LLM-summarize remainder
-└──────┬───────┘
-       │
-       ▼
-  Compacted event history
+```mermaid
+flowchart TD
+    Input["Raw event history"]
+    S1["**Stage 1: ObservationCondenser**\n(Masking)\nReplace old tool outputs with placeholders"]
+    S2["**Stage 2: AmortizedForgettingCondenser**\n(Thinning)\nProbabilistically drop older events"]
+    S3["**Stage 3: LLMSummarizingCondenser**\n(Summary)\nIf still over budget, LLM-summarize remainder"]
+    Output["Compacted event history"]
+    Input --> S1 --> S2 --> S3 --> Output
 ```
 
 ### Configuration (TOML)
@@ -815,14 +788,12 @@ multiple approaches:
 
 ### Codex: Truncation + Global Pass
 
-```
-Per-tool output truncation (10KB limit, 67/33 split)
-              │
-              ▼
-    Context still too large?
-              │
-              ▼
-Global truncation pass (shrink ALL tool outputs proportionally)
+```mermaid
+flowchart TD
+    T1["Per-tool output truncation\n(10KB limit, 67/33 split)"]
+    D1{"Context still\ntoo large?"}
+    T2["Global truncation pass\n(shrink ALL tool outputs proportionally)"]
+    T1 --> D1 -->|"yes"| T2
 ```
 
 Simple, deterministic, zero LLM cost. Works because Codex sessions tend to be focused
@@ -830,20 +801,14 @@ and relatively short.
 
 ### OpenHands: Multi-Stage Pipeline
 
-```
-Observation masking (zero cost, preserves structure)
-              │
-              ▼
-    Context still too large?
-              │
-              ▼
-Amortized forgetting (zero cost, probabilistic thinning)
-              │
-              ▼
-    Context STILL too large?
-              │
-              ▼
-LLM summarization (expensive, high quality)
+```mermaid
+flowchart TD
+    T1["Observation masking\n(zero cost, preserves structure)"]
+    D1{"Context still\ntoo large?"}
+    T2["Amortized forgetting\n(zero cost, probabilistic thinning)"]
+    D2{"Context STILL\ntoo large?"}
+    T3["LLM summarization\n(expensive, high quality)"]
+    T1 --> D1 -->|"yes"| T2 --> D2 -->|"yes"| T3
 ```
 
 Each stage is a fallback for the previous. Cheap mechanical strategies handle most cases;
@@ -851,17 +816,13 @@ the expensive LLM strategy only fires when necessary.
 
 ### Claude Code: Sub-Agents + Compaction
 
-```
-Exploration tasks → spawn sub-agent (context never enters parent)
-              │
-              ▼
-    Parent context growing?
-              │
-              ▼
-Auto-compaction at ~95% (LLM summarization)
-              │
-              ▼
-Re-read CLAUDE.md (restore persistent instructions)
+```mermaid
+flowchart TD
+    T1["Exploration tasks → spawn sub-agent\n(context never enters parent)"]
+    D1{"Parent context\ngrowing?"}
+    T2["Auto-compaction at ~95%\n(LLM summarization)"]
+    T3["Re-read CLAUDE.md\n(restore persistent instructions)"]
+    T1 --> D1 -->|"yes"| T2 --> T3
 ```
 
 Sub-agents prevent the MAJORITY of context growth. Compaction is a safety net for what
@@ -869,44 +830,26 @@ remains.
 
 ### Goose: Three-Level Background Summarization
 
-```
-Every turn → background summarize latest tool pair (async)
-              │
-              ▼
-    Context > 80%?
-              │
-              ▼
-Proactive summarization (summarize oldest unsummarized pairs)
-              │
-              ▼
-    API returns context_length_exceeded?
-              │
-              ▼
-Reactive emergency summarization (aggressive, max 2 retries)
-              │
-              ▼
-    Still failing?
-              │
-              ▼
-Hard truncation to 30K chars (last resort)
+```mermaid
+flowchart TD
+    T1["Every turn → background summarize\nlatest tool pair (async)"]
+    D1{"Context > 80%?"}
+    T2["Proactive summarization\n(summarize oldest unsummarized pairs)"]
+    D2{"API returns\ncontext_length_exceeded?"}
+    T3["Reactive emergency summarization\n(aggressive, max 2 retries)"]
+    D3{"Still\nfailing?"}
+    T4["Hard truncation to 30K chars\n(last resort)"]
+    T1 --> D1 -->|"yes"| T2 --> D2 -->|"yes"| T3 --> D3 -->|"yes"| T4
 ```
 
 ### Design Principle: Cheap First, Expensive as Fallback
 
-```
-                    ┌───────────────────────┐
-                    │    Strategy Cost       │
-                    │                       │
-  Apply first ────► │  Per-item truncation  │  Free
-                    │  Observation masking  │  Free
-                    │  Sliding window       │  Free
-                    │  Amortized forgetting │  Free
-                    │  ─────────────────── │
-                    │  Tool-pair summary    │  Cheap (small LLM calls)
-                    │  ─────────────────── │
-                    │  LLM attention        │  Expensive
-  Apply last  ────► │  Full summarization   │  Expensive
-                    └───────────────────────┘
+```mermaid
+flowchart TD
+    A["**Apply first — Free**\nPer-item truncation\nObservation masking\nSliding window\nAmortized forgetting"]
+    B["**Cheap**\nTool-pair summary\n(small LLM calls)"]
+    C["**Apply last — Expensive**\nLLM attention\nFull summarization"]
+    A -->|"if needed"| B -->|"if needed"| C
 ```
 
 ---
@@ -915,31 +858,36 @@ Hard truncation to 30K chars (last resort)
 
 ### Flowchart
 
-```
-START: Do you need compaction?
-│
-├── Sessions < 30 turns, files < 5K lines?
-│   └── NO → Use no compaction (mini-SWE-agent approach)
-│
-├── YES, sessions are long
-│   │
-│   ├── Is exploration a major cost?
-│   │   └── YES → Add sub-agent partitioning (explore in separate context)
-│   │
-│   ├── Are tool outputs large (>5KB regularly)?
-│   │   └── YES → Add per-item truncation (head+tail split)
-│   │
-│   ├── Is the codebase large (>100 files)?
-│   │   └── YES → Add repo-map for proactive prevention
-│   │
-│   └── Context still growing too fast?
-│       │
-│       ├── Budget for LLM compaction calls?
-│       │   ├── YES → Use LLM summarization or structured summary
-│       │   └── NO  → Use observation masking + sliding window
-│       │
-│       └── Need maximum quality?
-│           └── YES → Use pipeline (masking → thinning → LLM summary)
+```mermaid
+flowchart TD
+    Start{"Do you need\ncompaction?"}
+    Short["Use no compaction\n(mini-SWE-agent approach)"]
+    Explor{"Is exploration\na major cost?"}
+    SubAgent["Add sub-agent partitioning\n(explore in separate context)"]
+    LargeOut{"Are tool outputs\nlarge (>5KB regularly)?"}
+    Truncate["Add per-item truncation\n(head+tail split)"]
+    LargeRepo{"Is the codebase\nlarge (>100 files)?"}
+    RepoMap["Add repo-map\nfor proactive prevention"]
+    StillGrow{"Context still\ngrowing too fast?"}
+    Budget{"Budget for LLM\ncompaction calls?"}
+    LLMSum["Use LLM summarization\nor structured summary"]
+    MaskWin["Use observation masking\n+ sliding window"]
+    Quality{"Need maximum\nquality?"}
+    Pipeline["Use pipeline\n(masking → thinning → LLM summary)"]
+
+    Start -->|"sessions < 30 turns,\nfiles < 5K lines"| Short
+    Start -->|"sessions are long"| Explor
+    Explor -->|"yes"| SubAgent
+    Explor --> LargeOut
+    LargeOut -->|"yes"| Truncate
+    LargeOut --> LargeRepo
+    LargeRepo -->|"yes"| RepoMap
+    LargeRepo --> StillGrow
+    StillGrow --> Budget
+    Budget -->|"yes"| LLMSum
+    Budget -->|"no"| MaskWin
+    StillGrow --> Quality
+    Quality -->|"yes"| Pipeline
 ```
 
 ### Quick Reference by Use Case

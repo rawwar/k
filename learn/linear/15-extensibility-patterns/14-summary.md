@@ -16,26 +16,16 @@ You have now covered the full spectrum of extensibility patterns for a coding ag
 
 The patterns you have learned form a layered architecture, where each layer builds on the ones below it:
 
-```
-┌─────────────────────────────────────────────────┐
-│              Skills (Chapter 15.8)               │
-│   High-level: prompt + tools + workflow          │
-├─────────────────────────────────────────────────┤
-│           MCP Servers (Chapter 15.5-7)           │
-│   External: tool servers, resource servers       │
-├─────────────────────────────────────────────────┤
-│        Hooks & Events (Chapter 15.3-4)           │
-│   Middleware: intercept, observe, modify          │
-├─────────────────────────────────────────────────┤
-│          Plugins (Chapter 15.1-2)                │
-│   Foundation: loading, lifecycle, registration   │
-├─────────────────────────────────────────────────┤
-│     Configuration (Chapter 15.9)                 │
-│   Declarative: user-facing, no-code extension    │
-├─────────────────────────────────────────────────┤
-│  Security & Versioning (Chapter 15.11-12)        │
-│  Cross-cutting: isolation, trust, compatibility  │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1["**Skills** (Chapter 15.8)\nHigh-level: prompt + tools + workflow"]
+    S2["**MCP Servers** (Chapter 15.5-7)\nExternal: tool servers, resource servers"]
+    S3["**Hooks and Events** (Chapter 15.3-4)\nMiddleware: intercept, observe, modify"]
+    S4["**Plugins** (Chapter 15.1-2)\nFoundation: loading, lifecycle, registration"]
+    S5["**Configuration** (Chapter 15.9)\nDeclarative: user-facing, no-code extension"]
+    S6["**Security and Versioning** (Chapter 15.11-12)\nCross-cutting: isolation, trust, compatibility"]
+
+    S1 --- S2 --- S3 --- S4 --- S5 --- S6
 ```
 
 **Plugins** are the foundation. They provide the lifecycle management (load, init, run, shutdown) and registration mechanisms that everything else builds on. Whether a capability comes from an embedded module, a dynamic library, or a subprocess, the plugin system gives it a uniform interface.

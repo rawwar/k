@@ -36,20 +36,17 @@ P2P elements will likely emerge in hybrid architectures.
 
 ## Core P2P Architecture
 
-```
-┌──────────┐     ┌──────────┐     ┌──────────┐
-│ Agent A   │◄───►│ Agent B   │◄───►│ Agent C   │
-│           │     │           │     │           │
-│ Coder     │     │ Reviewer  │     │ Tester    │
-└─────┬─────┘     └─────┬─────┘     └─────┬─────┘
-      │                 │                 │
-      └────────┬────────┘────────┬────────┘
-               │                 │
-         ┌─────▼─────────────────▼─────┐
-         │    Shared Communication      │
-         │    Medium (Blackboard,       │
-         │    Message Bus, or P2P)      │
-         └─────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Agent A\n(Coder)"]
+    B["Agent B\n(Reviewer)"]
+    C["Agent C\n(Tester)"]
+    SCM["Shared Communication Medium\n(Blackboard, Message Bus, or P2P)"]
+    A <-->|"peer"| B
+    B <-->|"peer"| C
+    A --> SCM
+    B --> SCM
+    C --> SCM
 ```
 
 In a P2P system:
@@ -137,37 +134,17 @@ In P2P systems, agents must negotiate who does what. Several protocols address t
 
 A classic multi-agent negotiation protocol adapted for coding:
 
-```
-┌─────────────┐          ┌─────────────┐          ┌─────────────┐
-│  Announcer   │          │  Bidder A    │          │  Bidder B    │
-│  (any agent) │          │  (peer)      │          │  (peer)      │
-└──────┬──────┘          └──────┬──────┘          └──────┬──────┘
-       │                        │                        │
-       │  ANNOUNCE: "Need to    │                        │
-       │  fix auth bug in       │                        │
-       │  routes/users.ts"      │                        │
-       │───────────────────────►│                        │
-       │──────────────────────────────────────────────►  │
-       │                        │                        │
-       │         BID: "I can    │                        │
-       │         fix it. I've   │                        │
-       │         worked on auth │                        │
-       │         before."       │                        │
-       │◄───────────────────────│                        │
-       │                        │                        │
-       │                  BID: "I can fix it.            │
-       │                  Lower confidence but           │
-       │                  I know the test suite."        │
-       │◄──────────────────────────────────────────────  │
-       │                        │                        │
-       │  AWARD: "Agent A       │                        │
-       │  wins — best match"    │                        │
-       │───────────────────────►│                        │
-       │                        │                        │
-       │         COMMIT:        │                        │
-       │         "Fix applied   │                        │
-       │         and tested"    │                        │
-       │◄───────────────────────│                        │
+```mermaid
+sequenceDiagram
+    participant AN as Announcer (any agent)
+    participant BA as Bidder A (peer)
+    participant BB as Bidder B (peer)
+    AN->>BA: ANNOUNCE: Need to fix auth bug in routes/users.ts
+    AN->>BB: ANNOUNCE: Need to fix auth bug in routes/users.ts
+    BA->>AN: BID: I can fix it. Worked on auth before.
+    BB->>AN: BID: I can fix it. Lower confidence but know the test suite.
+    AN->>BA: AWARD: Agent A wins — best match
+    BA->>AN: COMMIT: Fix applied and tested
 ```
 
 ```python
@@ -246,42 +223,17 @@ every decision.
 A **blackboard** is a shared workspace where agents post information, read each
 other's contributions, and build toward a solution collaboratively:
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    BLACKBOARD                       │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ TASK: Refactor auth module to use JWT       │   │
-│  └─────────────────────────────────────────────┘   │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ [Agent A - Researcher]                      │   │
-│  │ Current auth uses passport.js with local    │   │
-│  │ and OAuth strategies. 15 routes depend on   │   │
-│  │ req.user populated by passport middleware.  │   │
-│  └─────────────────────────────────────────────┘   │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ [Agent B - Architect]                       │   │
-│  │ Proposed plan:                              │   │
-│  │ 1. Create JWT utility module                │   │
-│  │ 2. Replace passport middleware              │   │
-│  │ 3. Update all 15 route handlers             │   │
-│  │ Risk: OAuth refresh flow needs rethinking   │   │
-│  └─────────────────────────────────────────────┘   │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ [Agent C - Security Expert]                 │   │
-│  │ ⚠ Agent B's plan doesn't address token     │   │
-│  │ rotation or refresh token storage.          │   │
-│  │ Recommend: Add Step 2.5 for refresh flow    │   │
-│  └─────────────────────────────────────────────┘   │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │ [Agent B - Architect] REVISED               │   │
-│  │ Updated plan incorporating C's feedback...  │   │
-│  └─────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    TASK["TASK: Refactor auth module to use JWT"]
+    AA["Agent A - Researcher\nCurrent auth uses passport.js with local\nand OAuth strategies. 15 routes depend on\nreq.user populated by passport middleware."]
+    AB["Agent B - Architect\nProposed plan:\n1. Create JWT utility module\n2. Replace passport middleware\n3. Update all 15 route handlers\nRisk: OAuth refresh flow needs rethinking"]
+    AC["Agent C - Security Expert\n⚠ Plan doesn't address token rotation\nor refresh token storage.\nRecommend: Add Step 2.5 for refresh flow"]
+    ABR["Agent B - Architect (REVISED)\nUpdated plan incorporating C's feedback"]
+    TASK --> AA
+    TASK --> AB
+    AB --> AC
+    AC --> ABR
 ```
 
 ```python
@@ -513,16 +465,16 @@ hierarchical systems avoid.
 
 The most practical approach combines hierarchical orchestration with P2P elements:
 
-```
-┌───────────────────────────────────┐
-│          ORCHESTRATOR             │
-│  (delegates tasks, aggregates)    │
-├───────────┬───────────┬───────────┤
-│ Worker A  │ Worker B  │ Worker C  │
-│           │◄─────────►│           │
-│           │  P2P peer │           │
-│           │  review   │           │
-└───────────┴───────────┴───────────┘
+```mermaid
+flowchart TD
+    ORC["Orchestrator\n(delegates tasks, aggregates)"]
+    WA["Worker A"]
+    WB["Worker B"]
+    WC["Worker C"]
+    ORC --> WA
+    ORC --> WB
+    ORC --> WC
+    WB <-->|"P2P peer review"| WC
 ```
 
 In this hybrid:

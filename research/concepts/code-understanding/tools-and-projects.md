@@ -13,21 +13,37 @@ Code understanding in coding agents relies on a rich ecosystem of tools. Some ar
 
 ### Tool Landscape
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Code Understanding Tools                      │
-├────────────────┬────────────────┬────────────────┬──────────────┤
-│    Parsing     │    Search      │  Intelligence  │   Agent-     │
-│                │                │                │   Specific   │
-├────────────────┼────────────────┼────────────────┼──────────────┤
-│ tree-sitter    │ ripgrep        │ Sourcegraph    │ Aider repo   │
-│ ast-grep       │ ast-grep       │ SCIP/LSIF     │   map        │
-│ semgrep        │ semgrep        │ Stack Graphs   │ Cursor index │
-│ ctags          │ grep           │ LSP servers    │ Cody context │
-│ Babel/SWC      │ ag/ack         │ CodeQL         │   engine     │
-│ rustc/gopls    │ Sourcegraph    │ Kythe          │ OpenCode LSP │
-│                │   search       │                │              │
-└────────────────┴────────────────┴────────────────┴──────────────┘
+```mermaid
+flowchart TD
+    subgraph Parsing
+        P1["tree-sitter"]
+        P2["ast-grep"]
+        P3["semgrep"]
+        P4["ctags"]
+        P5["Babel/SWC"]
+        P6["rustc/gopls"]
+    end
+    subgraph Search
+        S1["ripgrep"]
+        S2["ast-grep"]
+        S3["semgrep"]
+        S4["grep / ag / ack"]
+        S5["Sourcegraph search"]
+    end
+    subgraph Intelligence
+        I1["Sourcegraph"]
+        I2["SCIP/LSIF"]
+        I3["Stack Graphs"]
+        I4["LSP servers"]
+        I5["CodeQL"]
+        I6["Kythe"]
+    end
+    subgraph AgentSpecific["Agent-Specific"]
+        A1["Aider repo map"]
+        A2["Cursor index"]
+        A3["Cody context engine"]
+        A4["OpenCode LSP"]
+    end
 ```
 
 ---
@@ -372,33 +388,23 @@ zoekt "class.*Service.*implements" -r
 
 Sourcegraph Cody uses a multi-layered context retrieval system:
 
-```
-User Query
-    │
-    ▼
-┌────────────────┐
-│ Query Rewriting │  Expand query with synonyms, related terms
-└───────┬────────┘
-        │
-        ├──────────────────┐───────────────────┐
-        ▼                  ▼                   ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ Keyword      │  │ Code Graph   │  │ Sourcegraph  │
-│ Search       │  │ Analysis     │  │ Search       │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-       │                 │                  │
-       └────────┬────────┘──────────────────┘
-                │
-                ▼
-       ┌──────────────┐
-       │ Context       │  Rank, deduplicate, select top-k
-       │ Assembly      │
-       └──────┬───────┘
-              │
-              ▼
-       ┌──────────────┐
-       │ LLM Prompt   │  Include selected context in prompt
-       └──────────────┘
+```mermaid
+flowchart TD
+    Q["User Query"]
+    QR["Query Rewriting<br/>Expand with synonyms, related terms"]
+    KS["Keyword Search"]
+    CG["Code Graph Analysis"]
+    SS["Sourcegraph Search"]
+    CA["Context Assembly<br/>Rank, deduplicate, select top-k"]
+    LP["LLM Prompt<br/>Include selected context in prompt"]
+    Q --> QR
+    QR --> KS
+    QR --> CG
+    QR --> SS
+    KS --> CA
+    CG --> CA
+    SS --> CA
+    CA --> LP
 ```
 
 ### Context Sources

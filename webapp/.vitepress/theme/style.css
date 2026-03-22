@@ -120,3 +120,29 @@
   border-color: #b4befe;
   background: rgba(180, 190, 254, 0.06);
 }
+
+/* ── Mermaid diagram styling ────────────────────────────────── */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  border-radius: 8px;
+  background: transparent !important;
+}
+
+/* Ensure node text is readable in dark mode */
+.dark .mermaid svg .label,
+.dark .mermaid svg text {
+  color: #cdd6f4 !important;
+  fill: #cdd6f4 !important;
+}
+
+.dark .mermaid svg .node rect,
+.dark .mermaid svg .node circle,
+.dark .mermaid svg .node polygon {
+  stroke: #45475a !important;
+}

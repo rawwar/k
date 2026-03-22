@@ -40,61 +40,41 @@ Capy's Captain/Build worker architecture to Ante's self-organizing multi-agent s
 
 ### Core Architecture Diagram
 
-```
-  +------------------------------------+
-  |          Orchestrator              |
-  |  (Task Analysis & Delegation)      |
-  |                                    |
-  |  1. Analyze incoming task          |
-  |  2. Decompose into subtasks        |
-  |  3. Assign to workers              |
-  |  4. Monitor progress               |
-  |  5. Synthesize results             |
-  +----------+-----------+-------------+
-             |           |
-             |  Dynamic task creation
-             |  (number and type of
-             |   subtasks determined
-             |   at runtime)
-             |           |
-    +--------+----+------+----+
-    |             |           |
-    v             v           v
-  +------+   +------+   +------+
-  |Wrkr 1|   |Wrkr 2|   |Wrkr 3|
-  | Edit |   | Test |   |Search|
-  | files|   | code |   | docs |
-  +--+---+   +--+---+   +--+---+
-     |           |           |
-     +-----+-----+-----+----+
-           |           |
-           v           v
-  +------------------------------------+
-  |     Result Synthesis               |
-  |  - Merge file changes              |
-  |  - Validate consistency            |
-  |  - Handle conflicts                |
-  +------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ORC["Orchestrator (Task Analysis & Delegation)"]
+        ORCsteps["1. Analyze incoming task\n2. Decompose into subtasks\n3. Assign to workers\n4. Monitor progress\n5. Synthesize results"]
+    end
+    ORC -->|"Dynamic task creation\n(number and type determined at runtime)"| W1
+    ORC --> W2
+    ORC --> W3
+    W1["Worker 1\nEdit files"]
+    W2["Worker 2\nTest code"]
+    W3["Worker 3\nSearch docs"]
+    W1 --> RS
+    W2 --> RS
+    W3 --> RS
+    RS["Result Synthesis\n- Merge file changes\n- Validate consistency\n- Handle conflicts"]
 ```
 
 ### Comparison with Other Patterns
 
-```
-  Prompt Chaining (Static):
-  [Step 1] --> [Step 2] --> [Step 3] --> [Output]
-  (Steps known at design time)
-
-  Parallelization (Structural):
-  [Input] --> [Worker A] --+
-          --> [Worker B] --+--> [Merge] --> [Output]
-          --> [Worker C] --+
-  (Split known at design time or by simple rules)
-
-  Orchestrator-Workers (Dynamic):
-  [Input] --> [Orchestrator] --> ???
-                              --> [Worker X] --+
-                              --> [Worker Y] --+--> [Synthesis]
-                              (Workers chosen at RUNTIME)
+```mermaid
+flowchart LR
+    subgraph PC["Prompt Chaining (Static)"]
+        PC1["Step 1"] --> PC2["Step 2"] --> PC3["Step 3"] --> PCO["Output"]
+        PCN["Steps known at design time"]
+    end
+    subgraph PAR["Parallelization (Structural)"]
+        PARI["Input"] --> PAA["Worker A"] & PAB["Worker B"] & PAC["Worker C"]
+        PAA & PAB & PAC --> PAM["Merge"] --> PAO["Output"]
+        PARN["Split known at design time or by simple rules"]
+    end
+    subgraph OW["Orchestrator-Workers (Dynamic)"]
+        OWI["Input"] --> OWO["Orchestrator"]
+        OWO -->|"chosen at RUNTIME"| OWX["Worker X"] & OWY["Worker Y"]
+        OWX & OWY --> OWS["Synthesis"]
+    end
 ```
 
 ## Core Concepts
@@ -104,14 +84,16 @@ Capy's Captain/Build worker architecture to Ante's self-organizing multi-agent s
 The defining feature: the orchestrator determines subtasks **at runtime** based on
 the specific input.
 
-```
-Static decomposition (prompt chaining):
-  Always: [Parse] --> [Transform] --> [Validate] --> [Output]
-
-Dynamic decomposition (orchestrator-workers):
-  Input A: [Search files] --> [Edit 2 files] --> [Run tests]
-  Input B: [Search files] --> [Edit 7 files] --> [Update docs] --> [Run tests]
-  Input C: [Read config] --> [Edit 1 file]
+```mermaid
+flowchart LR
+    subgraph Static["Static decomposition (prompt chaining)"]
+        S1["Parse"] --> S2["Transform"] --> S3["Validate"] --> S4["Output"]
+    end
+    subgraph Dynamic["Dynamic decomposition (orchestrator-workers)"]
+        DA["Input A"] --> DA1["Search files"] --> DA2["Edit 2 files"] --> DA3["Run tests"]
+        DB["Input B"] --> DB1["Search files"] --> DB2["Edit 7 files"] --> DB3["Update docs"] --> DB4["Run tests"]
+        DC["Input C"] --> DC1["Read config"] --> DC2["Edit 1 file"]
+    end
 ```
 
 The orchestrator must: understand the task, assess the scope, identify dependencies
@@ -121,18 +103,20 @@ between subtasks, and allocate appropriate workers.
 
 Workers can be **specialized** or **generic**:
 
-```
-  Specialized:
-    Orchestrator
-        +-- File Editor Worker     (tools: read, write, diff)
-        +-- Test Runner Worker     (tools: bash, test frameworks)
-        +-- Search Worker          (tools: grep, glob, semantic search)
-
-  Generic:
-    Orchestrator
-        +-- Worker 1 (all tools, assigned: "edit auth.py")
-        +-- Worker 2 (all tools, assigned: "edit routes.py")
-        +-- Worker 3 (all tools, assigned: "update tests")
+```mermaid
+flowchart TD
+    subgraph Spec["Specialized"]
+        SO["Orchestrator"]
+        SO --> FEW["File Editor Worker\n(tools: read, write, diff)"]
+        SO --> TRW["Test Runner Worker\n(tools: bash, test frameworks)"]
+        SO --> SW["Search Worker\n(tools: grep, glob, semantic search)"]
+    end
+    subgraph Gen["Generic"]
+        GO["Orchestrator"]
+        GO --> GW1["Worker 1 (all tools)\nassigned: 'edit auth.py'"]
+        GO --> GW2["Worker 2 (all tools)\nassigned: 'edit routes.py'"]
+        GO --> GW3["Worker 3 (all tools)\nassigned: 'update tests'"]
+    end
 ```
 
 Specialized workers are more efficient (smaller tool sets, focused prompts) but
@@ -178,17 +162,17 @@ primary worker, with the ability to spawn sub-agents as additional workers:
 - **Workers**: Sub-agents (Explore, Plan, custom) spawned via the task tool
 - **Specialization**: Explore agents are read-only; the main agent handles writes
 
-```
-Main Agent (Orchestrator + Primary Worker)
-    |
-    +-- Decides: "I need to understand the codebase first"
-    +-- Spawns: Explore Agent ("Find all API routes")
-    +-- Spawns: Explore Agent ("Find test patterns")
-    +-- Receives: exploration results
-    +-- Decides: "Now I need to edit 3 files"
-    +-- Executes: edit operations directly (primary worker role)
-    +-- Decides: "Now verify with tests"
-    +-- Executes: bash("npm test")
+```mermaid
+flowchart TD
+    MA["Main Agent\n(Orchestrator + Primary Worker)"]
+    MA --> D1["Decides: I need to understand the codebase first"]
+    D1 --> S1["Spawns: Explore Agent\n(Find all API routes)"]
+    D1 --> S2["Spawns: Explore Agent\n(Find test patterns)"]
+    S1 & S2 --> R["Receives: exploration results"]
+    R --> D2["Decides: Now I need to edit 3 files"]
+    D2 --> E1["Executes: edit operations directly\n(primary worker role)"]
+    E1 --> D3["Decides: Now verify with tests"]
+    D3 --> E2["Executes: bash('npm test')"]
 ```
 
 This hybrid approach — where the orchestrator is also a worker — is efficient for
@@ -202,13 +186,13 @@ ForgeCode employs three specialized sub-agents:
 - **Muse**: Creative problem-solving and design
 - **Sage**: Knowledge retrieval and analysis
 
-```
-ForgeCode System (Orchestrator)
-    |
-    +-- Task: "Design and implement a caching layer"
-    +-- Muse: Designs cache architecture, proposes eviction strategies
-    +-- Sage: Researches existing patterns, analyzes dependencies
-    +-- Forge: Writes the cache module, integrates with existing code
+```mermaid
+flowchart TD
+    FCS["ForgeCode System (Orchestrator)"]
+    FCS --> T["Task: Design and implement a caching layer"]
+    T --> Muse["Muse: Designs cache architecture,\nproposes eviction strategies"]
+    T --> Sage["Sage: Researches existing patterns,\nanalyzes dependencies"]
+    T --> Forge["Forge: Writes the cache module,\nintegrates with existing code"]
 ```
 
 ### Ante — Meta-Agent Orchestrator
@@ -225,19 +209,17 @@ Capy implements a clean separation between orchestration and execution:
 - **Captain**: The orchestrator that analyzes tasks and creates work items
 - **Build Workers**: Up to 25+ concurrent workers, each in its own git worktree
 
-```
-Captain (Orchestrator)
-    |
-    +-- Analyzes: "Implement user dashboard with 5 widgets"
-    |
-    +-- Creates work items:
-    |     +-- "Build chart widget"       --> Build Worker 1  [worktree 1]
-    |     +-- "Build table widget"       --> Build Worker 2  [worktree 2]
-    |     +-- "Build stats widget"       --> Build Worker 3  [worktree 3]
-    |     +-- "Build notification widget"--> Build Worker 4  [worktree 4]
-    |     +-- "Build settings widget"    --> Build Worker 5  [worktree 5]
-    |
-    +-- Monitors progress, merges branches when workers complete
+```mermaid
+flowchart TD
+    CAP["Captain (Orchestrator)"]
+    CAP --> ANA["Analyzes: Implement user dashboard with 5 widgets"]
+    ANA --> WI["Creates work items"]
+    WI --> BW1["Build chart widget\n→ Build Worker 1 [worktree 1]"]
+    WI --> BW2["Build table widget\n→ Build Worker 2 [worktree 2]"]
+    WI --> BW3["Build stats widget\n→ Build Worker 3 [worktree 3]"]
+    WI --> BW4["Build notification widget\n→ Build Worker 4 [worktree 4]"]
+    WI --> BW5["Build settings widget\n→ Build Worker 5 [worktree 5]"]
+    BW1 & BW2 & BW3 & BW4 & BW5 --> MON["Monitors progress,\nmerges branches when workers complete"]
 ```
 
 Capy's architecture is notable for its **scale** (25+ concurrent workers) and its
@@ -302,37 +284,42 @@ class TestRunnerWorker:
 
 ### Worker Isolation Strategies
 
-```
-  1. File-level isolation (assign files to workers)
-     Worker 1: owns auth.py, login.py
-     Worker 2: owns routes.py, api.py
-
-  2. Branch-level isolation (Capy's approach)
-     Worker 1: git worktree branch-1
-     Worker 2: git worktree branch-2
-
-  3. Container-level isolation
-     Worker 1: Docker container A
-     Worker 2: Docker container B
-
-  4. Permission-level isolation
-     Explore workers: read-only access
-     Edit workers: read-write access
+```mermaid
+flowchart TD
+    subgraph FL["1. File-level isolation"]
+        FLW1["Worker 1\nowns auth.py, login.py"]
+        FLW2["Worker 2\nowns routes.py, api.py"]
+    end
+    subgraph BL["2. Branch-level isolation (Capy's approach)"]
+        BLW1["Worker 1\ngit worktree branch-1"]
+        BLW2["Worker 2\ngit worktree branch-2"]
+    end
+    subgraph CL["3. Container-level isolation"]
+        CLW1["Worker 1\nDocker container A"]
+        CLW2["Worker 2\nDocker container B"]
+    end
+    subgraph PL["4. Permission-level isolation"]
+        PLW1["Explore workers\nread-only access"]
+        PLW2["Edit workers\nread-write access"]
+    end
 ```
 
 ### Worker Communication Patterns
 
-```
-  1. Request-Response (most common):
-     Orchestrator --> "Do X" --> Worker --> "X done, results" --> Orchestrator
-
-  2. Streaming updates:
-     Orchestrator --> "Do X" --> Worker
-     Worker --> "Progress: 25%" --> "Progress: 50%" --> "Done" --> Orchestrator
-
-  3. Event-driven (OpenHands style):
-     Orchestrator publishes Action event --> Worker subscribes, processes
-     Worker publishes Observation event --> Orchestrator receives, decides
+```mermaid
+flowchart LR
+    subgraph RR["1. Request-Response (most common)"]
+        RRO["Orchestrator"] -->|"Do X"| RRW["Worker"]
+        RRW -->|"X done, results"| RRO
+    end
+    subgraph STR["2. Streaming updates"]
+        STRO["Orchestrator"] -->|"Do X"| STRW["Worker"]
+        STRW -->|"Progress: 25% → 50% → Done"| STRO
+    end
+    subgraph EVT["3. Event-driven (OpenHands style)"]
+        EVTO["Orchestrator"] -->|"publishes Action event"| EVTW["Worker"]
+        EVTW -->|"publishes Observation event"| EVTO
+    end
 ```
 
 ## Dynamic Task Decomposition
@@ -341,23 +328,22 @@ class TestRunnerWorker:
 
 A key advantage over static pipelines: the orchestrator can adapt its plan.
 
-```
-Initial plan:
-  1. Search for the bug location
-  2. Fix the bug
-  3. Run tests
-
-After Worker 1 reports back:
-  "Bug is in 3 files, not 1. Also found a related bug in config."
-
-Revised plan:
-  1. [DONE] Search for the bug location
-  2a. Fix bug in auth.py        --> Worker 2
-  2b. Fix bug in middleware.py   --> Worker 3
-  2c. Fix bug in config.py      --> Worker 4
-  2d. Fix related config bug    --> Worker 5  (NEW subtask)
-  3.  Run tests                 --> Worker 6
-  4.  Update changelog          --> Worker 7  (NEW subtask)
+```mermaid
+flowchart TD
+    subgraph IP["Initial Plan"]
+        IP1["1. Search for the bug location"] --> IP2["2. Fix the bug"] --> IP3["3. Run tests"]
+    end
+    W1R["Worker 1 reports:\nBug is in 3 files, not 1.\nAlso found a related bug in config."]
+    subgraph RP["Revised Plan"]
+        RPS["1. ✓ Search for bug location (DONE)"]
+        RPS --> RP2A["2a. Fix bug in auth.py → Worker 2"]
+        RPS --> RP2B["2b. Fix bug in middleware.py → Worker 3"]
+        RPS --> RP2C["2c. Fix bug in config.py → Worker 4"]
+        RPS --> RP2D["2d. Fix related config bug → Worker 5 (NEW)"]
+        RP2A & RP2B & RP2C & RP2D --> RP3["3. Run tests → Worker 6"]
+        RP3 --> RP4["4. Update changelog → Worker 7 (NEW)"]
+    end
+    IP --> W1R --> RP
 ```
 
 ### Re-Planning When Workers Report Issues
@@ -477,21 +463,19 @@ async def simple_orchestrator(task: str, llm_client) -> str:
 
 For very complex tasks, orchestrators can spawn other orchestrators:
 
-```
-Top-Level Orchestrator
-    |
-    +-- Sub-Orchestrator: "Backend Changes"
-    |       +-- Worker: Edit models
-    |       +-- Worker: Edit API routes
-    |       +-- Worker: Update migrations
-    |
-    +-- Sub-Orchestrator: "Frontend Changes"
-    |       +-- Worker: Edit components
-    |       +-- Worker: Update styles
-    |
-    +-- Sub-Orchestrator: "Testing"
-            +-- Worker: Unit tests
-            +-- Worker: Integration tests
+```mermaid
+flowchart TD
+    TLO["Top-Level Orchestrator"]
+    TLO --> SOB["Sub-Orchestrator: Backend Changes"]
+    TLO --> SOF["Sub-Orchestrator: Frontend Changes"]
+    TLO --> SOT["Sub-Orchestrator: Testing"]
+    SOB --> WB1["Worker: Edit models"]
+    SOB --> WB2["Worker: Edit API routes"]
+    SOB --> WB3["Worker: Update migrations"]
+    SOF --> WF1["Worker: Edit components"]
+    SOF --> WF2["Worker: Update styles"]
+    SOT --> WT1["Worker: Unit tests"]
+    SOT --> WT2["Worker: Integration tests"]
 ```
 
 ## Challenges

@@ -222,19 +222,12 @@ This has direct architectural consequences:
    strategies preserve the **first K messages** (system prompt + initial instructions)
    and the **last N messages** (recent conversation), compressing the middle.
 
-```
-  Effective sliding window layout:
-
-  ┌──────────────────────────────────────────────────────────────────┐
-  │ PRESERVED: System prompt + initial instructions (first K)       │
-  │ [HIGH ATTENTION — beginning of context]                         │
-  ├──────────────────────────────────────────────────────────────────┤
-  │ COMPRESSED: Middle history (summaries only)                     │
-  │ [LOW ATTENTION — but compressed, so less information at risk]   │
-  ├──────────────────────────────────────────────────────────────────┤
-  │ PRESERVED: Recent messages + latest tool outputs (last N)       │
-  │ [HIGH ATTENTION — end of context]                               │
-  └──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Top["**PRESERVED** — First K messages\nSystem prompt + initial instructions\n[HIGH ATTENTION — beginning of context]"]
+    Mid["**COMPRESSED** — Middle history\nSummaries only\n[LOW ATTENTION — but compressed, so less information at risk]"]
+    Bot["**PRESERVED** — Last N messages\nRecent messages + latest tool outputs\n[HIGH ATTENTION — end of context]"]
+    Top --- Mid --- Bot
 ```
 
 ---
@@ -477,28 +470,37 @@ Every context management strategy falls into one of three fundamental categories
 
 ### Strategy Taxonomy
 
-```
-                    Context Management Strategies
-                    ═══════════════════════════════
+```mermaid
+flowchart LR
+    subgraph REDUCE["REDUCE — What Goes In"]
+        R["• Smart retrieval
+• Semantic search
+• Targeted loading
+• .context files
+• Dependency graphs
+• Code intelligence
 
-  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
-  │   REDUCE            │  │   COMPRESS           │  │   PARTITION          │
-  │   What Goes In      │  │   What's There       │  │   Across Windows     │
-  ├─────────────────────┤  ├─────────────────────┤  ├─────────────────────┤
-  │                     │  │                     │  │                     │
-  │ • Smart retrieval   │  │ • Summarization     │  │ • Sub-agents        │
-  │ • Semantic search   │  │ • Sliding windows   │  │ • Tool isolation    │
-  │ • Targeted loading  │  │ • Message pruning   │  │ • Multi-agent       │
-  │ • .context files    │  │ • Token budgets     │  │ • Hierarchical      │
-  │ • Dependency graphs │  │ • Lossy compaction  │  │   orchestration     │
-  │ • Code intelligence │  │ • Diff-only views   │  │ • Background agents │
-  │                     │  │                     │  │                     │
-  ├─────────────────────┤  ├─────────────────────┤  ├─────────────────────┤
-  │ Tradeoff:           │  │ Tradeoff:           │  │ Tradeoff:           │
-  │ May miss relevant   │  │ Lossy — summaries   │  │ Communication       │
-  │ code entirely       │  │ lose detail         │  │ boundaries between  │
-  │                     │  │                     │  │ agents lose context │
-  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘
+Tradeoff: May miss relevant code entirely"]
+    end
+    subgraph COMPRESS["COMPRESS — What's There"]
+        C["• Summarization
+• Sliding windows
+• Message pruning
+• Token budgets
+• Lossy compaction
+• Diff-only views
+
+Tradeoff: Lossy — summaries lose detail"]
+    end
+    subgraph PARTITION["PARTITION — Across Windows"]
+        P["• Sub-agents
+• Tool isolation
+• Multi-agent
+• Hierarchical orchestration
+• Background agents
+
+Tradeoff: Communication boundaries lose context"]
+    end
 ```
 
 ### Detailed Comparison

@@ -17,19 +17,14 @@ The agents studied span from ~200-line research prototypes (mini-SWE-agent) to p
 
 ## The Complexity Spectrum
 
-```
-Simplest                                                          Most Complex
-   │                                                                    │
-   ▼                                                                    ▼
-┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐
-│  Simple  │  │ Streaming│  │  Event-  │  │ Message- │  │  Multi-    │
-│  Linear  │  │   Loop   │  │  Driven  │  │ Passing  │  │  Agent     │
-│          │  │          │  │  State   │  │  (SQ/EQ) │  │ Orchestr.  │
-│mini-SWE  │  │ OpenCode │  │  Machine │  │          │  │            │
-│  Pi      │  │  Goose   │  │          │  │  Codex   │  │ ForgeCode  │
-│          │  │Gemini CLI│  │ OpenHands│  │          │  │ Ante       │
-│          │  │          │  │          │  │          │  │ Claude Code│
-└──────────┘  └──────────┘  └──────────┘  └──────────┘  └────────────┘
+```mermaid
+flowchart LR
+    A["Simple Linear\n(mini-SWE, Pi)"]
+    B["Streaming Loop\n(OpenCode, Goose,\nGemini CLI)"]
+    C["Event-Driven\nState Machine\n(OpenHands)"]
+    D["Message-Passing\nSQ/EQ\n(Codex)"]
+    E["Multi-Agent\nOrchestration\n(ForgeCode, Ante,\nClaude Code)"]
+    A -->|"simpler"| B --> C --> D --> E
 ```
 
 ### Why This Spectrum Exists
@@ -44,22 +39,22 @@ Each step to the right on the spectrum adds capabilities at the cost of complexi
 
 ### The Fundamental Trade-off
 
-```
-                    Debuggability
-                         ▲
-                         │
-            mini-SWE ●   │
-                         │   ● Pi
-                         │
-              OpenCode ● │        ● Goose
-                         │
-                         │   ● Gemini CLI
-                         │
-            OpenHands ●  │
-                         │
-                Codex ●  │        ● Claude Code
-                         │
-                         └──────────────────────► Capabilities
+```mermaid
+flowchart LR
+    subgraph high_debug["High Debuggability"]
+        mSWE["mini-SWE-agent"]
+        Pi["Pi"]
+        OC["OpenCode"]
+        Goose["Goose"]
+        GCLI["Gemini CLI"]
+    end
+    subgraph low_debug["Lower Debuggability"]
+        OH["OpenHands"]
+        Codex["Codex"]
+        CC["Claude Code"]
+    end
+    note["More capabilities → lower debuggability\nunless you invest in observability tooling"]
+    high_debug -->|more capabilities| low_debug
 ```
 
 Every agent occupies a point on this curve. There is no free lunch — more capabilities always cost debuggability unless you invest heavily in observability tooling (which itself adds complexity).
@@ -219,36 +214,14 @@ This is perhaps the most consequential architectural decision, as it determines 
 
 How an agent decides to stop is a surprisingly deep design decision:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Stop Strategies                        │
-├─────────────────┬───────────────────────────────────────┤
-│ Trust the model │ The model emits a "done" signal.      │
-│                 │ No explicit turn limit.                │
-│                 │ Risk: infinite loops if model confused.│
-│                 │ Agents: OpenCode, Codex               │
-├─────────────────┼───────────────────────────────────────┤
-│ Hard limits     │ Fixed max turns / max tokens.         │
-│                 │ Always terminates.                     │
-│                 │ Risk: stops mid-task on hard problems. │
-│                 │ Agents: mini-SWE-agent, OpenHands,    │
-│                 │         Goose (1000 turns)             │
-├─────────────────┼───────────────────────────────────────┤
-│ Verification    │ Agent must prove the task is done      │
-│ gate            │ (run tests, check output, etc).        │
-│                 │ Risk: false confidence if tests pass   │
-│                 │ but behavior is wrong.                 │
-│                 │ Agents: ForgeCode, Junie               │
-├─────────────────┼───────────────────────────────────────┤
-│ User-driven     │ Human decides when to stop.            │
-│                 │ Best UX, worst automation.             │
-│                 │ Agents: Claude Code (interactive mode)  │
-├─────────────────┼───────────────────────────────────────┤
-│ Composite       │ Combines multiple strategies.          │
-│                 │ E.g., trust model OR hard limit OR     │
-│                 │ user interrupt.                        │
-│                 │ Agents: Most production agents          │
-└─────────────────┴───────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SS{{"Stop Strategy"}}
+    SS -->|"Trust the model"| TM["Model emits done signal\nNo explicit turn limit\nAgents: OpenCode, Codex\nRisk: infinite loops"]
+    SS -->|"Hard limits"| HL["Fixed max turns / tokens\nAlways terminates\nAgents: mini-SWE, OpenHands, Goose\nRisk: stops mid-task"]
+    SS -->|"Verification gate"| VG["Must prove task done\n(tests, output checks)\nAgents: ForgeCode, Junie\nRisk: false confidence"]
+    SS -->|"User-driven"| UD["Human decides when to stop\nAgents: Claude Code interactive\nBest UX, worst automation"]
+    SS -->|"Composite"| CP["Combines multiple strategies\ne.g. trust model OR hard limit OR interrupt\nAgents: most production agents"]
 ```
 
 ---
@@ -293,39 +266,15 @@ Agents must balance autonomy with safety. The permission model determines how mu
 
 Error recovery is where architectural complexity most directly translates to user-visible quality. A table of escalating sophistication:
 
-```
-Level 0: No recovery
-         Crash on error. Agent stops.
-         No agents use this in practice.
-
-Level 1: Feed error back to LLM
-         Append error text to conversation. Let model figure it out.
-         Used by: mini-SWE-agent, Pi, most simple agents.
-         Works surprisingly well with strong models.
-
-Level 2: Retry with backoff
-         On transient errors (rate limits, network), retry up to N times.
-         Used by: OpenCode (8× retry), Goose (with compaction on retry).
-         Essential for production reliability.
-
-Level 3: Tool correction before execution
-         Validate and fix tool calls before executing them.
-         Used by: ForgeCode (Muse corrects Forge's tool calls).
-         Prevents errors rather than recovering from them.
-
-Level 4: Stuck detection + multi-strategy recovery
-         Detect when agent is looping or making no progress.
-         Apply escalating recovery strategies.
-         Used by: OpenHands StuckDetector:
-           Strategy 1: Detect identical action repetition
-           Strategy 2: Detect alternating action pairs
-           Strategy 3: Detect monologue (agent talking to itself)
-           Strategy 4: Force context condensation and redirect
-
-Level 5: Sandbox escalation + state rollback
-         Execute in sandbox. On failure, roll back state and retry
-         with elevated permissions or different strategy.
-         Used by: Codex CLI (sandbox → escalate → compact → retry).
+```mermaid
+flowchart TD
+    L0["Level 0: No recovery\nCrash on error — agent stops\n(no agents use this in practice)"]
+    L1["Level 1: Feed error back to LLM\nAppend error text; let model recover\n(mini-SWE-agent, Pi, most simple agents)"]
+    L2["Level 2: Retry with backoff\nOn transient errors retry up to N times\n(OpenCode 8×, Goose with compaction)"]
+    L3["Level 3: Tool correction before execution\nValidate and fix tool calls before running\n(ForgeCode: Muse corrects Forge's calls)"]
+    L4["Level 4: Stuck detection + multi-strategy recovery\nDetect loops/no-progress; apply escalating strategies\n(OpenHands StuckDetector: repeat → alternating → monologue → condense)"]
+    L5["Level 5: Sandbox escalation + state rollback\nExecute in sandbox; on failure roll back and retry\n(Codex CLI: sandbox → escalate → compact → retry)"]
+    L0 --> L1 --> L2 --> L3 --> L4 --> L5
 ```
 
 ---
@@ -409,19 +358,16 @@ This is the single most important takeaway from studying 17+ agent implementatio
 
 ### The Model-Architecture Interaction Matrix
 
-```
-                    Weak Model          Strong Model
-                 ┌───────────────┬──────────────────┐
-  Simple Loop    │  Poor results │  Excellent        │
-                 │  (no safety   │  results          │
-                 │   net)        │  (model self-     │
-                 │               │   manages)        │
-                 ├───────────────┼──────────────────┤
-  Complex Loop   │  Decent       │  Excellent        │
-                 │  results      │  results, but     │
-                 │  (loop        │  unnecessary      │
-                 │   compensates)│  overhead          │
-                 └───────────────┴──────────────────┘
+```mermaid
+flowchart LR
+    subgraph simple["Simple Loop"]
+        SW["Weak model: poor results\n(no safety net)"]
+        SS["Strong model: excellent results\n(model self-manages)"]
+    end
+    subgraph complex["Complex Loop"]
+        CW["Weak model: decent results\n(loop compensates)"]
+        CS["Strong model: excellent results,\nbut unnecessary overhead"]
+    end
 ```
 
 The asymmetry is clear: a strong model + simple loop matches a strong model + complex loop. But a weak model *needs* the complex loop. This means complex loops are future-proof but currently over-engineered for frontier models.

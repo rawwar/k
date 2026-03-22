@@ -45,21 +45,18 @@ first try" is not reliable but "iterate until tests pass" is achievable.
 The canonical evaluator-optimizer architecture consists of two LLM calls in a
 loop, connected by a feedback channel:
 
-```
-+---------------------------------------------------+
-|              Evaluator-Optimizer Loop               |
-|                                                     |
-|  +-----------+    +-----------+                    |
-|  | Generator  |--->| Evaluator |                    |
-|  |  (LLM 1)  |<---|  (LLM 2)  |                    |
-|  +-----------+    +-----------+                    |
-|       |                  |                          |
-|       |    feedback      |   score/pass/fail        |
-|       |<-----------------|                          |
-|       |                                             |
-|       v                                             |
-|  [Output when criteria met or max iterations]       |
-+---------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph EvalOptLoop["Evaluator-Optimizer Loop"]
+        GEN["Generator\n(LLM 1)"]
+        EVL["Evaluator\n(LLM 2)"]
+        OUT["Output when criteria met\nor max iterations"]
+        GEN -->|generates| EVL
+        EVL -->|"feedback"| GEN
+        EVL -->|"score/pass/fail"| CRIT{"Criteria\nmet?"}
+        CRIT -->|NO| GEN
+        CRIT -->|YES| OUT
+    end
 ```
 
 The generator and evaluator may be:
@@ -73,28 +70,19 @@ The generator and evaluator may be:
 
 ### Data Flow
 
-```
-+------------+
-|   Input     |
-|  (task)     |
-+------+------+
-       |
-       v
-+------------+     +--------------+     +-------------+
-|  Generate   |---->|   Evaluate   |---->|  Criteria    |
-|  candidate  |     |   output     |     |  met?        |
-+------------+     +--------------+     +------+------+
-       ^                                   |       |
-       |              NO                   |       | YES
-       |<----------------------------------+       |
-       |     (feedback + instructions)             v
-       |                                    +-------------+
-       |                                    |  Return      |
-       |                                    |  final       |
-       |                                    |  output      |
-       |                                    +-------------+
-       |
-       |  (also exits if max_iterations reached)
+```mermaid
+flowchart TD
+    INP["Input\n(task)"]
+    GEN["Generate\ncandidate"]
+    EVL["Evaluate\noutput"]
+    CRIT{"Criteria\nmet?"}
+    RET["Return\nfinal output"]
+    INP --> GEN
+    GEN --> EVL
+    EVL --> CRIT
+    CRIT -->|"NO\n(feedback + instructions)"| GEN
+    CRIT -->|YES| RET
+    GEN -->|"max iterations\nreached"| RET
 ```
 
 ### In the Context of Coding Agents
@@ -103,22 +91,17 @@ For coding agents specifically, the architecture often takes a specialized form
 where the evaluator is not another LLM call but the execution environment
 itself:
 
-```
-+--------------------------------------------------------+
-|           Test-Driven Evaluator-Optimizer                |
-|                                                          |
-|  +-----------+   +----------+   +------------------+    |
-|  |  LLM      |-->|  Code    |-->|  Execute Tests   |    |
-|  |  Generate  |   |  Write   |   |  (programmatic   |    |
-|  |  /Fix Code |   |  to Disk |   |   evaluator)     |    |
-|  +-----------+   +----------+   +--------+---------+    |
-|       ^                                   |              |
-|       |         test results              |              |
-|       |   (pass/fail + error messages)    |              |
-|       |<----------------------------------+              |
-|                                                          |
-|  Exit: all tests pass OR max iterations reached          |
-+--------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph TDE["Test-Driven Evaluator-Optimizer"]
+        LLM["LLM\nGenerate/Fix Code"]
+        CW["Code\nWrite to Disk"]
+        ET["Execute Tests\n(programmatic evaluator)"]
+        EXIT["Exit: all tests pass\nOR max iterations reached"]
+        LLM --> CW --> ET
+        ET -->|"test results\n(pass/fail + error messages)"| LLM
+        ET -->|"all tests pass\nor max iterations"| EXIT
+    end
 ```
 
 This hybrid approach — LLM generation with programmatic evaluation — is the
@@ -310,13 +293,11 @@ failures, repeat.
 Junie CLI implements the most explicit evaluator-optimizer pipeline among the
 17 agents studied. Its fixed pipeline is:
 
-```
-understand -> plan -> implement -> verify -> iterate -> present
-                                     |         ^
-                                     |         |
-                                     +---------+
-                                   (loop until tests
-                                    pass or limit hit)
+```mermaid
+flowchart LR
+    U["understand"] --> P["plan"] --> I["implement"] --> V["verify"] --> IT["iterate"] --> PR["present"]
+    V -->|"loop until tests\npass or limit hit"| IT
+    IT --> V
 ```
 
 The verify step runs the project's test suite. If tests fail, the iterate
@@ -366,22 +347,16 @@ benchmarks.
 
 This is evaluator-optimizer applied to the agent's own design:
 
-```
-+-----------------------------------------------------+
-|        Aider's Meta-Level Optimization               |
-|                                                       |
-|  +--------------+   +----------------+               |
-|  | Edit Format   |-->| Run SWE-bench  |              |
-|  | Configuration |   | Benchmark      |              |
-|  +--------------+   +-------+--------+               |
-|         ^                    |                        |
-|         |    benchmark       |                        |
-|         |    results         |                        |
-|         |<-------------------+                        |
-|         |                                             |
-|   [Adjust edit format, model settings, prompts]       |
-|   [Repeat across benchmark suite]                     |
-+-----------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph AiderMeta["Aider's Meta-Level Optimization"]
+        EF["Edit Format\nConfiguration"]
+        BM["Run SWE-bench\nBenchmark"]
+        EF --> BM
+        BM -->|"benchmark results"| EF
+        ADJ["Adjust edit format,\nmodel settings, prompts\nRepeat across benchmark suite"]
+        EF --> ADJ
+    end
 ```
 
 ### Claude Code: Implicit Evaluation

@@ -29,37 +29,15 @@ This metric is fundamentally different from what most coding agents track. Rathe
 
 In interactive mode, Droid operates as a conversational agent:
 
-```
-Developer: "Refactor the auth module to use JWT instead of sessions"
-    │
-    ▼
-┌─────────────────────┐
-│  Context Assembly    │ ← Reads relevant files, session history
-│  (compaction-aware)  │
-└──────────┬──────────┘
-           │
-    ┌──────▼──────┐
-    │   Planning   │ ← May enter Specification Mode for complex tasks
-    └──────┬──────┘
-           │
-    ┌──────▼──────────────────┐
-    │  Tool Execution Loop     │
-    │  ┌───────────────────┐  │
-    │  │ Read files         │  │
-    │  │ Grep for patterns  │  │
-    │  │ Edit files         │  │
-    │  │ Execute tests      │  │
-    │  │ ... repeat ...     │  │
-    │  └───────────────────┘  │
-    └──────────┬──────────────┘
-               │
-    ┌──────────▼──────────┐
-    │  Present Results     │ ← Diff, PR, summary
-    └──────────┬──────────┘
-               │
-    ┌──────────▼──────────┐
-    │  Await Feedback      │ ← Human reviews, iterates, or approves
-    └─────────────────────┘
+```mermaid
+flowchart TD
+    A["Developer delegates task"] --> B["Context Assembly (compaction-aware)<br/>Reads relevant files, session history"]
+    B --> C["Planning<br/>May enter Specification Mode for complex tasks"]
+    C --> D["Execute tool call<br/>Read files · Grep · Edit files · Execute tests"]
+    D --> E{More tools needed?}
+    E -- yes --> D
+    E -- no --> F["Present Results<br/>Diff, PR, summary"]
+    F --> G["Await Feedback<br/>Human reviews, iterates, or approves"]
 ```
 
 ### Non-Interactive Mode (CI/CD)

@@ -477,22 +477,10 @@ reading file B, and a plan would have prevented that.
 
 The relationship between scaffold complexity and performance is not monotonic:
 
-```
-Scaffold Complexity →
-Performance ↑
-
-    │          ╭──── diminishing returns ────╮
-    │         ╱                               ╲
-    │        ╱                                 ── plateau
-    │       ╱
-    │      ╱
-    │     ╱  ← sweet spot (mini-SWE-agent lives here)
-    │    ╱
-    │   ╱
-    │  ╱
-    │ ╱
-    │╱
-    └──────────────────────────────────────────────
+```mermaid
+flowchart LR
+    A["Minimal scaffold\n(mini-SWE-agent lives here)"] -->|"increasing scaffold complexity"| B["Sweet spot\n(good performance / complexity tradeoff)"]
+    B -->|"diminishing returns"| C["Over-engineered\n(plateau: marginal gains,\nhigh maintenance burden)"]
 ```
 
 After a certain threshold, adding scaffold complexity yields marginal gains while

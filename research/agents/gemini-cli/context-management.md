@@ -18,24 +18,14 @@ window to provide a rich, efficient context system.
 GEMINI.md files are the primary mechanism for providing persistent context to the agent.
 They follow a three-tier hierarchy:
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    Context Assembly                           │
-│                                                              │
-│  Priority (highest to lowest):                               │
-│                                                              │
-│  1. JIT Context (auto-discovered)                            │
-│     └── Discovered when tools access files in directories    │
-│         containing GEMINI.md files                           │
-│                                                              │
-│  2. Workspace GEMINI.md                                      │
-│     └── ./GEMINI.md (project root)                           │
-│     └── Can have nested GEMINI.md in subdirectories          │
-│                                                              │
-│  3. Global GEMINI.md                                         │
-│     └── ~/.gemini/GEMINI.md (user-level defaults)            │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    GL["3. Global GEMINI.md<br/>~/.gemini/GEMINI.md<br/>User-level defaults (lowest priority)"]
+    WS["2. Workspace GEMINI.md<br/>./GEMINI.md – project root<br/>Nested subdirectory GEMINI.md files"]
+    JIT["1. JIT Context<br/>Auto-discovered when tools access directories<br/>containing GEMINI.md files (highest priority)"]
+    CA["Context Assembly"]
+
+    GL --> WS --> JIT --> CA
 ```
 
 ### Tier 1: Global (~/.gemini/GEMINI.md)
@@ -137,22 +127,18 @@ Token caching is an API-level optimization unique to Gemini CLI among terminal a
 
 ### How It Works
 
-```
-First Request:
-┌──────────────────────┐     ┌──────────────────┐
-│ System Instructions  │────>│ Gemini API Server │
-│ + Tool Declarations  │     │                    │
-│ + GEMINI.md content  │     │ Cache created     │
-│ + Conversation       │     │ Cache ID returned │
-└──────────────────────┘     └──────────────────┘
+```mermaid
+flowchart LR
+    subgraph FIRST["First Request"]
+        SI["System Instructions + Tool Declarations<br/>+ GEMINI.md content + Conversation"]
+    end
 
-Subsequent Requests:
-┌──────────────────────┐     ┌──────────────────┐
-│ Cache ID reference   │────>│ Gemini API Server │
-│ + New conversation   │     │                    │
-│   messages only      │     │ Cached prefix     │
-│                      │     │ reused            │
-└──────────────────────┘     └──────────────────┘
+    subgraph SUB["Subsequent Requests"]
+        CI["Cache ID reference<br/>+ New conversation messages only"]
+    end
+
+    FIRST --> |"Cache created, Cache ID returned"| SRV["Gemini API Server"]
+    SUB --> |"Cache hit — cached prefix reused"| SRV
 ```
 
 ### Benefits
@@ -277,23 +263,13 @@ Skills are discovered from three locations (in priority order):
 
 ### Skill Activation Flow
 
-```
-Model encounters task requiring specialized knowledge
-    │
-    v
-Model reviews available skill names/descriptions
-    │
-    v
-Model calls activate_skill("react-optimization")
-    │
-    v
-Skill content loaded into context
-    │
-    v
-Model applies specialized expertise to current task
-    │
-    v
-(Skill remains active for rest of conversation)
+```mermaid
+flowchart TD
+    A["Model encounters task<br/>requiring specialized knowledge"] --> B["Model reviews available<br/>skill names and descriptions"]
+    B --> C["Model calls activate_skill<br/>(e.g. 'react-optimization')"]
+    C --> D["Full skill.md content loaded into context"]
+    D --> E["Model applies specialized expertise to current task"]
+    E --> F["Skill remains active for rest of conversation"]
 ```
 
 ### Skill Metadata Example
@@ -394,30 +370,18 @@ With 1M token context, pruning is less aggressive than competing agents:
 
 The complete context assembly for each API request:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  Context Assembly Pipeline                    │
-│                                                              │
-│  1. Base System Prompt (capabilities, guidelines)            │
-│     |                                                        │
-│  2. Global GEMINI.md (~/.gemini/GEMINI.md)                   │
-│     |                                                        │
-│  3. Workspace GEMINI.md (./GEMINI.md)                        │
-│     |                                                        │
-│  4. JIT Context (auto-discovered GEMINI.md files)            │
-│     |                                                        │
-│  5. Active Skills (loaded via activate_skill)                │
-│     |                                                        │
-│  6. Tool Declarations (all registered tools)                 │
-│     |                                                        │
-│  7. Conversation History (pruned to fit budget)              │
-│     |                                                        │
-│  8. Current User Message                                     │
-│     |                                                        │
-│  = Complete API Request                                      │
-│                                                              │
-│  [Token caching applied to steps 1-6 for API key users]     │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    P1["1. Base System Prompt<br/>capabilities, guidelines"] --> P2["2. Global GEMINI.md<br/>~/.gemini/GEMINI.md"]
+    P2 --> P3["3. Workspace GEMINI.md<br/>./GEMINI.md"]
+    P3 --> P4["4. JIT Context<br/>auto-discovered GEMINI.md files"]
+    P4 --> P5["5. Active Skills<br/>loaded via activate_skill"]
+    P5 --> P6["6. Tool Declarations<br/>all registered tools"]
+    P6 --> P7["7. Conversation History<br/>pruned to fit budget"]
+    P7 --> P8["8. Current User Message"]
+    P8 --> P9["Complete API Request"]
+
+    CACHE["Token caching applied to steps 1–6<br/>for API key users"] -.-> P6
 ```
 
 ## Comparison with Other Agents

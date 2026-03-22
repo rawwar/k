@@ -12,8 +12,10 @@
 
 Without streaming, the user experience of an agentic coding tool looks like this:
 
-```
-User prompt ──► [         5-30 seconds of silence          ] ──► Full response appears
+```mermaid
+flowchart LR
+    A["User prompt"] --> B["5–30 seconds of silence"]
+    B --> C["Full response appears"]
 ```
 
 The model may be generating hundreds of tokens, reasoning through a multi-step
@@ -22,9 +24,12 @@ context, this feels broken. Users wonder if the tool crashed.
 
 With streaming, the experience transforms:
 
-```
-User prompt ──► tok tok tok tok [tool call] tok tok tok ──► Done
-                 ▲ first token in ~200-500ms
+```mermaid
+flowchart LR
+    A["User prompt"] -->|"first token ~200–500ms"| B["tokens stream"]
+    B --> C["tool call"]
+    C --> D["more tokens"]
+    D --> E["Done"]
 ```
 
 Perceived latency drops from "seconds to minutes" to "fraction of a second to
@@ -65,33 +70,20 @@ the agent loop from the TUI rendering layer via a pub/sub system.
 
 ### Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         TUI (Bubble Tea)                        │
-│  subscribes to pub/sub ◄──────────────────────────────────┐     │
-└───────────────────────────────────────────────────────────┼─────┘
-                                                            │
-┌───────────────────────────────────────────────────────────┼─────┐
-│  agent.Run()                                              │     │
-│  ┌──────────────────────────────────────────────────────┐ │     │
-│  │  goroutine: processGeneration()                      │ │     │
-│  │  ┌────────────────────────────────────────────────┐  │ │     │
-│  │  │  streamAndHandleEvents()                       │  │ │     │
-│  │  │  ┌──────────────┐    ┌─────────────────────┐   │  │ │     │
-│  │  │  │ Provider      │──►│ Event Channel        │───┼──┼─┘     │
-│  │  │  │ (Claude, etc) │    │ EventThinkingDelta  │   │  │       │
-│  │  │  └──────────────┘    │ EventContentDelta    │   │  │       │
-│  │  │                      │ EventToolUseStart    │   │  │       │
-│  │  │                      │ EventToolUseStop     │   │  │       │
-│  │  │                      │ EventComplete        │   │  │       │
-│  │  │                      └─────────────────────┘   │  │       │
-│  │  └────────────────────────────────────────────────┘  │       │
-│  │  ┌────────────────────────────────────────────────┐  │       │
-│  │  │  Tool Execution (if FinishReason == ToolUse)   │  │       │
-│  │  │  append results → continue loop                │  │       │
-│  │  └────────────────────────────────────────────────┘  │       │
-│  └──────────────────────────────────────────────────────┘       │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph TUI["TUI (Bubble Tea)"]
+        PUB["subscribes to pub/sub"]
+    end
+    subgraph agentRun["agent.Run()"]
+        subgraph goroutine["goroutine: processGeneration()"]
+            subgraph stream["streamAndHandleEvents()"]
+                PROV["Provider\n(Claude, etc)"] -->|events| CHAN["Event Channel\nEventThinkingDelta\nEventContentDelta\nEventToolUseStart\nEventToolUseStop\nEventComplete"]
+            end
+            TOOL["Tool Execution\n(if FinishReason == ToolUse)\nappend results → continue loop"]
+        end
+    end
+    CHAN -->|"pub/sub"| PUB
 ```
 
 ### Entry Point: agent.Run()
@@ -249,18 +241,21 @@ the database.
 
 OpenCode implements cancellation as a four-level defense:
 
-```
-Level 1: Session ──► Cancel(sessionID) calls stored CancelFunc
-    │                 Propagates to all child contexts
-    ▼
-Level 2: Loop ────► select on ctx.Done() before each iteration
-    │                 Catches cancellation between LLM calls
-    ▼
-Level 3: Stream ──► check ctx.Err() after each event in for-range
-    │                 Catches cancellation mid-stream
-    ▼
-Level 4: Tools ───► between tool executions, check ctx.Done()
-                     Prevents starting new tools after cancellation
+```mermaid
+flowchart TD
+    L1["Level 1: Session
+Cancel(sessionID) calls stored CancelFunc
+Propagates to all child contexts"]
+    L2["Level 2: Loop
+select on ctx.Done() before each iteration
+Catches cancellation between LLM calls"]
+    L3["Level 3: Stream
+check ctx.Err() after each event in for-range
+Catches cancellation mid-stream"]
+    L4["Level 4: Tools
+between tool executions, check ctx.Done()
+Prevents starting new tools after cancellation"]
+    L1 --> L2 --> L3 --> L4
 ```
 
 A subtle detail: after cancellation, OpenCode uses `context.Background()` for
@@ -514,17 +509,15 @@ async function executeTools(
 The confirmation bus is a streaming-aware pattern that pauses the agent loop
 while waiting for user input without breaking the stream:
 
-```
-Agent loop ──► tool call detected ──► confirmationBus.request()
-                                            │
-                                     ┌──────▼──────┐
-                                     │  TUI renders │
-                                     │  permission  │
-                                     │  dialog      │
-                                     └──────┬──────┘
-                                            │ user responds
-                                     ◄──────┘
-              tool executes (or skips) ◄────┘
+```mermaid
+sequenceDiagram
+    participant A as Agent Loop
+    participant B as confirmationBus
+    participant T as TUI
+    A->>B: tool call detected → request()
+    B->>T: render permission dialog
+    T-->>B: user responds
+    B-->>A: tool executes (or skips)
 ```
 
 ---
@@ -552,13 +545,10 @@ Stream timeline:
 
 The accumulation pattern is consistent across all implementations:
 
-```
-┌──────────────┐     ┌──────────────────┐     ┌────────────────┐
-│ ToolUseStart │────►│ Accumulate deltas │────►│ ToolUseStop    │
-│ id + name    │     │ append to buffer  │     │ parse JSON     │
-│              │     │ per tool-call ID  │     │ validate args  │
-└──────────────┘     └──────────────────┘     │ execute tool   │
-                                               └────────────────┘
+```mermaid
+flowchart LR
+    A["ToolUseStart\n(id + name)"] --> B["Accumulate deltas\nappend to buffer\nper tool-call ID"]
+    B --> C["ToolUseStop\nparse JSON\nvalidate args\nexecute tool"]
 ```
 
 **Risk: malformed JSON** — If the stream is interrupted (network error, context
@@ -608,18 +598,23 @@ a.pubsub.Publish(sessionID, AgentEvent{Type: AgentEventTypeCancelled})
 
 Streaming creates a challenging concurrency scenario:
 
-```
-Time ──────────────────────────────────────────────►
-
-Stream goroutine:   write(δ₁)  write(δ₂)  write(δ₃)  write(δ₄)
-                       │          │          │          │
-DB writes:          ───┼──────────┼──────────┼──────────┼───
-                       │          │          │          │
-Pub/sub:            ───┼──────────┼──────────┼──────────┼───
-                       │          │          │          │
-TUI reads:          ───────┼────────────┼────────────┼──────
-                           ▲            ▲            ▲
-                    may see δ₁    may see δ₁+δ₂  sees δ₁+δ₂+δ₃
+```mermaid
+sequenceDiagram
+    participant SG as Stream goroutine
+    participant DB as DB writes
+    participant PS as Pub/sub
+    participant TUI as TUI reads
+    SG->>DB: write(δ₁)
+    SG->>PS: write(δ₁)
+    Note over TUI: may see δ₁
+    SG->>DB: write(δ₂)
+    SG->>PS: write(δ₂)
+    Note over TUI: may see δ₁+δ₂
+    SG->>DB: write(δ₃)
+    SG->>PS: write(δ₃)
+    SG->>DB: write(δ₄)
+    SG->>PS: write(δ₄)
+    Note over TUI: sees δ₁+δ₂+δ₃
 ```
 
 Each delta updates the DB immediately. In theory, a TUI read could see a
@@ -689,19 +684,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 When a tool requires user approval, the streaming display must pause to show a
 permission dialog. This creates a state machine within the TUI:
 
-```
-┌──────────┐     tool needs      ┌──────────────┐     user      ┌──────────┐
-│ Streaming │────approval────────►│ Permission   │───responds───►│ Streaming │
-│ Display   │                     │ Dialog       │               │ Display   │
-└──────────┘                     └──────────────┘               └──────────┘
-     │                                  │
-     │ (streaming events               │ (events queued
-     │  rendered live)                  │  while dialog shown)
-     ▼                                  ▼
-  ┌────────┐                     ┌────────────┐
-  │ Render  │                     │ Queue      │
-  │ deltas  │                     │ events     │
-  └────────┘                     └────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> StreamingDisplay: start
+    StreamingDisplay --> PermissionDialog: tool needs approval
+    StreamingDisplay --> RenderDeltas: streaming events rendered live
+    PermissionDialog --> QueueEvents: events queued while dialog shown
+    PermissionDialog --> StreamingDisplay: user responds
+    QueueEvents --> StreamingDisplay: replay queued events
 ```
 
 Events that arrive while the permission dialog is showing must be queued, not
@@ -766,8 +756,13 @@ const (
 Write every delta to the database. This provides crash recovery and enables the
 "resume after restart" pattern:
 
-```
-Generation starts ──► δ₁ saved ──► δ₂ saved ──► [crash] ──► restart ──► load partial message
+```mermaid
+flowchart LR
+    A["Generation starts"] --> B["δ₁ saved"]
+    B --> C["δ₂ saved"]
+    C --> D["crash"]
+    D --> E["restart"]
+    E --> F["load partial message"]
 ```
 
 ### 4. Pub/Sub for Decoupling Streaming from Rendering
@@ -775,15 +770,13 @@ Generation starts ──► δ₁ saved ──► δ₂ saved ──► [crash] 
 Never have the streaming goroutine directly update TUI state. Use a pub/sub
 layer to decouple the producer (streaming) from the consumer (rendering):
 
-```
-┌──────────┐     publish     ┌─────────┐     subscribe     ┌─────────┐
-│ Streaming │───────────────►│ Pub/Sub │───────────────────►│ TUI     │
-│ Loop      │                │ Broker  │                    │ Render  │
-└──────────┘                └─────────┘                    └─────────┘
-                                  │
-                                  ├─────► Logger
-                                  ├─────► Metrics
-                                  └─────► Debug inspector
+```mermaid
+flowchart LR
+    SL["Streaming Loop"] -->|publish| PS["Pub/Sub Broker"]
+    PS -->|subscribe| TUI["TUI Render"]
+    PS -->|subscribe| LOG["Logger"]
+    PS -->|subscribe| MET["Metrics"]
+    PS -->|subscribe| DBG["Debug inspector"]
 ```
 
 This also enables multiple subscribers: a logger, a metrics collector, a debug

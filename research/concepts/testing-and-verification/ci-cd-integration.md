@@ -28,21 +28,23 @@ CI/CD integration enables agents to:
 - **Run scheduled maintenance** tasks on cron triggers
 - **Operate in event-driven pipelines** triggered by webhooks, comments, or pushes
 
-```
-    Traditional Agent Workflow          CI/CD-Integrated Agent Workflow
-    ┌───────────────────────┐           ┌──────────────────────────────────┐
-    │                       │           │                                  │
-    │   Human ──► Agent     │           │   Event ──► Agent ──► PR/Fix    │
-    │     │         │       │           │     ▲                   │       │
-    │     │         ▼       │           │     │                   ▼       │
-    │     │      Terminal   │           │     │        ┌──── CI Pipeline  │
-    │     │      Output     │           │     │        │         │        │
-    │     ▼                 │           │     │        │         ▼        │
-    │   Human reviews       │           │   Webhook ◄──┘    Pass/Fail    │
-    │   locally             │           │     │                   │       │
-    │                       │           │     └───────────────────┘       │
-    └───────────────────────┘           │     (autonomous loop)          │
-                                        └──────────────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph trad["Traditional Agent Workflow"]
+    H["Human"] --> AG1["Agent"]
+    AG1 --> TO["Terminal Output"]
+    H --> HR["Human reviews locally"]
+  end
+  subgraph cicd["CI/CD-Integrated Agent Workflow"]
+    EV["Event"] --> AG2["Agent"]
+    AG2 --> PR["PR/Fix"]
+    PR --> CI["CI Pipeline"]
+    CI --> PF["Pass/Fail"]
+    CI --> WH["Webhook"]
+    PF --> WH
+    WH --> EV
+    WH -. "autonomous loop" .-> EV
+  end
 ```
 
 The **autonomous loop** is the key architectural difference. In a CI/CD context, the agent
@@ -256,25 +258,18 @@ For CI/CD pipelines, agents **must** operate without human interaction. A prompt
 "Should I proceed?" in a GitHub Actions runner will hang indefinitely and eventually
 timeout. Every serious CI/CD-capable agent provides a non-interactive mode.
 
-```
-    Interactive Mode                Non-Interactive Mode
-    ┌──────────────────┐            ┌─────────────────────────┐
-    │  Agent: "Edit     │            │  Agent receives task    │
-    │  foo.js?"         │            │       │                 │
-    │     │             │            │       ▼                 │
-    │     ▼             │            │  Executes all tools     │
-    │  Human: "Yes"     │            │  (permissions bypassed) │
-    │     │             │            │       │                 │
-    │     ▼             │            │       ▼                 │
-    │  Agent edits      │            │  Returns structured     │
-    │     │             │            │  output (JSON/exit code)│
-    │     ▼             │            └─────────────────────────┘
-    │  Agent: "Also     │
-    │  modify bar.js?"  │
-    │     │             │
-    │     ▼             │
-    │  Human: "No"      │
-    └──────────────────┘
+```mermaid
+flowchart LR
+  subgraph interactive["Interactive Mode"]
+    Q1["Agent: 'Edit foo.js?'"] --> Y["Human: 'Yes'"]
+    Y --> AE["Agent edits"]
+    AE --> Q2["Agent: 'Also modify bar.js?'"]
+    Q2 --> N["Human: 'No'"]
+  end
+  subgraph noninteractive["Non-Interactive Mode"]
+    RT["Agent receives task"] --> ET["Executes all tools (permissions bypassed)"]
+    ET --> RS["Returns structured output (JSON/exit code)"]
+  end
 ```
 
 ### Agent-by-Agent Non-Interactive Support
@@ -322,32 +317,15 @@ cleanly to agent capabilities.
 
 ### The Agent-Driven PR Lifecycle
 
-```
-    ┌──────────────────────────────────────────────────────────────────┐
-    │                    Agent-Driven PR Lifecycle                     │
-    │                                                                  │
-    │   ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐  │
-    │   │ Trigger  │───►│  Agent   │───►│  CI      │───►│  Human   │  │
-    │   │ (issue,  │    │ Creates  │    │ Pipeline │    │ Review   │  │
-    │   │  event,  │    │ PR       │    │ Runs     │    │          │  │
-    │   │  mention)│    │          │    │          │    │          │  │
-    │   └─────────┘    └──────────┘    └────┬─────┘    └────┬─────┘  │
-    │                                       │               │         │
-    │                                  Pass │          Approve│        │
-    │                                       │               │         │
-    │                                       ▼               ▼         │
-    │                                  ┌──────────┐    ┌──────────┐  │
-    │                                  │  Fail    │    │  Merge   │  │
-    │                                  │          │    │          │  │
-    │                                  └────┬─────┘    └──────────┘  │
-    │                                       │                         │
-    │                                       ▼                         │
-    │                                  ┌──────────┐                   │
-    │                                  │  Agent   │                   │
-    │                                  │ Diagnoses│──── (loops back   │
-    │                                  │ & Fixes  │     to CI)        │
-    │                                  └──────────┘                   │
-    └──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+  T["Trigger (issue, event, mention)"] --> A["Agent Creates PR"]
+  A --> CI["CI Pipeline Runs"]
+  CI -->|pass| HR["Human Review"]
+  CI -->|fail| F["Fail"]
+  HR -->|approve| M["Merge"]
+  F --> AD["Agent Diagnoses & Fixes"]
+  AD -->|loops back to CI| CI
 ```
 
 ### Automated Code Review
@@ -404,37 +382,17 @@ push) a fix.
 
 ### The CI-Fix Loop
 
-```
-    Push ──► CI Runs ──► Failure Detected
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │  Fetch CI Logs  │
-                     │  (stdout/stderr,│
-                     │   exit codes,   │
-                     │   test output)  │
-                     └────────┬────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │  Agent Analyzes │
-                     │  (parse errors, │
-                     │   match to code,│
-                     │   identify fix) │
-                     └────────┬────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │  Push Fix       │
-                     │  (commit to     │
-                     │   same branch)  │
-                     └────────┬────────┘
-                              │
-                              ▼
-                     CI Runs Again ──► Pass? ──► Done
-                         │
-                         ▼
-                     Fail? ──► Loop (max N attempts)
+```mermaid
+flowchart TD
+  P["Push"] --> CI1["CI Runs"]
+  CI1 --> FD["Failure Detected"]
+  FD --> FL["Fetch CI Logs (stdout/stderr, exit codes, test output)"]
+  FL --> AA["Agent Analyzes (parse errors, match to code, identify fix)"]
+  AA --> PF["Push Fix (commit to same branch)"]
+  PF --> CI2["CI Runs Again"]
+  CI2 -->|Pass| D["Done"]
+  CI2 -->|Fail| LP["Loop (max N attempts)"]
+  LP --> FL
 ```
 
 ### Droid's github_action_repair
@@ -522,29 +480,19 @@ both a correctness concern and a security boundary.
 
 ### How Agents Interact with Required Checks
 
-```
-    Agent Creates PR
-          │
-          ▼
-    ┌───────────────────────────────────────────────┐
-    │              Branch Protection Rules            │
-    │                                                 │
-    │   ☑ Require status checks to pass              │
-    │     ├── Unit tests        ✓ / ✗                │
-    │     ├── Lint               ✓ / ✗                │
-    │     ├── Type check         ✓ / ✗                │
-    │     └── Agent review       ✓ / ✗  (optional)   │
-    │                                                 │
-    │   ☑ Require pull request reviews                │
-    │     └── At least 1 human approval              │
-    │                                                 │
-    │   ☑ Require signed commits (optional)          │
-    │     └── Agent must have GPG key configured     │
-    │                                                 │
-    │   ☑ Restrict who can push                      │
-    │     └── Agent's GitHub App or bot account      │
-    │                                                 │
-    └───────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+  APR["Agent Creates PR"] --> SC
+  APR --> RR
+  APR --> RS
+  APR --> RP
+  SC["☑ Require status checks to pass"] --> UT["Unit tests ✓/✗"]
+  SC --> LT["Lint ✓/✗"]
+  SC --> TC["Type check ✓/✗"]
+  SC --> AR["Agent review ✓/✗ (optional)"]
+  RR["☑ Require pull request reviews"] --> HA["At least 1 human approval"]
+  RS["☑ Require signed commits (optional)"] --> GPG["Agent must have GPG key configured"]
+  RP["☑ Restrict who can push"] --> BA["Agent's GitHub App or bot account"]
 ```
 
 Key design principle: **agent-generated code is untrusted code**. Even if an agent created
@@ -601,14 +549,13 @@ This enables **throughput scaling**: a team can label 10 issues and get 10 PRs.
 Claude Code supports integration channels including Telegram, Discord, and custom webhooks.
 This enables patterns like:
 
-```
-    Slack message: "Can someone fix the auth timeout bug?"
-         │
-         ▼
-    Webhook ──► GitHub Action ──► Claude Code ──► PR created
-         │
-         ▼
-    Slack notification: "PR #142 created to fix auth timeout"
+```mermaid
+flowchart TD
+  SM["Slack message: 'Can someone fix the auth timeout bug?'"] --> WH["Webhook"]
+  WH --> GA["GitHub Action"]
+  GA --> CC["Claude Code"]
+  CC --> PR["PR created"]
+  PR --> SN["Slack notification: 'PR #142 created to fix auth timeout'"]
 ```
 
 ---
@@ -644,24 +591,17 @@ code execution occurs in an isolated sandbox with restricted network access and 
 isolation. This prevents malicious code generated by the LLM from escaping the sandbox to
 compromise the CI environment.
 
-```
-    ┌─────────────────────────────────────────┐
-    │            CI Runner (Host)              │
-    │                                         │
-    │   ┌─────────────────────────────────┐   │
-    │   │        Agent Sandbox            │   │
-    │   │                                 │   │
-    │   │   ┌─────────┐  ┌────────────┐  │   │
-    │   │   │  Agent   │  │  Code      │  │   │
-    │   │   │  Process │  │  Execution │  │   │
-    │   │   └─────────┘  └────────────┘  │   │
-    │   │                                 │   │
-    │   │   No network  │  Filesystem    │   │
-    │   │   access      │  isolated      │   │
-    │   └─────────────────────────────────┘   │
-    │                                         │
-    │   Secrets injected via env vars only    │
-    └─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+  subgraph host["CI Runner (Host)"]
+    subgraph sandbox["Agent Sandbox"]
+      AP["Agent Process"]
+      CE["Code Execution"]
+      NN["No network access"]
+      FI["Filesystem isolated"]
+    end
+    SE["Secrets injected via env vars only"]
+  end
 ```
 
 ### Commit Signing

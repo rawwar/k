@@ -49,11 +49,9 @@ The workflow has three phases:
 2. **Create** a batch referencing that file.
 3. **Poll** the batch status until it completes, then download results.
 
-```
-┌──────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│  Upload  │────▶│ Create Batch │────▶│ Poll Status │────▶│  Download    │
-│  JSONL   │     │   (POST)     │     │   (GET)     │     │  Results     │
-└──────────┘     └──────────────┘     └─────────────┘     └──────────────┘
+```mermaid
+flowchart LR
+    A["Upload JSONL"] --> B["Create Batch\n(POST)"] --> C["Poll Status\n(GET)"] --> D["Download Results"]
 ```
 
 ### Input File Format
@@ -128,17 +126,15 @@ curl https://api.openai.com/v1/batches/batch_xyz789 \
 
 ### Batch Status Lifecycle
 
-```
-validating ──▶ in_progress ──▶ completed
-                    │              │
-                    ▼              ▼
-                 failed       (download results)
-                    │
-                    ▼
-              cancelling ──▶ cancelled
-                               │
-                               ▼
-                            expired
+```mermaid
+flowchart TD
+    A[validating] --> B[in_progress]
+    B --> C[completed]
+    B --> D[failed]
+    C --> E["(download results)"]
+    D --> F[cancelling]
+    F --> G[cancelled]
+    G --> H[expired]
 ```
 
 | Status | Description |
@@ -329,8 +325,9 @@ Response:
 
 Anthropic uses a simpler status model:
 
-```
-created ──▶ processing ──▶ ended
+```mermaid
+flowchart LR
+    A[created] --> B[processing] --> C[ended]
 ```
 
 | Status | Description |

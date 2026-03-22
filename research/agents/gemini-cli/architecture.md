@@ -176,22 +176,13 @@ Each tool registration includes:
 
 The confirmation bus is a clean event-driven abstraction for user consent:
 
-```
-Tool Execution Request
-       │
-       v
-┌──────────────────┐     ┌───────────────────┐
-│ Confirmation Bus │────>│  Policy Engine     │
-│                  │     │  (auto-approve     │
-│                  │<────│   or require       │
-│                  │     │   confirmation)    │
-└──────┬───────────┘     └───────────────────┘
-       │
-       v
-  User Prompt (if required)
-       │
-       v
-  Tool Execution (in sandbox if configured)
+```mermaid
+flowchart LR
+    TER["Tool Execution Request"] --> CB["Confirmation Bus"]
+    CB --> PE["Policy Engine<br/>(auto-approve or require confirmation)"]
+    PE --> CB
+    CB --> UP["User Prompt<br/>(if required)"]
+    UP --> TE["Tool Execution<br/>(in sandbox if configured)"]
 ```
 
 The confirmation bus separates the **decision** of whether to confirm from the
@@ -268,19 +259,11 @@ The routing module handles model and request routing:
 
 Gemini CLI supports the Model Context Protocol for tool extensibility:
 
-```
-┌─────────────────┐     ┌──────────────────┐
-│   Gemini CLI    │     │   MCP Server 1   │
-│   (MCP Client)  │────>│   (e.g., GitHub) │
-│                 │     └──────────────────┘
-│                 │     ┌──────────────────┐
-│                 │────>│   MCP Server 2   │
-│                 │     │   (e.g., DB)     │
-│                 │     └──────────────────┘
-│                 │     ┌──────────────────┐
-│                 │────>│   MCP Server N   │
-│                 │     │   (custom)       │
-└─────────────────┘     └──────────────────┘
+```mermaid
+flowchart LR
+    GC["Gemini CLI<br/>(MCP Client)"] --> MCP1["MCP Server 1<br/>(e.g., GitHub)"]
+    GC --> MCP2["MCP Server 2<br/>(e.g., DB)"]
+    GC --> MCPN["MCP Server N<br/>(custom)"]
 ```
 
 Configuration in `.gemini/settings.json`:
@@ -311,22 +294,17 @@ The `ide/` module supports VS Code companion integration:
 
 The hooks system provides extension points throughout the agent lifecycle:
 
-```
-Agent Start
-  │
-  ├── onAgentStart
-  │
-  ├── onTurnStart
-  │   ├── onToolCall
-  │   │   ├── onPreToolExecution
-  │   │   └── onPostToolExecution
-  │   ├── onModelResponse
-  │   └── onTurnEnd
-  │
-  ├── onTurnStart (next turn)
-  │   └── ...
-  │
-  └── onAgentEnd
+```mermaid
+flowchart TD
+    AS["Agent Start"] --> OAS["onAgentStart"]
+    OAS --> OTS["onTurnStart"]
+    OTS --> OTC["onToolCall"]
+    OTC --> OPRE["onPreToolExecution"]
+    OPRE --> OPOST["onPostToolExecution"]
+    OTS --> OMR["onModelResponse"]
+    OTS --> OTE["onTurnEnd"]
+    OTE --> |"next turn"| OTS
+    OTE --> OAE["onAgentEnd"]
 ```
 
 Hooks can be registered by:
@@ -336,16 +314,12 @@ Hooks can be registered by:
 
 ## Configuration Hierarchy
 
-```
-Highest priority
-    │
-    ├── Command-line flags (--model, --sandbox, etc.)
-    ├── Environment variables (GEMINI_SANDBOX, GEMINI_API_KEY, etc.)
-    ├── Project settings (.gemini/settings.json)
-    ├── User settings (~/.gemini/settings.json)
-    └── Built-in defaults
-    │
-Lowest priority
+```mermaid
+flowchart TD
+    A["① Command-line flags<br/>(highest priority)<br/>--model, --sandbox, etc."] --> B["② Environment variables<br/>GEMINI_SANDBOX, GEMINI_API_KEY, etc."]
+    B --> C["③ Project settings<br/>.gemini/settings.json"]
+    C --> D["④ User settings<br/>~/.gemini/settings.json"]
+    D --> E["⑤ Built-in defaults<br/>(lowest priority)"]
 ```
 
 ## Build and Release

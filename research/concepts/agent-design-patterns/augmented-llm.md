@@ -22,30 +22,17 @@ An augmented LLM extends a base language model with three capabilities:
 2. **Tools** — the ability to take actions in the environment
 3. **Memory** — the ability to persist information across interactions
 
-```
-  +-------------------------------------------------------+
-  |                    Augmented LLM                       |
-  |                                                        |
-  |   +--------------+  +-----------+  +--------------+   |
-  |   |  Retrieval   |  |   Tools   |  |    Memory    |   |
-  |   |              |  |           |  |              |   |
-  |   | - Vector DB  |  | - File IO |  | - Short-term |   |
-  |   | - Keyword    |  | - Shell   |  | - Long-term  |   |
-  |   | - Hybrid     |  | - LSP     |  | - Episodic   |   |
-  |   | - Code index |  | - Search  |  | - Semantic   |   |
-  |   +------+-------+  +-----+-----+  +------+-------+  |
-  |          |                |               |            |
-  |          +--------+-------+-------+-------+            |
-  |                   v               v                    |
-  |              +---------------------+                   |
-  |              |     LLM Core        |                   |
-  |              |                     |                   |
-  |              |  Reasoning Engine   |                   |
-  |              |  Token Prediction   |                   |
-  |              |  Context Window     |                   |
-  |              +---------------------+                   |
-  |                                                        |
-  +-------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph AugmentedLLM["Augmented LLM"]
+        Retrieval["Retrieval\n- Vector DB\n- Keyword\n- Hybrid\n- Code index"]
+        Tools["Tools\n- File IO\n- Shell\n- LSP\n- Search"]
+        Memory["Memory\n- Short-term\n- Long-term\n- Episodic\n- Semantic"]
+        LLM["LLM Core\nReasoning Engine\nToken Prediction\nContext Window"]
+        Retrieval --> LLM
+        Tools --> LLM
+        Memory --> LLM
+    end
 ```
 
 ### Why "Augmented"?
@@ -70,56 +57,35 @@ agentic systems possible.
 
 The detailed architecture of an augmented LLM in a CLI coding context:
 
-```
-                          User Prompt
-                              |
-                              v
-                    +-----------------+
-                    |  System Prompt  |
-                    |  + Instructions |
-                    +--------+--------+
-                             |
-                             v
-  +---------------------------------------------------------+
-  |                    AUGMENTED LLM                         |
-  |                                                          |
-  |  +---------------------------------------------+        |
-  |  |              Context Assembly                |        |
-  |  |                                              |        |
-  |  |  +-----------+ +-----------+ +------------+  |        |
-  |  |  |  Memory   | | Retrieved | |  Tool Defs |  |        |
-  |  |  |  Context  | |  Context  | |  & Schemas |  |        |
-  |  |  +-----------+ +-----------+ +------------+  |        |
-  |  +---------------------+------------------------+        |
-  |                        |                                 |
-  |                        v                                 |
-  |  +---------------------------------------------+        |
-  |  |                 LLM Inference                |        |
-  |  |                                              |        |
-  |  |   Input tokens --> Model --> Output tokens   |        |
-  |  |                                              |        |
-  |  |   Output may contain:                        |        |
-  |  |   - Natural language response                |        |
-  |  |   - Tool call request(s)                     |        |
-  |  |   - Retrieval queries                        |        |
-  |  +---------------------+------------------------+        |
-  |                        |                                 |
-  |                        v                                 |
-  |  +---------------------------------------------+        |
-  |  |              Tool Execution Layer            |        |
-  |  |                                              |        |
-  |  |  +---------+ +--------+ +------+ +--------+  |       |
-  |  |  |File I/O | | Shell  | | LSP  | | Search |  |       |
-  |  |  +---------+ +--------+ +------+ +--------+  |       |
-  |  |  +---------+ +--------+ +------+ +--------+  |       |
-  |  |  |  Git    | |Browser | | MCP  | | Custom |  |       |
-  |  |  +---------+ +--------+ +------+ +--------+  |       |
-  |  +-----------------------------------------------+      |
-  |                                                          |
-  +----------------------------------------------------------+
-                              |
-                              v
-                    Response to User
+```mermaid
+flowchart TD
+    UP["User Prompt"]
+    SP["System Prompt\n+ Instructions"]
+    UP --> SP
+    subgraph ALLM["AUGMENTED LLM"]
+        subgraph CA["Context Assembly"]
+            MC["Memory\nContext"]
+            RC["Retrieved\nContext"]
+            TD["Tool Defs\n& Schemas"]
+        end
+        LLI["LLM Inference\nInput tokens → Model → Output tokens\nOutput may contain:\n- Natural language response\n- Tool call request(s)\n- Retrieval queries"]
+        subgraph TEL["Tool Execution Layer"]
+            FI["File I/O"]
+            SH["Shell"]
+            LSP["LSP"]
+            SE["Search"]
+            GIT["Git"]
+            BR["Browser"]
+            MCP["MCP"]
+            CU["Custom"]
+        end
+        MC --> LLI
+        RC --> LLI
+        TD --> LLI
+        LLI --> TEL
+    end
+    SP --> CA
+    ALLM --> RU["Response to User"]
 ```
 
 ### The Single-Inference Model
@@ -128,13 +94,17 @@ The critical distinction between an augmented LLM and an agent: the augmented
 LLM performs a **single inference pass** (possibly with tool calls that trigger
 follow-up inferences). An agent wraps this in a **loop**.
 
-```
-  Augmented LLM:
-    Input --> [Inference + Tool Calls] --> Output
-
-  Agent:
-    Input --> [Inference + Tool Calls] --> Observe --> [Inference + Tool Calls] --> ...
-              +------------------------ Loop until done --------------------------+
+```mermaid
+flowchart LR
+    subgraph augLLM["Augmented LLM"]
+        direction LR
+        i1["Input"] --> inf1["Inference + Tool Calls"] --> out1["Output"]
+    end
+    subgraph agent["Agent"]
+        direction LR
+        i2["Input"] --> inf2["Inference + Tool Calls"] --> obs["Observe"] --> decide["Decide"]
+        decide -->|loop| inf2
+    end
 ```
 
 In practice, the line is blurry. When a model makes a tool call and then
@@ -219,35 +189,14 @@ retrieval layer that combines multiple sources.
 
 Code has unique properties that affect chunking:
 
-```
-  +----------------------------------------------+
-  |           Code Chunking Strategies            |
-  |                                               |
-  |  1. Naive (line-based)                        |
-  |     Split every N lines                       |
-  |     X Breaks functions mid-body               |
-  |                                               |
-  |  2. Function-level                            |
-  |     One chunk per function/method             |
-  |     + Semantic boundaries                     |
-  |     X Large functions exceed chunk size       |
-  |                                               |
-  |  3. Class-level                               |
-  |     One chunk per class                       |
-  |     + Preserves class context                 |
-  |     X Large classes exceed chunk size         |
-  |                                               |
-  |  4. AST-aware                                 |
-  |     Use syntax tree to find natural boundaries|
-  |     + Respects language structure              |
-  |     + Handles nested structures               |
-  |     X Requires parser per language            |
-  |                                               |
-  |  5. Sliding window with overlap               |
-  |     Overlapping chunks of N lines             |
-  |     + No information loss at boundaries       |
-  |     X Redundant tokens                        |
-  +----------------------------------------------+
+```mermaid
+flowchart TD
+    CC["Code Chunking Strategies"]
+    CC --> N1["1. Naive (line-based)\nSplit every N lines\n✗ Breaks functions mid-body"]
+    CC --> N2["2. Function-level\nOne chunk per function/method\n✓ Semantic boundaries\n✗ Large functions exceed chunk size"]
+    CC --> N3["3. Class-level\nOne chunk per class\n✓ Preserves class context\n✗ Large classes exceed chunk size"]
+    CC --> N4["4. AST-aware\nUse syntax tree for natural boundaries\n✓ Respects language structure\n✓ Handles nested structures\n✗ Requires parser per language"]
+    CC --> N5["5. Sliding window with overlap\nOverlapping chunks of N lines\n✓ No information loss at boundaries\n✗ Redundant tokens"]
 ```
 
 Most coding agents use a combination: AST-aware chunking for indexed search,
@@ -262,29 +211,34 @@ tools push actions *out* into the environment.
 
 ### Tool Categories in Coding Agents
 
-```
-  +------------------------------------------------------------+
-  |                    Tool Taxonomy                            |
-  |                                                            |
-  |  +------------------+  +------------------+                |
-  |  | Read Operations  |  | Write Operations |                |
-  |  |                  |  |                  |                |
-  |  | - read_file      |  | - write_file     |                |
-  |  | - list_directory |  | - apply_diff     |                |
-  |  | - search_files   |  | - create_file    |                |
-  |  | - grep           |  | - delete_file    |                |
-  |  | - git_log        |  | - git_commit     |                |
-  |  +------------------+  +------------------+                |
-  |                                                            |
-  |  +------------------+  +------------------+                |
-  |  | Execute Actions  |  | Analysis Tools   |                |
-  |  |                  |  |                  |                |
-  |  | - run_command    |  | - lsp_diagnostics|                |
-  |  | - run_tests      |  | - type_check     |                |
-  |  | - install_deps   |  | - lint           |                |
-  |  | - start_server   |  | - parse_ast      |                |
-  |  +------------------+  +------------------+                |
-  +------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Read["Read Operations"]
+        r1["read_file"]
+        r2["list_directory"]
+        r3["search_files"]
+        r4["grep"]
+        r5["git_log"]
+    end
+    subgraph Write["Write Operations"]
+        w1["write_file"]
+        w2["apply_diff"]
+        w3["create_file"]
+        w4["delete_file"]
+        w5["git_commit"]
+    end
+    subgraph Execute["Execute Actions"]
+        e1["run_command"]
+        e2["run_tests"]
+        e3["install_deps"]
+        e4["start_server"]
+    end
+    subgraph Analysis["Analysis Tools"]
+        a1["lsp_diagnostics"]
+        a2["type_check"]
+        a3["lint"]
+        a4["parse_ast"]
+    end
 ```
 
 ### How Tools Differ from RAG
@@ -336,17 +290,9 @@ MCP (Model Context Protocol) is Anthropic's open standard for connecting LLMs
 to external tools and data sources. It provides a standardized interface that
 any tool provider can implement.
 
-```
-  +--------------+       +--------------+       +--------------+
-  |  LLM Client  |<----->|  MCP Server  |<----->|  External    |
-  |  (Agent)     |  MCP  |  (Adapter)   |       |  Service     |
-  +--------------+ Proto +--------------+       +--------------+
-
-  Examples:
-  - Claude Code --> MCP --> GitHub API
-  - Claude Code --> MCP --> Database
-  - Goose       --> MCP --> Custom extensions
-  - OpenCode    --> MCP --> Custom tools
+```mermaid
+flowchart LR
+    LC["LLM Client\n(Agent)"] <-->|MCP Proto| MS["MCP Server\n(Adapter)"] <--> ES["External\nService"]
 ```
 
 MCP is particularly relevant for CLI coding agents because it allows:
@@ -451,28 +397,15 @@ explicit long-term memory files rather than automated episodic learning.
 
 ### Memory Architecture Diagram
 
-```
-  +----------------------------------------------------------+
-  |                    Memory Systems                         |
-  |                                                           |
-  |  +-----------------+                                      |
-  |  |  Short-Term      | <-- Conversation history            |
-  |  |  (Context Window) |     Lost on session end             |
-  |  +--------+---------+                                     |
-  |           | Summarize                                      |
-  |           v on overflow                                    |
-  |  +-----------------+                                      |
-  |  |  Long-Term       | <-- CLAUDE.md, AGENTS.md, etc.      |
-  |  |  (Persistent)    |     Survives across sessions         |
-  |  +--------+---------+                                     |
-  |           |                                                |
-  |           v                                                |
-  |  +-----------------+                                      |
-  |  |  Episodic        | <-- Task logs, outcome history       |
-  |  |  (Learned)       |     Inferred patterns                |
-  |  +-----------------+                                      |
-  |                                                           |
-  +----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph MemSys["Memory Systems"]
+        ST["Short-Term\n(Context Window)\n← Conversation history\nLost on session end"]
+        LT["Long-Term\n(Persistent)\n← CLAUDE.md, AGENTS.md, etc.\nSurvives across sessions"]
+        EP["Episodic\n(Learned)\n← Task logs, outcome history\nInferred patterns"]
+        ST -->|"Summarize\non overflow"| LT
+        LT --> EP
+    end
 ```
 
 ---
@@ -524,32 +457,19 @@ requests a command, and Warp provides it with appropriate context.
 
 The line between an augmented LLM and an agent is the **loop**:
 
-```
-  +------------------------------------------------------------------+
-  |                                                                  |
-  |  Augmented LLM:                                                  |
-  |                                                                  |
-  |    User --> [Context + LLM + Tools] --> Response                 |
-  |                                                                  |
-  |    - Single pass (may include tool-call sub-steps)               |
-  |    - Deterministic control flow                                  |
-  |    - Predictable cost and latency                                |
-  |    - No ability to recover from errors                           |
-  |                                                                  |
-  +------------------------------------------------------------------+
-  |                                                                  |
-  |  Agent:                                                          |
-  |                                                                  |
-  |    User --> [Context + LLM + Tools] --> Observe --> [Decide] --+ |
-  |                  ^                                     |        |
-  |                  +---------------- Loop <---------------+       |
-  |                                                                  |
-  |    - Multiple passes with observation                            |
-  |    - Dynamic, model-directed control flow                        |
-  |    - Variable cost and latency                                   |
-  |    - Can recover from errors and adapt                           |
-  |                                                                  |
-  +------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph AugLLM["Augmented LLM"]
+        direction LR
+        u1["User"] --> ctx1["Context + LLM + Tools"] --> r1["Response"]
+        note1["Single pass · Deterministic control flow\nPredictable cost and latency · No error recovery"]
+    end
+    subgraph Agt["Agent"]
+        direction LR
+        u2["User"] --> ctx2["Context + LLM + Tools"] --> obs["Observe"] --> dec["Decide"]
+        dec -->|Loop| ctx2
+        note2["Multiple passes · Dynamic model-directed control flow\nVariable cost and latency · Can recover from errors"]
+    end
 ```
 
 ### Cost and Latency Tradeoffs
@@ -565,17 +485,15 @@ The line between an augmented LLM and an agent is the **loop**:
 
 ### When to Graduate from Augmented LLM to Agent
 
-```
-  Should you use an agent loop?
-
-  +-- Does the task require multiple tools in sequence?
-  |   +-- NO --> Augmented LLM is sufficient
-  |   +-- YES -> Can you predefine the sequence?
-  |              +-- YES --> Use prompt chaining (workflow)
-  |              +-- NO --> Does the task require reacting to results?
-  |                         +-- NO --> Use parallelization (workflow)
-  |                         +-- YES -> You need an agent loop
-  +----------------------------------------------------------
+```mermaid
+flowchart TD
+    Q1{"Does the task require\nmultiple tools in sequence?"}
+    Q1 -->|NO| A1["Augmented LLM\nis sufficient"]
+    Q1 -->|YES| Q2{"Can you predefine\nthe sequence?"}
+    Q2 -->|YES| A2["Use prompt chaining\n(workflow)"]
+    Q2 -->|NO| Q3{"Does the task require\nreacting to results?"}
+    Q3 -->|NO| A3["Use parallelization\n(workflow)"]
+    Q3 -->|YES| A4["You need an\nagent loop"]
 ```
 
 ---
@@ -765,15 +683,15 @@ tools = ToolRegistry([
 The augmented LLM is the foundation. Every other pattern in the
 [Agent Design Patterns](README.md) catalog builds on it:
 
-```
-  Augmented LLM
-       |
-       +--> Prompt Chaining     = Sequence of augmented LLM calls
-       +--> Routing             = Augmented LLM as classifier + handlers
-       +--> Parallelization     = Concurrent augmented LLM calls
-       +--> Orchestrator-Workers = Augmented LLM managing augmented LLMs
-       +--> Evaluator-Optimizer  = Two augmented LLMs in a feedback loop
-       +--> Autonomous Agent     = Augmented LLM in an autonomous loop
+```mermaid
+flowchart TD
+    ALM["Augmented LLM"]
+    ALM --> PC["Prompt Chaining\n= Sequence of augmented LLM calls"]
+    ALM --> RT["Routing\n= Augmented LLM as classifier + handlers"]
+    ALM --> PZ["Parallelization\n= Concurrent augmented LLM calls"]
+    ALM --> OW["Orchestrator-Workers\n= Augmented LLM managing augmented LLMs"]
+    ALM --> EO["Evaluator-Optimizer\n= Two augmented LLMs in a feedback loop"]
+    ALM --> AA["Autonomous Agent\n= Augmented LLM in an autonomous loop"]
 ```
 
 Improving the augmented LLM — better retrieval, better tools, better memory —

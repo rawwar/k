@@ -16,65 +16,21 @@ You have built a complete shell execution tool for your coding agent. Let's step
 
 Here is the full execution pipeline, from the LLM's tool call to the result sent back:
 
-```
-LLM Tool Call: { "command": "cargo test", "working_dir": "/project" }
-        |
-        v
-  ┌─────────────────────────────┐
-  │  1. Parse & Build Command   │  ShellCommand::new("cargo test")
-  │     (Command Builder)       │     .working_dir("/project")
-  └─────────────┬───────────────┘     .timeout(30s)
-                │
-                v
-  ┌─────────────────────────────┐
-  │  2. Dangerous Command Check │  DangerDetector::analyze()
-  │     (Safety Layer 1)        │  → Block if Critical
-  └─────────────┬───────────────┘  → Warn if High
-                │
-                v
-  ┌─────────────────────────────┐
-  │  3. Command Policy Check    │  CommandPolicy::check()
-  │     (Safety Layer 2)        │  → Allow/deny list
-  └─────────────┬───────────────┘
-                │
-                v
-  ┌─────────────────────────────┐
-  │  4. Environment Setup       │  EnvPolicy::apply()
-  │     (Isolation)             │  → Strip API keys
-  └─────────────┬───────────────┘  → Inject CI=true, NO_COLOR=1
-                │
-                v
-  ┌─────────────────────────────┐
-  │  5. Process Spawn           │  tokio::process::Command
-  │     (Execution)             │  → Piped stdout/stderr
-  └─────────────┬───────────────┘  → Process group isolation
-                │
-                v
-  ┌─────────────────────────────┐
-  │  6. Timeout + Signal        │  tokio::time::timeout
-  │     (Enforcement)           │  → SIGTERM → wait → SIGKILL
-  └─────────────┬───────────────┘
-                │
-                v
-  ┌─────────────────────────────┐
-  │  7. Output Capture          │  tokio::join! on stdout/stderr
-  │     (Collection)            │  → Concurrent pipe reading
-  └─────────────┬───────────────┘
-                │
-                v
-  ┌─────────────────────────────┐
-  │  8. Output Truncation       │  TruncationConfig::truncate()
-  │     (Context Management)    │  → Middle truncation
-  └─────────────┬───────────────┘  → Size metadata
-                │
-                v
-  ┌─────────────────────────────┐
-  │  9. Format Result           │  ShellOutput::to_tool_result()
-  │     (Serialization)         │  → Structured text for LLM
-  └─────────────────────────────┘
-                │
-                v
-    Tool Result → back to LLM
+```mermaid
+flowchart TD
+    LLM["LLM Tool Call\n{ command: 'cargo test', working_dir: '/project' }"]
+    S1["1. Parse & Build Command\nCommand Builder"]
+    S2["2. Dangerous Command Check\nSafety Layer 1"]
+    S3["3. Command Policy Check\nSafety Layer 2"]
+    S4["4. Environment Setup\nIsolation"]
+    S5["5. Process Spawn\nExecution"]
+    S6["6. Timeout + Signal\nEnforcement"]
+    S7["7. Output Capture\nCollection"]
+    S8["8. Output Truncation\nContext Management"]
+    S9["9. Format Result\nSerialization"]
+    RESULT["Tool Result → back to LLM"]
+
+    LLM --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> RESULT
 ```
 
 Each layer is independent and testable. You can swap out the truncation strategy without touching the timeout logic. You can add new dangerous patterns without changing the command builder. This separation of concerns is what makes the tool maintainable.

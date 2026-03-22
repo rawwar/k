@@ -297,24 +297,16 @@ Think of system complexity like a budget. You have a finite amount of
 complexity that your team can build, maintain, debug, and reason about.
 Every architectural choice spends from this budget:
 
-```
-+-----------------------------------------------------------+
-|                    Complexity Budget                        |
-|                                                             |
-|  +---------------------------------------------+          |
-|  | ################################             | Budget   |
-|  +---------------------------------------------+          |
-|                                                             |
-|  Spent on:                                                  |
-|  ########  Core logic (unavoidable)                        |
-|  ####      Tool integration                                |
-|  ###       Prompt engineering                              |
-|  ##        Error handling                                  |
-|  ........  Available for agent architecture                |
-|                                                             |
-|  Question: Is spending the remaining budget on agent        |
-|  architecture the highest-value use?                        |
-+-----------------------------------------------------------+
+```mermaid
+flowchart TD
+    CB["Complexity Budget"]
+    CB --> CL["Core logic\n(unavoidable)"]
+    CB --> TI["Tool integration"]
+    CB --> PE["Prompt engineering"]
+    CB --> EH["Error handling"]
+    CB --> AA["Available for\nagent architecture"]
+    Q["Is spending the remaining budget\non agent architecture the\nhighest-value use?"]
+    AA -.-> Q
 ```
 
 ### Measuring Agent Value-Add vs Overhead
@@ -378,23 +370,12 @@ mini-SWE-agent is perhaps the most important data point in this research
 library. At approximately 100 lines of bash, it demonstrates that agent
 scaffold complexity has **sharply diminishing returns**:
 
-```
-Agent Complexity (lines of code) vs SWE-bench Performance:
-
-  +--------------------------------------------------+
-  |                                              *    |  Full agents
-  |                                         *         |  (10K+ lines)
-  |                                    *              |
-  |                               *                   |
-  |                          *                        |
-  |                                                    |
-  |                                                    |
-  |            *                                       |  mini-SWE-agent
-  |                                                    |  (~100 lines)
-  |                                                    |
-  +--------------------------------------------------+
-  100        1K         10K        50K       100K
-                Lines of scaffold code
+```mermaid
+flowchart LR
+    mini["mini-SWE-agent\n(~100 lines)\nCompetitive performance"]
+    full["Full agents\n(10K+ lines)\nHigher but diminishing returns"]
+    mini -->|"scaffold complexity\nhas diminishing returns"| full
+    note["Majority of agent value\ncomes from core loop,\nnot sophisticated orchestration"]
 ```
 
 The gap between mini-SWE-agent and full agents is significant, but the gap
@@ -683,20 +664,16 @@ complexity because it "should" help without evidence that it does.
 
 The three key metrics form a trade-off surface:
 
-```
-                     High Completion
-                           |
-                    *      |      *
-                  Agent    |   Multi-agent
-                  loop     |   orchestration
-                           |
-                           |
-          *                |
-        Single             |
-        call               |
-                           |
-   ------------------------+-------------------->
-   Low Cost/Latency                 High Cost/Latency
+```mermaid
+flowchart LR
+    SC["Single call\nLow cost/latency\nLower completion"]
+    AL["Agent loop\nMedium cost/latency\nHigher completion"]
+    MA["Multi-agent\norchestration\nHigh cost/latency\nHighest completion"]
+    SC -->|"add agentic loop"| AL
+    AL -->|"add orchestration"| MA
+    Q["Optimal point depends\non your use case"]
+    MA -.-> Q
+    AL -.-> Q
 ```
 
 The optimal point depends on your use case. For a developer tool used
@@ -835,67 +812,24 @@ steps in advance.
 
 Use this flowchart to determine the appropriate level of complexity:
 
-```
-                    +----------------------+
-                    |  Do you have a task   |
-                    |  to solve with LLM?   |
-                    +----------+-----------+
-                               |
-                               v
-                    +----------------------+
-                    |  Can a single LLM     |  YES
-                    |  call solve it with   |------> Use Level 1
-                    |  good prompting?      |        (Single call)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Does the model need   |  YES
-                    |  more context from     |------> Use Level 2
-                    |  your codebase/docs?   |        (Add retrieval)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Does the model need   |  YES
-                    |  to take actions       |------> Use Level 3
-                    |  (read/write/execute)? |        (Add tools)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Is the task clearly   |  YES
-                    |  decomposable into     |------> Use Level 4
-                    |  sequential steps?     |        (Prompt chain)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Do inputs vary enough |  YES
-                    |  to need different     |------> Use Level 5
-                    |  handling paths?       |        (Add routing)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Does the task need    |  YES
-                    |  dynamic sub-task      |------> Use Level 6
-                    |  decomposition?        |        (Orchestration)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Is the task truly     |  YES
-                    |  open-ended and        |------> Use Level 7
-                    |  unpredictable?        |        (Full autonomy)
-                    +----------+-----------+
-                               | NO
-                               v
-                    +----------------------+
-                    |  Re-examine. You may   |
-                    |  be over-complicating  |
-                    |  the problem.          |
-                    +----------------------+
+```mermaid
+flowchart TD
+    START["Do you have a task\nto solve with LLM?"]
+    START --> Q1{"Can a single LLM call\nsolve it with good prompting?"}
+    Q1 -->|YES| L1["Use Level 1\n(Single call)"]
+    Q1 -->|NO| Q2{"Does the model need more\ncontext from your codebase/docs?"}
+    Q2 -->|YES| L2["Use Level 2\n(Add retrieval)"]
+    Q2 -->|NO| Q3{"Does the model need to\ntake actions (read/write/execute)?"}
+    Q3 -->|YES| L3["Use Level 3\n(Add tools)"]
+    Q3 -->|NO| Q4{"Is the task clearly decomposable\ninto sequential steps?"}
+    Q4 -->|YES| L4["Use Level 4\n(Prompt chain)"]
+    Q4 -->|NO| Q5{"Do inputs vary enough to need\ndifferent handling paths?"}
+    Q5 -->|YES| L5["Use Level 5\n(Add routing)"]
+    Q5 -->|NO| Q6{"Does the task need dynamic\nsub-task decomposition?"}
+    Q6 -->|YES| L6["Use Level 6\n(Orchestration)"]
+    Q6 -->|NO| Q7{"Is the task truly open-ended\nand unpredictable?"}
+    Q7 -->|YES| L7["Use Level 7\n(Full autonomy)"]
+    Q7 -->|NO| RE["Re-examine. You may be\nover-complicating the problem."]
 ```
 
 ---

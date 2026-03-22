@@ -24,39 +24,39 @@ kernel design (io_uring's submission/completion queues). The result is a system 
 every interaction is a message, every side effect is observable, and the entire execution
 history is replayable.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        USER INTERFACE                       │
-│  (TUI, Web, CLI, Test Harness)                              │
-│                                                             │
-│   ┌──────────────┐                  ┌──────────────────┐    │
-│   │  User Input   │                 │  Event Display    │    │
-│   │  Handler      │                 │  Renderer         │    │
-│   └──────┬───────┘                  └────────▲─────────┘    │
-└──────────┼──────────────────────────────────┼──────────────┘
-           │ Op messages                      │ Event messages
-           ▼                                  │
-    ┌──────────────┐                  ┌───────┴──────────┐
-    │  Submission   │                 │   Event           │
-    │  Queue (SQ)   │                 │   Queue (EQ)      │
-    │  ─────────    │                 │   ─────────       │
-    │  Op::UserTurn │                 │  TurnStarted      │
-    │  Op::Approval │                 │  AgentMessage      │
-    │  Op::Compact  │                 │  ApprovalRequest   │
-    │  Op::Interrupt│                 │  TurnComplete      │
-    │  Op::Undo     │                 │  TokenUsage        │
-    │  Op::Shutdown │                 │  ContextCompacted  │
-    └──────┬───────┘                  └────────▲─────────┘
-           │                                   │
-           ▼                                   │
-    ┌──────────────────────────────────────────┴──────────┐
-    │                  SESSION LOOP                        │
-    │                                                      │
-    │   ┌─────────────┐  ┌──────────────┐  ┌──────────┐   │
-    │   │  Context     │  │  Tool        │  │  Sandbox │   │
-    │   │  Manager     │  │  Orchestrator│  │  Manager │   │
-    │   └─────────────┘  └──────────────┘  └──────────┘   │
-    └──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph UI["User Interface (TUI, Web, CLI, Test Harness)"]
+        UIH["User Input Handler"]
+        EDR["Event Display Renderer"]
+    end
+    subgraph SQ["Submission Queue (SQ)"]
+        direction TB
+        SQ1["Op::UserTurn"]
+        SQ2["Op::Approval"]
+        SQ3["Op::Compact"]
+        SQ4["Op::Interrupt"]
+        SQ5["Op::Undo"]
+        SQ6["Op::Shutdown"]
+    end
+    subgraph EQ["Event Queue (EQ)"]
+        direction TB
+        EQ1["TurnStarted"]
+        EQ2["AgentMessage"]
+        EQ3["ApprovalRequest"]
+        EQ4["TurnComplete"]
+        EQ5["TokenUsage"]
+        EQ6["ContextCompacted"]
+    end
+    subgraph SL["Session Loop"]
+        CM["Context Manager"]
+        TO["Tool Orchestrator"]
+        SM["Sandbox Manager"]
+    end
+    UIH -->|"Op messages"| SQ
+    SQ --> SL
+    SL -->|"Event messages"| EQ
+    EQ --> EDR
 ```
 
 ---
@@ -370,22 +370,13 @@ When tool calls execute in parallel (via `join_all`), the borrow checker ensures
 no two tasks hold mutable references to the same data. Shared state must go through
 `Arc<Mutex<_>>` or `Arc<RwLock<_>>`, making the synchronization explicit and auditable.
 
-```
-Rust's Type System Guarantees for Message-Passing:
-
-  ┌─────────────────────────────────────────────────┐
-  │  Op enum + exhaustive match                      │
-  │  → Every operation is handled                    │
-  ├─────────────────────────────────────────────────┤
-  │  Send + 'static bounds on channel types          │
-  │  → Messages are safe to send across threads      │
-  ├─────────────────────────────────────────────────┤
-  │  Ownership transfer via channel send             │
-  │  → No aliasing of in-flight messages             │
-  ├─────────────────────────────────────────────────┤
-  │  Borrow checker on parallel tool execution       │
-  │  → No data races in concurrent tool calls        │
-  └─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Op enum + exhaustive match\n→ Every operation is handled"]
+    B["Send + 'static bounds on channel types\n→ Messages are safe to send across threads"]
+    C["Ownership transfer via channel send\n→ No aliasing of in-flight messages"]
+    D["Borrow checker on parallel tool execution\n→ No data races in concurrent tool calls"]
+    A --> B --> C --> D
 ```
 
 ---
@@ -395,40 +386,22 @@ Rust's Type System Guarantees for Message-Passing:
 A complete turn involves multiple message exchanges between the UI and the session loop.
 Here is the full lifecycle:
 
-```
-User types prompt
-       │
-       ▼
-┌──────────────┐     Op::UserTurn        ┌────────────────┐
-│     TUI      │ ──────────────────────▶ │  Session Loop   │
-└──────────────┘                          └───────┬────────┘
-       ▲                                          │
-       │  Event::TurnStarted                      │
-       ◄──────────────────────────────────────────┘
-       │                                          │
-       │  Event::AgentMessage (streaming)         │ Build prompt,
-       ◄──────────────────────────────────────────┤ stream response
-       │  Event::AgentMessage (streaming)         │
-       ◄──────────────────────────────────────────┤
-       │                                          │
-       │  Event::ExecApprovalRequest              │ Tool call needs
-       ◄──────────────────────────────────────────┤ approval
-       │                                          │
-       │     Op::ExecApproval(Approve)            │ ◄── loop blocks here
-       ├──────────────────────────────────────────▶    waiting for approval
-       │                                          │
-       │                                          │ Execute tool in sandbox
-       │                                          │ Inject result into context
-       │                                          │ Continue model turn
-       │                                          │
-       │  Event::AgentMessage (final)             │
-       ◄──────────────────────────────────────────┤
-       │                                          │
-       │  Event::TokenUsage                       │
-       ◄──────────────────────────────────────────┤
-       │                                          │
-       │  Event::TurnComplete                     │
-       ◄──────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant TUI as TUI
+    participant SL as Session Loop
+
+    TUI->>SL: Op::UserTurn
+    SL-->>TUI: Event::TurnStarted
+    SL-->>TUI: Event::AgentMessage (streaming)
+    SL-->>TUI: Event::AgentMessage (streaming)
+    SL-->>TUI: Event::ExecApprovalRequest
+    Note over SL: blocks, waiting for approval
+    TUI->>SL: Op::ExecApproval(Approve)
+    Note over SL: Execute tool in sandbox\nInject result into context\nContinue model turn
+    SL-->>TUI: Event::AgentMessage (final)
+    SL-->>TUI: Event::TokenUsage
+    SL-->>TUI: Event::TurnComplete
 ```
 
 **Step-by-step walkthrough:**
@@ -624,24 +597,13 @@ requests simultaneously, and approvals can be resolved in any order.
 Context compaction is critical for long-running agentic sessions that may accumulate
 hundreds of thousands of tokens across many turns.
 
-```
-Context Window Lifecycle:
-
-  0%                    90%              100%
-  ├─────────────────────┼────────────────┤
-  │  Active context      │  Danger zone   │
-  │                      │                │
-  │  ◄── normal ops ──► │                │
-  │                      ▲                │
-  │                      │                │
-  │              Compaction triggers here  │
-  │                                       │
-  │  After compaction:                    │
-  │  ┌────────────┬──────────────────────┐│
-  │  │  Summary   │  Recent turns        ││
-  │  │  (~10%)    │  (preserved)         ││
-  │  └────────────┴──────────────────────┘│
-  └───────────────────────────────────────┘
+```mermaid
+flowchart LR
+    A["0% – Start"] --> B["Active Context<br/>normal ops"]
+    B --> C{"90% Threshold<br/>Compaction Trigger"}
+    C -->|continue| D["Danger Zone<br/>90–100%"]
+    C -->|compact| E["Compacted Context<br/>Summary ~10%<br/>+ Recent turns preserved"]
+    E --> B
 ```
 
 **How it works:**
@@ -751,27 +713,15 @@ In the Codex CLI architecture:
 When a task is too complex for a single agent or requires isolated exploration, the
 main agent can spawn sub-agents via the `codex` tool or the `/fork` command.
 
-```
-Main Agent Session Loop
-       │
-       │  codex tool call or /fork
-       ▼
-┌──────────────────────────┐
-│  Sub-Agent Spawn Process │
-│                          │
-│  1. Reserve spawn slot   │ ◄── CAS on AtomicUsize counter
-│     (max concurrency)    │     (prevents unbounded spawning)
-│                          │
-│  2. Create config        │ ◄── Inherit parent config with
-│     with overrides       │     role/policy overrides
-│                          │
-│  3. Spawn CodexThread    │ ◄── New SQ/EQ pair, own context
-│     with own context     │
-│                          │
-│  4. Await completion     │ ◄── Parent blocks or polls
-│                          │
-│  5. Release spawn slot   │
-└──────────────────────────┘
+```mermaid
+flowchart TD
+    MA["Main Agent Session Loop"]
+    MA -->|"codex tool call or /fork"| SP["Sub-Agent Spawn Process"]
+    SP --> S1["1. Reserve spawn slot\n(CAS on AtomicUsize counter,\nprevents unbounded spawning)"]
+    S1 --> S2["2. Create config with overrides\n(inherit parent config with role/policy)"]
+    S2 --> S3["3. Spawn CodexThread\nwith own SQ/EQ pair and context"]
+    S3 --> S4["4. Await completion\n(parent blocks or polls)"]
+    S4 --> S5["5. Release spawn slot"]
 ```
 
 **Spawn slot reservation** uses compare-and-swap (CAS) on an atomic counter to prevent
@@ -870,42 +820,21 @@ the events and how approval decisions are made.
 Long-running sessions can be persisted to disk and resumed later. The persistence format
 is JSONL (one JSON object per line), stored in `~/.codex/sessions/`.
 
-```
-Session Persistence and Resume:
-
-  During execution:
-  ┌─────────────────────────────────────────┐
-  │  Session Loop                            │
-  │                                          │
-  │  Op::UserTurn ──► process ──► Event      │──► JSONL append
-  │  Op::Approval ──► process ──► Event      │──► JSONL append
-  │  Tool result   ──► context ──► snapshot  │──► JSONL append
-  └─────────────────────────────────────────┘
-                                      │
-                                      ▼
-                        ~/.codex/sessions/<id>.jsonl
-                        ┌──────────────────────┐
-                        │ {"type":"user",...}   │
-                        │ {"type":"assistant"..}│
-                        │ {"type":"tool_call"..}│
-                        │ {"type":"tool_res"...}│
-                        │ {"type":"compaction"} │
-                        │ ...                   │
-                        └──────────────────────┘
-
-  During resume:
-  ┌──────────────────────────┐
-  │  Load JSONL file          │
-  │                           │
-  │  For each line:           │
-  │    deserialize ──► Item   │
-  │    replay into Context    │ ──► ContextManager rebuilds state
-  │                           │
-  │  For sub-agent refs:      │
-  │    recursively resume     │ ──► Load sub-agent JSONL, replay
-  │                           │
-  │  Session ready            │ ──► User can continue conversation
-  └──────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph exec["During execution"]
+        SL2["Session Loop"]
+        SL2 -->|"Op::UserTurn → process → Event"| J1["JSONL append"]
+        SL2 -->|"Op::Approval → process → Event"| J2["JSONL append"]
+        SL2 -->|"Tool result → context → snapshot"| J3["JSONL append"]
+        J1 & J2 & J3 --> FILE["~/.codex/sessions/id.jsonl\n{type:user} {type:assistant}\n{type:tool_call} {type:tool_res}\n{type:compaction} ..."]
+    end
+    subgraph resume["During resume"]
+        LOAD["Load JSONL file"]
+        LOAD -->|"deserialize → replay into Context"| CTX["ContextManager rebuilds state"]
+        LOAD -->|"sub-agent refs → recursively resume"| SUB["Load sub-agent JSONL, replay"]
+        CTX & SUB --> READY["Session ready → user can continue"]
+    end
 ```
 
 ```rust

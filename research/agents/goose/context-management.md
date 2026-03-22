@@ -232,33 +232,28 @@ docs/setup.md       # Referenced but not auto-included
 
 ## Context Flow Diagram
 
-```
-Session Start
-    │
-    ├── Load GooseHints (.goosehints, AGENTS.md)
-    ├── Build system prompt (base + hints)
-    │
-    ▼
-Each Turn
-    │
-    ├── Check proactive compaction (>80% context used?)
-    │   └── Yes → compact_messages() → HistoryReplaced
-    │
-    ├── Inject MOIM context (per-extension dynamic context)
-    │
-    ├── Filter messages (agent_visible only)
-    │
-    ├── Send to LLM
-    │   ├── Success → process response
-    │   └── ContextLengthExceeded → emergency compact (≤2 attempts)
-    │
-    ├── Background: maybe_summarize_tool_pairs()
-    │   ├── Identify old tool request/response pairs
-    │   ├── Summarize each pair via LLM
-    │   ├── Mark originals as agent-invisible
-    │   └── Insert summaries
-    │
-    └── Persist all messages (originals + summaries)
+```mermaid
+flowchart TD
+    SS[Session Start] --> GH["Load GooseHints (.goosehints, AGENTS.md)"]
+    GH --> BSP["Build system prompt (base + hints)"]
+    BSP --> ET
+
+    ET([Each Turn]) --> PC{"Proactive compaction?\n> 80% context used?"}
+    PC -->|yes| CM["compact_messages() → HistoryReplaced"]
+    CM --> MOIM
+    PC -->|no| MOIM[Inject MOIM context]
+    MOIM --> FM[Filter messages: agent_visible only]
+    FM --> LLM[Send to LLM]
+    LLM -->|success| PR[Process response]
+    LLM -->|ContextLengthExceeded| EC["Emergency compact (≤2 attempts)"]
+    EC --> LLM
+    PR --> BG["Background: maybe_summarize_tool_pairs()"]
+    BG --> ID[Identify old tool request/response pairs]
+    ID --> SUM[Summarize each pair via LLM]
+    SUM --> INV[Mark originals as agent-invisible]
+    INV --> INS[Insert summaries]
+    INS --> PERS[Persist all messages]
+    PERS --> ET
 ```
 
 ## Key Design Decisions

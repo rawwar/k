@@ -125,14 +125,9 @@ multi-model system that breaks coding tasks into specialized stages.
 
 **Cascade architecture:**
 
-```
-User Request
-    │
-    ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Planning    │────▶│  Execution   │────▶│  Validation  │
-│   (Large LM)  │     │  (Fast LM)   │     │  (Large LM)  │
-└──────────────┘     └──────────────┘     └──────────────┘
+```mermaid
+flowchart LR
+    A["User Request"] --> B["Planning\n(Large LM)"] --> C["Execution\n(Fast LM)"] --> D["Validation\n(Large LM)"]
 ```
 
 - **Planning stage:** Uses a large model (Claude/GPT-4o class) to understand the task,
@@ -265,28 +260,14 @@ workflows. Key advantages over Chat Completions:
 
 **Codex agent architecture:**
 
-```
-User task (via ChatGPT or API)
-    │
-    ▼
-┌────────────────────────┐
-│   Codex Orchestrator    │
-│   (Responses API)       │
-│                        │
-│  ┌──────────────────┐  │
-│  │  codex-mini-2025 │  │   ← Optimized for code tasks
-│  │  -03-26          │  │
-│  └──────────────────┘  │
-│                        │
-│  Tools:                │
-│  - file read/write     │
-│  - terminal commands   │
-│  - web search          │
-│  - code interpreter    │
-│                        │
-│  Sandbox: microVM      │
-│  (isolated container)  │
-└────────────────────────┘
+```mermaid
+flowchart TD
+    A["User task\n(via ChatGPT or API)"] --> B
+    subgraph B["Codex Orchestrator (Responses API)"]
+        C["codex-mini-2025-03-26\n(optimized for code tasks)"]
+        D["Tools: file read/write · terminal commands\nweb search · code interpreter"]
+        E["Sandbox: microVM\n(isolated container)"]
+    end
 ```
 
 - **Model:** `codex-mini` — a reasoning model optimized for software engineering tasks.
@@ -379,27 +360,13 @@ response = client.messages.create(
 
 **Agentic loop:**
 
-```
-User message
-    │
-    ▼
-┌─────────────────┐
-│  Claude thinks   │ ← Extended thinking (internal reasoning)
-│  (budget_tokens) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  Tool call       │────▶│  Tool execution  │
-│  (bash, edit,    │     │  (client-side)   │
-│   read, search)  │     └────────┬────────┘
-└─────────────────┘              │
-         ▲                       │
-         └───────────────────────┘
-         (loop until task complete)
-         │
-         ▼
-    Final response
+```mermaid
+flowchart TD
+    A["User message"] --> B["Claude thinks\n(budget_tokens)\n— extended thinking —"]
+    B --> C["Tool call\n(bash, edit, read, search)"]
+    C --> D["Tool execution\n(client-side)"]
+    D -->|"loop until task complete"| B
+    B --> E["Final response"]
 ```
 
 **Key differences from Codex:**

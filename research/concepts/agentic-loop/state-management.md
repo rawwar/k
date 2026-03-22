@@ -9,9 +9,11 @@ O(n²) in the worst case: each new turn pays for every previous turn.
 
 The approaches form a spectrum from trivially simple to highly structured:
 
-```
-Linear List ──→ Wrapped Messages ──→ Event Sourcing ──→ Checkpointed State
- (append)        (metadata)           (projections)      (time-travel)
+```mermaid
+flowchart LR
+    A["Linear List\n(append)"] --> B["Wrapped Messages\n(metadata)"]
+    B --> C["Event Sourcing\n(projections)"]
+    C --> D["Checkpointed State\n(time-travel)"]
 ```
 
 State management directly impacts:
@@ -226,15 +228,17 @@ settings and migration paths."
 
 Goose performs summarization in the background, not blocking the main loop:
 
-```
-Main Thread                    Background Thread
-───────────                    ─────────────────
-step() → LLM call             
-  ← response                  
-check token count              
-  if > 80%: trigger ──────────→ summarize(old_messages)
-continue stepping                ← summary ready
-next LLM call uses summary ←── inject summary, mark old invisible
+```mermaid
+sequenceDiagram
+    participant MT as Main Thread
+    participant BT as Background Thread
+    MT->>MT: step() → LLM call
+    MT->>MT: ← response
+    MT->>MT: check token count
+    MT->>BT: if > 80%: trigger summarize(old_messages)
+    Note over MT: continue stepping
+    BT->>MT: inject summary, mark old invisible
+    MT->>MT: next LLM call uses summary
 ```
 
 This avoids the latency hit of synchronous summarization, though it means one or two steps
@@ -327,19 +331,12 @@ from reading state (the agent's prompt construction and the UI).
 
 The event-sourced design enables several powerful patterns:
 
-```
-                    ┌─────────────────────────────┐
-                    │        EventStream           │
-                    │  [E₀, E₁, E₂, ..., Eₙ]     │
-                    └──────┬──────┬───────┬────────┘
-                           │      │       │
-              ┌────────────┘      │       └────────────┐
-              ▼                   ▼                     ▼
-     ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐
-     │ Condensation │    │  Delegation  │    │  External        │
-     │ (compress    │    │ (filtered    │    │  Monitoring      │
-     │  old events) │    │  child view) │    │  (subscriptions) │
-     └─────────────┘    └──────────────┘    └──────────────────┘
+```mermaid
+flowchart TD
+    ES["EventStream\n[E₀, E₁, E₂, ..., Eₙ]"]
+    ES --> CO["Condensation\ncompress old events"]
+    ES --> DE["Delegation\nfiltered child view"]
+    ES --> EM["External Monitoring\nsubscriptions"]
 ```
 
 1. **Condensation without destroying originals**: older events are summarized into a
@@ -434,19 +431,11 @@ This enables session resumption across terminal restarts: load the JSONL, replay
 
 Claude Code takes checkpointing further by capturing both **conversation state** and **code state**:
 
-```
-Checkpoint at step 15:
-┌──────────────────────────────────┐
-│ Conversation State               │
-│  - Messages 0-15                 │
-│  - Current plan                  │
-│  - Tool results cache            │
-├──────────────────────────────────┤
-│ Code State                       │
-│  - Git stash or shadow copy      │
-│  - Modified files snapshot       │
-│  - Working directory state       │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    CP["Checkpoint at step 15"]
+    CP --> CS["Conversation State\n- Messages 0–15\n- Current plan\n- Tool results cache"]
+    CP --> COD["Code State\n- Git stash or shadow copy\n- Modified files snapshot\n- Working directory state"]
 ```
 
 **User rewind**: the user can jump back to any checkpoint, restoring:
@@ -494,10 +483,12 @@ with SqliteSaver.from_conn_string("checkpoints.db") as saver:
 **Human-in-the-loop via checkpoints**: LangGraph uses checkpoints as natural interrupt points.
 When a graph node is marked as requiring human approval:
 
-```
-Node A ──→ [CHECKPOINT] ──→ Human reviews ──→ [RESUME] ──→ Node B
-              │                                    │
-              └── State saved to DB                └── State loaded, possibly modified
+```mermaid
+flowchart LR
+    NA["Node A"] --> CP["CHECKPOINT\n(state saved to DB)"]
+    CP --> HR["Human reviews\n(may modify state)"]
+    HR --> RS["RESUME\n(state loaded)"]
+    RS --> NB["Node B"]
 ```
 
 The graph pauses, persists its complete state, and waits. Hours or days later, a human
@@ -539,13 +530,20 @@ the entire conversation—impractical for long sessions.
 Different agents handle knowledge accumulation differently:
 
 **Capy's strict handoff**:
-```
-Captain Agent                    Build Agent
-─────────────                    ───────────
-Analyze task                     
-Write specification ────────────→ Receive spec (SOLE input)
-                                  Execute plan
-                                  Return result
+```mermaid
+flowchart LR
+    subgraph CA["Captain Agent"]
+        A1["Analyze task"]
+        A2["Write specification"]
+    end
+    subgraph BA["Build Agent"]
+        B1["Receive spec\n(SOLE input)"]
+        B2["Execute plan"]
+        B3["Return result"]
+    end
+    A1 --> A2
+    A2 -->|"specification"| B1
+    B1 --> B2 --> B3
 ```
 The Captain's output (a structured specification) is the Build agent's entire input.
 No shared mutable state, no ambient knowledge—everything the Build agent needs must be
@@ -569,11 +567,12 @@ This file persists across sessions, accumulating project-specific knowledge that
 otherwise need to be re-discovered each time.
 
 **SageAgent's pipeline carry-forward**:
-```
-TaskAnalysis → PlanGeneration → CodeImplementation → TestGeneration
-     │              │                   │                   │
-     └──────────────┴───────────────────┴───────────────────┘
-                    Output of each stage feeds into next
+```mermaid
+flowchart LR
+    TA["TaskAnalysis"] --> PG["PlanGeneration"]
+    PG --> CI["CodeImplementation"]
+    CI --> TG["TestGeneration"]
+    TA & PG & CI -->|"output feeds into next"| TG
 ```
 
 Each pipeline stage produces structured output that's consumed by the next stage,
@@ -619,19 +618,17 @@ how do agents share information without corrupting each other's context?
 
 ### ForgeCode: Shared Context with Agent Switching
 
-```
-┌──────────┐     ┌──────────┐     ┌──────────┐
-│   Muse   │ ←─→ │  Forge   │ ←─→ │   Sage   │
-│ (design) │     │ (build)  │     │ (review) │
-└────┬─────┘     └────┬─────┘     └────┬─────┘
-     │                │                │
-     └────────────────┴────────────────┘
-                      │
-              ┌───────┴───────┐
-              │  Shared State │
-              │  - todo_write │
-              │  - context    │
-              └───────────────┘
+```mermaid
+flowchart TD
+    Muse["Muse\n(design)"]
+    Forge["Forge\n(build)"]
+    Sage["Sage\n(review)"]
+    SS["Shared State\n- todo_write\n- context"]
+    Muse <--> Forge
+    Forge <--> Sage
+    Muse --> SS
+    Forge --> SS
+    Sage --> SS
 ```
 
 - Context preserved across agent switches (Muse → Forge → Sage)
@@ -640,25 +637,15 @@ how do agents share information without corrupting each other's context?
 
 ### Ante: Independent Contexts
 
-```
-                  ┌─────────────┐
-                  │ Meta-Agent  │
-                  │ (orchestr.) │
-                  └──────┬──────┘
-                         │ fan-out
-            ┌────────────┼────────────┐
-            ▼            ▼            ▼
-     ┌────────────┐ ┌────────────┐ ┌────────────┐
-     │ Sub-Agent₁ │ │ Sub-Agent₂ │ │ Sub-Agent₃ │
-     │ (own ctx)  │ │ (own ctx)  │ │ (own ctx)  │
-     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-           │               │               │
-           └───────────────┴───────────────┘
-                           │ fan-in
-                    ┌──────┴──────┐
-                    │ Meta-Agent  │
-                    │ (aggregate) │
-                    └─────────────┘
+```mermaid
+flowchart TD
+    MA1["Meta-Agent\n(orchestrator)"]
+    MA1 -->|"fan-out"| SA1["Sub-Agent₁\n(own ctx)"]
+    MA1 -->|"fan-out"| SA2["Sub-Agent₂\n(own ctx)"]
+    MA1 -->|"fan-out"| SA3["Sub-Agent₃\n(own ctx)"]
+    SA1 -->|"fan-in"| MA2["Meta-Agent\n(aggregate)"]
+    SA2 -->|"fan-in"| MA2
+    SA3 -->|"fan-in"| MA2
 ```
 
 - Independent contexts per sub-agent: each has its own message history
@@ -668,14 +655,13 @@ how do agents share information without corrupting each other's context?
 
 ### Capy: Strict Isolation
 
-```
-Captain ──spec──→ Build
-   │                │
-   │ No shared      │ No communication
-   │ mutable state  │ mid-execution
-   │                │
-   └────────────────┘
-         Boundary
+```mermaid
+flowchart LR
+    subgraph Boundary["Strict Isolation Boundary"]
+        CA["Captain\nNo shared mutable state"]
+        BA["Build\nNo mid-execution communication"]
+    end
+    CA -->|"spec — sole interface"| BA
 ```
 
 - The Captain's specification is the **sole interface** to the Build agent
@@ -773,12 +759,11 @@ class CondensedObservation(Observation):
 
 The controller applies condensation as part of the normal event processing loop:
 
-```
-Events: [E₀, E₁, E₂, ..., E₂₀, CondenseAction, E₂₂, E₂₃, ...]
-                                       │
-                                       ▼
-Projected: [CondensedSummary(E₀..E₂₀), E₂₂, E₂₃, ...]
-Original:  [E₀, E₁, E₂, ..., E₂₀, CondenseAction, E₂₂, E₂₃, ...]  ← preserved
+```mermaid
+flowchart TD
+    A["Events: E₀ E₁ E₂ … E₂₀ CondenseAction E₂₂ E₂₃ …"]
+    A -->|project| B["Projected view:\nCondensedSummary(E₀..E₂₀), E₂₂, E₂₃, …"]
+    A -->|preserve| C["Original stream: unchanged\nE₀ E₁ … E₂₀ CondenseAction E₂₂ E₂₃ …"]
 ```
 
 **Key difference from summarization**: the original events are never destroyed. The condensed
@@ -861,10 +846,10 @@ applied to conversation state rather than code.
 
 **Claude Code's checkpoints function like git commits**:
 
-```
-main:     C₀ ──→ C₁ ──→ C₂ ──→ C₃ ──→ C₄  (current)
-                          │
-branch:                   └──→ C₂' ──→ C₃'  (alternative approach)
+```mermaid
+flowchart LR
+    C0["C₀"] --> C1["C₁"] --> C2["C₂"] --> C3["C₃"] --> C4["C₄\ncurrent"]
+    C2 --> C2p["C₂'"] --> C3p["C₃'\nalternative approach"]
 ```
 
 - Each checkpoint is a snapshot (commit) of conversation + code state
@@ -921,15 +906,15 @@ The format choice reflects priorities:
 
 ### When to Use What
 
-```
-Task Duration          Recommended Approach
-─────────────          ─────────────────────
-< 20 steps             Linear list (don't over-engineer)
-20-100 steps           Conversation + metadata with summarization
-100+ steps             Event sourcing or checkpointing
-Multi-agent            Shared state with explicit interfaces
-Production system      Full checkpointing with persistence
-Research/training      Linear list (perfect trajectories)
+```mermaid
+flowchart TD
+    S{{"Select approach by task type"}}
+    S -->|"< 20 steps"| A["Linear list\n(don't over-engineer)"]
+    S -->|"20–100 steps"| B["Conversation + metadata\nwith summarization"]
+    S -->|"100+ steps"| C["Event sourcing\nor checkpointing"]
+    S -->|"Multi-agent"| D["Shared state\nwith explicit interfaces"]
+    S -->|"Production system"| E["Full checkpointing\nwith persistence"]
+    S -->|"Research / training"| F["Linear list\n(perfect trajectories)"]
 ```
 
 ---

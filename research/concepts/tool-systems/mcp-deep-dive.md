@@ -19,17 +19,27 @@ Cursor, custom agents) and **M** external systems (GitHub, Jira, databases,
 file systems, monitoring), you needed **N × M** individual connectors. Each
 connector had its own authentication model, data format, and error handling.
 
-```
-Without MCP                          With MCP
-
-  App A ──┬── System 1                App A ──┐
-          ├── System 2                App B ──┤     ┌── System 1
-          └── System 3                App C ──┼─MCP─┤── System 2
-  App B ──┬── System 1                App D ──┘     └── System 3
-          ├── System 2
-          └── System 3                N + M connectors (linear)
-                                      instead of N × M (quadratic)
-  N × M connectors (quadratic)
+```mermaid
+flowchart LR
+    subgraph without["Without MCP — N×M connections"]
+        direction LR
+        A1[App A] --> S1[System 1]
+        A1 --> S2[System 2]
+        A1 --> S3[System 3]
+        A2[App B] --> S1
+        A2 --> S2
+        A2 --> S3
+    end
+    subgraph with["With MCP — N+M connections"]
+        direction LR
+        B1[App A] --> MCP
+        B2[App B] --> MCP
+        B3[App C] --> MCP
+        B4[App D] --> MCP
+        MCP --> T1[System 1]
+        MCP --> T2[System 2]
+        MCP --> T3[System 3]
+    end
 ```
 
 This is the same problem the software industry has solved before — with USB for
@@ -153,19 +163,16 @@ capabilities (tools, resources, prompts) via the MCP protocol. Servers are
 designed to be focused: one server for file operations, another for Git,
 another for database queries.
 
-```
-┌─────────────────────────────────────────────┐
-│                    HOST                       │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Client 1 │  │ Client 2 │  │ Client 3 │   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
-│       │              │              │         │
-└───────┼──────────────┼──────────────┼─────────┘
-        │              │              │
-   ┌────▼────┐   ┌────▼────┐   ┌────▼────┐
-   │ Server  │   │ Server  │   │ Server  │
-   │ (Files) │   │  (Git)  │   │  (DB)   │
-   └─────────┘   └─────────┘   └─────────┘
+```mermaid
+flowchart TD
+    subgraph HOST["HOST"]
+        C1[Client 1]
+        C2[Client 2]
+        C3[Client 3]
+    end
+    C1 --> S1["Server<br/>(Files)"]
+    C2 --> S2["Server<br/>(Git)"]
+    C3 --> S3["Server<br/>(DB)"]
 ```
 
 ### Capability Negotiation
@@ -199,22 +206,23 @@ just Tools and add Resources or Prompts later.
 
 Every MCP session follows a defined lifecycle:
 
-```
-Client                              Server
-  │                                    │
-  │─── initialize ────────────────────▶│  Phase 1: Initialization
-  │◀── initialize result ─────────────│  (exchange capabilities)
-  │─── notifications/initialized ────▶│
-  │                                    │
-  │◀── tools/list, resources/list ────│  Phase 2: Operation
-  │─── tools/call ────────────────────▶│  (normal message exchange)
-  │◀── result ─────────────────────────│
-  │                                    │
-  │─── ping ──────────────────────────▶│  Phase 3: Keep-alive
-  │◀── pong ───────────────────────────│  (optional)
-  │                                    │
-  │─── shutdown (or close transport) ─▶│  Phase 4: Shutdown
-  │                                    │
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    note over C,S: Phase 1: Initialization
+    C->>S: initialize
+    S->>C: initialize result
+    C->>S: notifications/initialized
+    note over C,S: Phase 2: Operation
+    S->>C: tools/list, resources/list
+    C->>S: tools/call
+    S->>C: result
+    note over C,S: Phase 3: Keep-alive (optional)
+    C->>S: ping
+    S->>C: pong
+    note over C,S: Phase 4: Shutdown
+    C->>S: shutdown (or close transport)
 ```
 
 1. **Initialize** — Client sends `initialize` with its name, version, and
@@ -280,16 +288,11 @@ communicates over standard I/O streams:
 - **Logging**: Server writes human-readable diagnostics to **stderr**
 - **Framing**: Messages are delimited by **newlines** (`\n`)
 
-```
-┌─────────────┐         stdin          ┌─────────────┐
-│             │ ──── JSON-RPC ──────▶  │             │
-│   Client    │                         │   Server    │
-│   Process   │ ◀─── JSON-RPC ───────  │  (child)    │
-│             │         stdout          │             │
-└─────────────┘                         └──────┬──────┘
-                                               │ stderr
-                                               ▼
-                                        (diagnostic logs)
+```mermaid
+flowchart LR
+    C["Client Process"] -->|"stdin — JSON-RPC"| S["Server (child)"]
+    S -->|"stdout — JSON-RPC"| C
+    S -->|"stderr"| L["diagnostic logs"]
 ```
 
 **Advantages**: Zero configuration, no networking, inherits process lifecycle.
@@ -324,18 +327,12 @@ replace the earlier SSE-only transport.
 - **Server-initiated messages**: Server can open SSE streams on **GET**
   requests to push notifications to the Client
 
-```
-┌─────────────┐                          ┌─────────────┐
-│             │  POST /mcp               │             │
-│   Client    │  ── JSON-RPC body ─────▶ │   Server    │
-│             │                          │  (HTTP)     │
-│             │  ◀── JSON response ───── │             │
-│             │    or SSE stream          │             │
-│             │                          │             │
-│             │  GET /mcp                │             │
-│             │  ◀── SSE stream ──────── │             │
-│             │  (server-initiated msgs) │             │
-└─────────────┘                          └─────────────┘
+```mermaid
+flowchart LR
+    C[Client] -->|"POST /mcp — JSON-RPC body"| S["Server (HTTP)"]
+    S -->|"JSON response or SSE stream"| C
+    C -->|"GET /mcp"| S
+    S -->|"SSE stream (server-initiated)"| C
 ```
 
 ### Session Management
@@ -348,21 +345,16 @@ Streamable HTTP uses the **`Mcp-Session-Id`** header for session tracking:
 4. Server can reject requests with missing or invalid session IDs (HTTP 404)
 5. Client can terminate a session with HTTP DELETE to the endpoint
 
-```
-Client                                  Server
-  │                                       │
-  │── POST /mcp (initialize) ───────────▶│
-  │◀── 200 OK ───────────────────────────│
-  │    Mcp-Session-Id: sess-abc-123       │
-  │                                       │
-  │── POST /mcp ─────────────────────────▶│
-  │   Mcp-Session-Id: sess-abc-123        │
-  │◀── 200 OK (SSE stream) ──────────────│
-  │                                       │
-  │── DELETE /mcp ───────────────────────▶│
-  │   Mcp-Session-Id: sess-abc-123        │
-  │◀── 200 OK ───────────────────────────│
-  │                                       │
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: POST /mcp (initialize)
+    S->>C: 200 OK, Mcp-Session-Id: sess-abc-123
+    C->>S: POST /mcp (Mcp-Session-Id: sess-abc-123)
+    S->>C: 200 OK (SSE stream)
+    C->>S: DELETE /mcp (Mcp-Session-Id: sess-abc-123)
+    S->>C: 200 OK
 ```
 
 ### Resumability
@@ -426,17 +418,13 @@ MCP does **not replace** function calling — it builds on top of it:
 5. The Server executes the tool and returns results
 6. The Host feeds results back to the LLM
 
-```
-User ─▶ Host ─▶ LLM API (with function definitions from MCP)
-                    │
-                    ▼ (LLM returns function_call)
-         Host routes call to MCP Client
-                    │
-                    ▼
-              MCP Server executes tool
-                    │
-                    ▼
-         Host sends result back to LLM
+```mermaid
+flowchart TD
+    A[User] --> B[Host]
+    B --> C["LLM API (with function definitions from MCP)"]
+    C -->|"LLM returns function_call"| D["Host routes call to MCP Client"]
+    D --> E["MCP Server executes tool"]
+    E --> F["Host sends result back to LLM"]
 ```
 
 ### When to Use Which
@@ -1006,18 +994,10 @@ themselves be MCP clients, connecting to other servers. This enables:
 - **Orchestration**: A coordinator server delegates to specialist servers
 - **Federation**: Multiple servers present a unified interface
 
-```
-                    ┌──────────────────┐
-                    │  Orchestrator    │
-                    │  MCP Server      │
-                    └─────┬──────┬─────┘
-                          │      │
-               ┌──────────┘      └──────────┐
-               ▼                             ▼
-     ┌─────────────────┐          ┌─────────────────┐
-     │  Analysis Server │          │  Storage Server  │
-     │  (MCP Server)    │          │  (MCP Server)    │
-     └─────────────────┘          └─────────────────┘
+```mermaid
+flowchart TD
+    O["Orchestrator MCP Server"] --> A["Analysis Server<br/>(MCP Server)"]
+    O --> S["Storage Server<br/>(MCP Server)"]
 ```
 
 ### Protocol Evolution

@@ -16,53 +16,25 @@ the runtime executes actions in a sandboxed environment and publishes `Observati
 
 ## Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      AgentController                        │
-│                                                             │
-│  ┌───────────┐    step()    ┌──────────────┐               │
-│  │ AgentState │◄────────────│ CodeActAgent │               │
-│  │  Machine   │  returns    │   .step()    │               │
-│  └─────┬─────┘  Action      └──────┬───────┘               │
-│        │                           │                        │
-│        │  manage                   │ LLM.completion()       │
-│        │  transitions              │ + tool parsing         │
-│        ▼                           ▼                        │
-│  ┌──────────┐  publish     ┌──────────────┐               │
-│  │  Budget   │  action     │  pending_    │               │
-│  │  Limits   │◄────────────│  actions[]   │               │
-│  │  Stuck    │             └──────────────┘               │
-│  │  Detect   │                                             │
-│  └──────────┘                                              │
-└────────┬────────────────────────────────────────────────────┘
-         │ Action added to EventStream
-         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       EventStream                           │
-│                                                             │
-│   [Event₀] [Event₁] [Event₂] ... [Eventₙ]                │
-│                                                             │
-│   Subscribers:                                              │
-│     - AGENT_CONTROLLER  (on_event → drives loop)           │
-│     - RUNTIME           (on_event → executes actions)      │
-│     - SECURITY_ANALYZER (on_event → policy checks)         │
-│     - LOGGER / UI       (on_event → display)               │
-└────────┬────────────────────────────────────────────────────┘
-         │ Action dispatched to Runtime
-         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        Runtime                              │
-│                                                             │
-│  ActionExecutionClient ──HTTP POST──► ActionExecutionServer │
-│       (host side)        /execute     (sandbox container)   │
-│                          _action                            │
-│                                                             │
-│  Executes: bash, ipython, file ops, browser automation      │
-│  Returns: Observation (CmdOutputObservation, etc.)          │
-└────────┬────────────────────────────────────────────────────┘
-         │ Observation added to EventStream
-         ▼
-    Loop continues: controller calls agent.step() again
+```mermaid
+flowchart TD
+    subgraph AC["AgentController"]
+        ASM["AgentState Machine"]
+        BL["Budget Limits / Stuck Detect"]
+        PA["pending_actions[]"]
+    end
+    CA["CodeActAgent.step()"]
+    ES["EventStream\n[Event₀ Event₁ Event₂ ... Eventₙ]"]
+    AEC["ActionExecutionClient (host side)"]
+    AES["ActionExecutionServer (sandbox container)"]
+
+    CA -->|"LLM.completion() + tool parsing"| PA
+    PA -->|"returns Action"| ASM
+    AC -->|"Action added to EventStream"| ES
+    ES -->|"Action dispatched to Runtime"| AEC
+    AEC -->|"HTTP POST /execute_action"| AES
+    AES -->|"Observation"| ES
+    ES -->|"Observation in state.history"| AC
 ```
 
 ---
@@ -71,34 +43,17 @@ the runtime executes actions in a sandboxed environment and publishes `Observati
 
 The controller manages a finite state machine governing the agent lifecycle:
 
-```
-                    ┌──────────┐
-                    │   INIT   │
-                    └────┬─────┘
-                         │ _step() called
-                         ▼
-                    ┌──────────┐
-            ┌──────│ RUNNING  │◄─────────────────────┐
-            │      └────┬─────┘                       │
-            │           │                             │
-            │     ┌─────┼──────────┬─────────┐       │
-            │     │     │          │         │       │
-            │     ▼     ▼          ▼         ▼       │
-            │  ┌──────┐ ┌────────┐ ┌──────┐ ┌─────┐ │
-            │  │PAUSED│ │AWAITING│ │ ERROR│ │STOP │ │
-            │  │      │ │ _USER_ │ │      │ │ PED │ │
-            │  │      │ │ INPUT  │ │      │ │     │ │
-            │  └──┬───┘ └───┬────┘ └──────┘ └─────┘ │
-            │     │         │  user sends message     │
-            │     │         └─────────────────────────┘
-            │     │  resume
-            │     └───────────────────────────────────┘
-            │
-            │  AgentFinishAction
-            ▼
-       ┌──────────┐
-       │ FINISHED │
-       └──────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> INIT
+    INIT --> RUNNING : _step() called
+    RUNNING --> PAUSED : pause signal
+    PAUSED --> RUNNING : resume
+    RUNNING --> AWAITING_USER_INPUT : MessageAction(wait_for_response=True)
+    AWAITING_USER_INPUT --> RUNNING : user sends message
+    RUNNING --> ERROR : unrecoverable exception
+    RUNNING --> STOPPED : external stop signal
+    RUNNING --> FINISHED : AgentFinishAction
 ```
 
 **Key transitions:**
@@ -238,16 +193,16 @@ calling). OpenHands handles this by:
 This means a single LLM response generating 3 tool calls results in 3 consecutive
 `_step()` invocations without additional LLM calls — each popping from the queue.
 
-```
-LLM Response: [tool_call_1, tool_call_2, tool_call_3]
-                    │
-                    ▼
-         pending_actions = deque([action_1, action_2, action_3])
-                    │
-    step() call 1:  return action_1  (popleft)
-    step() call 2:  return action_2  (popleft, no LLM call)
-    step() call 3:  return action_3  (popleft, no LLM call)
-    step() call 4:  queue empty → new LLM call
+```mermaid
+flowchart TD
+    A["LLM Response: [tool_call_1, tool_call_2, tool_call_3]"]
+    B["pending_actions = deque([action_1, action_2, action_3])"]
+    C["step() call 1: return action_1 (popleft)"]
+    D["step() call 2: return action_2 (popleft, no LLM call)"]
+    E["step() call 3: return action_3 (popleft, no LLM call)"]
+    F["step() call 4: queue empty → new LLM call"]
+
+    A --> B --> C --> D --> E --> F
 ```
 
 ---
@@ -258,18 +213,15 @@ The `function_calling.py` module maps LLM tool call names to concrete OpenHands
 Action types. This is the translation layer between the LLM's function-calling
 interface and the internal action system.
 
-```
-┌──────────────────────┐         ┌─────────────────────────────┐
-│  LLM Tool Call Name  │────────►│  OpenHands Action Type      │
-├──────────────────────┤         ├─────────────────────────────┤
-│ execute_bash         │────────►│ CmdRunAction                │
-│ execute_ipython_cell │────────►│ IPythonRunCellAction        │
-│ str_replace_editor   │────────►│ FileEditAction / FileRead   │
-│ browser              │────────►│ BrowseInteractiveAction     │
-│ finish               │────────►│ AgentFinishAction           │
-│ think                │────────►│ AgentThinkAction            │
-│ <mcp_tool_name>      │────────►│ MCPAction                   │
-└──────────────────────┘         └─────────────────────────────┘
+```mermaid
+flowchart LR
+    EB["execute_bash"] --> CR["CmdRunAction"]
+    EI["execute_ipython_cell"] --> IP["IPythonRunCellAction"]
+    SE["str_replace_editor"] --> FE["FileEditAction / FileReadAction"]
+    BR["browser"] --> BI["BrowseInteractiveAction"]
+    FN["finish"] --> AF["AgentFinishAction"]
+    TH["think"] --> AT["AgentThinkAction"]
+    MCP["&lt;mcp_tool_name&gt;"] --> MA["MCPAction"]
 ```
 
 ### str_replace_editor Dispatch
@@ -307,32 +259,20 @@ if tool_call.function.name == 'str_replace_editor':
 When an `Action` event is published to the `EventStream`, the Runtime subscriber
 picks it up and executes it in an isolated sandbox.
 
-```
-AgentController                    EventStream                     Runtime
-     │                                │                              │
-     │  add_event(CmdRunAction)       │                              │
-     │───────────────────────────────►│                              │
-     │                                │  on_event(CmdRunAction)      │
-     │                                │─────────────────────────────►│
-     │                                │                              │
-     │                                │    ┌──────────────────────┐  │
-     │                                │    │ ActionExecutionClient │  │
-     │                                │    │  POST /execute_action │  │
-     │                                │    │  to sandbox server    │  │
-     │                                │    └──────────┬───────────┘  │
-     │                                │               │              │
-     │                                │    ┌──────────▼───────────┐  │
-     │                                │    │ ActionExecutionServer │  │
-     │                                │    │  runs bash command    │  │
-     │                                │    │  in Docker container  │  │
-     │                                │    └──────────┬───────────┘  │
-     │                                │               │              │
-     │                                │  add_event(CmdOutputObs)     │
-     │                                │◄─────────────────────────────│
-     │                                │                              │
-     │  next _step() sees             │                              │
-     │  CmdOutputObservation          │                              │
-     │  in state.history              │                              │
+```mermaid
+sequenceDiagram
+    participant AC as AgentController
+    participant ES as EventStream
+    participant AEC as ActionExecutionClient
+    participant AES as ActionExecutionServer
+
+    AC->>ES: add_event(CmdRunAction)
+    ES->>AEC: on_event(CmdRunAction)
+    AEC->>AES: POST /execute_action
+    AES->>AES: runs bash command in Docker container
+    AES-->>AEC: result
+    AEC->>ES: add_event(CmdOutputObservation)
+    ES-->>AC: next _step() sees CmdOutputObservation in state.history
 ```
 
 ### Action → Observation Type Mapping
@@ -391,34 +331,19 @@ When stuck is detected, the controller can:
 `AgentDelegateAction` enables hierarchical agent composition. A parent agent can
 spawn a child agent (e.g., `BrowsingAgent`) to handle a subtask.
 
-```
-┌──────────────────────────────────┐
-│     Parent AgentController       │
-│     (CodeActAgent)               │
-│                                  │
-│  step() returns                  │
-│  AgentDelegateAction(            │
-│    agent='BrowsingAgent',        │
-│    inputs={...}                  │
-│  )                               │
-│         │                        │
-│         ▼                        │
-│  ┌────────────────────────────┐  │
-│  │  Child AgentController     │  │
-│  │  (BrowsingAgent)           │  │
-│  │                            │  │
-│  │  Runs on NestedEventStore  │  │
-│  │  (filtered view of parent  │  │
-│  │   EventStream)             │  │
-│  │                            │  │
-│  │  Returns results via       │  │
-│  │  AgentDelegateObservation  │  │
-│  └────────────────────────────┘  │
-│         │                        │
-│         ▼                        │
-│  Parent sees observation,        │
-│  continues its own loop          │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph PAC["Parent AgentController (CodeActAgent)"]
+        ADA["step() returns AgentDelegateAction\n(agent='BrowsingAgent', inputs={...})"]
+        subgraph CAC["Child AgentController (BrowsingAgent)"]
+            NES["Runs on NestedEventStore\n(filtered view of parent EventStream)"]
+            ADO["Returns AgentDelegateObservation"]
+        end
+        CONT["Parent sees observation,\ncontinues its own loop"]
+    end
+
+    ADA --> CAC
+    CAC --> CONT
 ```
 
 The `NestedEventStore` provides isolation — the child only sees events relevant to
@@ -457,24 +382,19 @@ Sandbox timeout / crash            │ ErrorObservation           │ Agent can 
 
 ### Context Window Recovery Flow
 
-```
-agent.step(state)
-    │
-    ├── LLM.completion() raises ContextWindowExceededError
-    │
-    ▼
-condenser.condensed_history(state)
-    │
-    ├── Returns Condensation(action=CondensationAction)
-    │       │
-    │       ▼
-    │   Controller applies condensation to state
-    │   (summarizes older events, keeps recent ones)
-    │       │
-    │       ▼
-    │   Re-enter _step() with shorter history
-    │
-    └── If condensation itself fails → set ERROR state
+```mermaid
+flowchart TD
+    A["agent.step(state)"]
+    B["LLM.completion() raises ContextWindowExceededError"]
+    C["condenser.condensed_history(state)"]
+    D["Returns Condensation(action=CondensationAction)"]
+    E["Controller applies condensation to state\n(summarizes older events, keeps recent ones)"]
+    F["Re-enter _step() with shorter history"]
+    G["condensation itself fails → set ERROR state"]
+
+    A --> B --> C
+    C --> D --> E --> F
+    C -.->|"if fails"| G
 ```
 
 ---
@@ -483,62 +403,48 @@ condenser.condensed_history(state)
 
 Putting it all together, here is one full cycle from controller step to observation:
 
-```
- ┌─ AgentController._step() ────────────────────────────────────────────┐
- │                                                                       │
- │  1. Check: state == RUNNING? budget OK? iterations OK?               │
- │     └─ NO → raise error, set ERROR/STOPPED                          │
- │     └─ YES → continue                                                │
- │                                                                       │
- │  2. action = agent.step(state)                                       │
- │     │                                                                 │
- │     ├─ pending_actions not empty?                                    │
- │     │  └─ YES → return popleft() [skip LLM call]                    │
- │     │                                                                 │
- │     ├─ /exit command?                                                │
- │     │  └─ YES → return AgentFinishAction                             │
- │     │                                                                 │
- │     ├─ condenser returns Condensation?                               │
- │     │  └─ YES → return CondensationAction [controller applies]       │
- │     │                                                                 │
- │     ├─ build messages from condensed history                         │
- │     ├─ LLM.completion(messages, tools) → response                    │
- │     ├─ response_to_actions(response) → [action₁, action₂, ...]      │
- │     ├─ push all to pending_actions                                   │
- │     └─ return popleft()                                              │
- │                                                                       │
- │  3. Route the action:                                                │
- │     ├─ CondensationAction → apply to state, loop immediately         │
- │     ├─ AgentFinishAction → set FINISHED                              │
- │     ├─ AgentDelegateAction → spawn child controller                  │
- │     ├─ MessageAction(wait) → set AWAITING_USER_INPUT                 │
- │     └─ Other → publish to EventStream                                │
- │                                                                       │
- │  4. stuck_detector.check(state)                                      │
- │     └─ stuck? → raise AgentStuckInLoopError                          │
- │                                                                       │
- └───────────────────────────────────────────────────────────────────────┘
-                              │
-              Action in EventStream
-                              │
-                              ▼
- ┌─ Runtime ────────────────────────────────────────────────────────────┐
- │                                                                       │
- │  5. ActionExecutionClient receives action via on_event()             │
- │     └─ POST /execute_action to sandbox ActionExecutionServer         │
- │                                                                       │
- │  6. Sandbox executes (bash, ipython, file I/O, browser)              │
- │     └─ Returns result                                                │
- │                                                                       │
- │  7. Observation created and added to EventStream                     │
- │                                                                       │
- └───────────────────────────────────────────────────────────────────────┘
-                              │
-              Observation in EventStream
-                              │
-                              ▼
-         Next _step() sees it in state.history
-         Loop continues until FINISHED / ERROR / STOPPED
+```mermaid
+flowchart TD
+    subgraph ACS["AgentController._step()"]
+        CHK["1. Check: state==RUNNING? budget OK? iterations OK?"]
+        ERR_PRE["raise error → set ERROR/STOPPED"]
+        B["2. action = agent.step(state)"]
+        C1{{"pending_actions not empty?"}}
+        C2{{"exit command?"}}
+        C3{{"condenser returns Condensation?"}}
+        C4["Build messages → LLM call\n→ parse → push queue → popleft()"]
+        D["3. Route the action"]
+        D1["CondensationAction → apply to state, loop immediately"]
+        D2["AgentFinishAction → set FINISHED"]
+        D3["AgentDelegateAction → spawn child controller"]
+        D4["MessageAction(wait) → set AWAITING_USER_INPUT"]
+        D5["Other → publish to EventStream"]
+        E["4. stuck_detector.check(state)"]
+    end
+    subgraph RUN["Runtime"]
+        F["5. ActionExecutionClient receives action"]
+        G["6. Sandbox executes (bash, ipython, file I/O, browser)"]
+        H["7. Observation added to EventStream"]
+    end
+    NEXT["Next _step() sees Observation in state.history\nLoop continues until FINISHED / ERROR / STOPPED"]
+
+    CHK -->|NO| ERR_PRE
+    CHK -->|YES| B
+    B --> C1
+    C1 -->|YES| D
+    C1 -->|NO| C2
+    C2 -->|YES| D2
+    C2 -->|NO| C3
+    C3 -->|YES| D1
+    C3 -->|NO| C4 --> D
+    D --> D1
+    D --> D2
+    D --> D3
+    D --> D4
+    D --> D5
+    D5 --> E
+    E --> RUN
+    RUN --> F --> G --> H --> NEXT
 ```
 
 ---

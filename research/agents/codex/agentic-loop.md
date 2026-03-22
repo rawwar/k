@@ -10,61 +10,22 @@ parallel tool calls, automatic context compaction, and multi-agent sub-spawning.
 
 ## High-Level Flow
 
-```
-User Input (Op::UserTurn)
-       │
-       ▼
-┌─────────────────────┐
-│  Build Prompt        │ ◄── ContextManager.for_prompt()
-│  (history + tools    │     + ToolRouter.model_visible_specs()
-│   + system message)  │     + developer instructions
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Call Model API      │ ◄── ResponsesApiRequest → SSE stream
-│  (streaming)         │     or WebSocket connection
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Parse Response      │ ◄── ResponseItem variants:
-│  Items               │     Message, LocalShellCall, FunctionCall,
-│                      │     CustomToolCall, WebSearchCall, Reasoning
-└──────────┬──────────┘
-           │
-     ┌─────┴─────┐
-     │            │
-  Text         Tool Calls
-     │            │
-     ▼            ▼
-  Emit        ┌─────────────────────┐
-  AgentMsg    │  ToolRouter         │ ◄── build_tool_call()
-              │  (dispatch)         │
-              └──────────┬──────────┘
-                         │
-                         ▼
-              ┌─────────────────────┐
-              │  ToolOrchestrator   │ ◄── approval → sandbox → execute
-              │  (approve + run)    │
-              └──────────┬──────────┘
-                         │
-                         ▼
-              ┌─────────────────────┐
-              │  Inject Result      │ ◄── FunctionCallOutput / LocalShellOutput
-              │  into Context       │
-              └──────────┬──────────┘
-                         │
-                         ▼
-              ┌─────────────────────┐
-              │  Check Compaction   │ ◄── if tokens > auto_compact_limit
-              │  Threshold          │     → trigger remote compaction
-              └──────────┬──────────┘
-                         │
-                         ▼
-                  Loop back to
-                  "Call Model API"
-                  (next turn)
+```mermaid
+flowchart TD
+    A["User Input (Op::UserTurn)"]
+    B["Build Prompt<br/>(history + tools + system message)<br/>ContextManager.for_prompt()<br/>+ ToolRouter.model_visible_specs()"]
+    C["Call Model API (streaming)<br/>ResponsesApiRequest → SSE stream<br/>or WebSocket connection"]
+    D["Parse Response Items<br/>Message, LocalShellCall, FunctionCall,<br/>CustomToolCall, WebSearchCall, Reasoning"]
+    E["Emit AgentMsg"]
+    F["ToolRouter (dispatch)<br/>build_tool_call()"]
+    G["ToolOrchestrator (approve + run)<br/>approval → sandbox → execute"]
+    H["Inject Result into Context<br/>FunctionCallOutput / LocalShellOutput"]
+    I["Check Compaction Threshold<br/>if tokens > auto_compact_limit<br/>→ trigger remote compaction"]
+
+    A --> B --> C --> D
+    D -->|"Text"| E
+    D -->|"Tool Calls"| F --> G --> H --> I
+    I -->|"Loop back (next turn)"| C
 ```
 
 ## The Session Loop

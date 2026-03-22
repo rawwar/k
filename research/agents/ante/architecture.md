@@ -33,38 +33,24 @@ The system is fully self-contained: no JavaScript runtimes, no Python interprete
 dependencies. A single Rust binary handles everything from terminal rendering to LLM
 communication to agent orchestration.
 
-```
-┌───────────────────────────────────────────────┐
-│                  Ante CLI                      │
-│              (Terminal Interface)               │
-└──────────────────┬────────────────────────────┘
-                   │
-┌──────────────────▼────────────────────────────┐
-│              Meta-Agent                        │
-│         (Task Decomposition &                  │
-│          Agent Orchestration)                   │
-└──┬──────────┬──────────┬──────────┬───────────┘
-   │          │          │          │
-┌──▼───┐  ┌──▼───┐  ┌──▼───┐  ┌──▼───────────┐
-│ Sub  │  │ Sub  │  │ Sub  │  │ Sub          │
-│Agent │  │Agent │  │Agent │  │Agent         │
-│  A   │  │  B   │  │  C   │  │  ...         │
-└──┬───┘  └──┬───┘  └──┬───┘  └──┬───────────┘
-   │         │         │         │
-┌──▼─────────▼─────────▼─────────▼──────────────┐
-│         Lock-Free Scheduler                    │
-│    (Atomic Ops, Wait-Free Queues)              │
-└──────────────────┬────────────────────────────┘
-                   │
-┌──────────────────▼────────────────────────────┐
-│            LLM Provider Layer                  │
-│  ┌─────────────┐  ┌─────────────────────────┐ │
-│  │  Cloud APIs  │  │  Local Inference        │ │
-│  │  (Anthropic, │  │  (nanochat-rs /         │ │
-│  │   Google,    │  │   other local models)   │ │
-│  │   etc.)      │  │                         │ │
-│  └─────────────┘  └─────────────────────────┘ │
-└───────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    CLI["Ante CLI\n(Terminal Interface)"]
+    MA["Meta-Agent\n(Task Decomposition & Agent Orchestration)"]
+    SA_A["Sub-Agent A"]
+    SA_B["Sub-Agent B"]
+    SA_C["Sub-Agent C"]
+    SA_MORE["Sub-Agent ..."]
+    LFS["Lock-Free Scheduler\n(Atomic Ops, Wait-Free Queues)"]
+    LLM["LLM Provider Layer"]
+    CLOUD["Cloud APIs\n(Anthropic, Google, etc.)"]
+    LOCAL["Local Inference\n(nanochat-rs / other local models)"]
+
+    CLI --> MA
+    MA --> SA_A & SA_B & SA_C & SA_MORE
+    SA_A & SA_B & SA_C & SA_MORE --> LFS
+    LFS --> LLM
+    LLM --> CLOUD & LOCAL
 ```
 
 ---

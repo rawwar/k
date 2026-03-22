@@ -36,27 +36,20 @@ decides the sequence at design time.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     PROMPT CHAINING PIPELINE                        │
-│                                                                     │
-│  ┌───────┐    ┌──────────┐    ┌──────┐    ┌──────────┐    ┌──────┐│
-│  │ Input  │───▶│ LLM Call │───▶│ Gate │───▶│ LLM Call │───▶│ Gate ││
-│  │        │    │    #1    │    │  #1  │    │    #2    │    │  #2  ││
-│  └───────┘    └──────────┘    └──────┘    └──────────┘    └──────┘│
-│                                                              │     │
-│                                                              ▼     │
-│                               ┌──────────┐    ┌──────┐    ┌──────┐│
-│                               │  Output   │◀──│ Gate │◀──│ LLM  ││
-│                               │           │   │  #3  │   │Call #3││
-│                               └──────────┘    └──────┘    └──────┘│
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Gates: Programmatic checks between steps                   │   │
-│  │  • Format validation    • Quality thresholds                │   │
-│  │  • Safety checks        • Human approval                   │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph PC["PROMPT CHAINING PIPELINE"]
+        IN["Input"]
+        LLM1["LLM Call #1"]
+        G1["Gate #1"]
+        LLM2["LLM Call #2"]
+        G2["Gate #2"]
+        LLM3["LLM Call #3"]
+        G3["Gate #3"]
+        OUT["Output"]
+        IN --> LLM1 --> G1 --> LLM2 --> G2 --> LLM3 --> G3 --> OUT
+        GATES["Gates: Programmatic checks between steps\n• Format validation  • Quality thresholds\n• Safety checks       • Human approval"]
+    end
 ```
 
 The architecture has three fundamental components:
@@ -99,16 +92,14 @@ Gates are what distinguish prompt chaining from a naive sequence of API calls.
 They are **programmatic checks** — not LLM calls — that validate intermediate
 outputs before passing them downstream.
 
-```
-┌──────────┐     ┌─────────────────────────┐     ┌──────────┐
-│ LLM Call │────▶│         GATE            │────▶│ LLM Call │
-│   Step N │     │                         │     │  Step N+1│
-└──────────┘     │  ✓ Output well-formed?  │     └──────────┘
-                 │  ✓ Passes constraints?  │
-                 │  ✓ Within size limits?  │
-                 │                         │
-                 │  ✗ → Retry / Abort      │
-                 └─────────────────────────┘
+```mermaid
+flowchart LR
+    STEP_N["LLM Call\nStep N"]
+    GATE["GATE\n✓ Output well-formed?\n✓ Passes constraints?\n✓ Within size limits?\n✗ → Retry / Abort"]
+    STEP_N1["LLM Call\nStep N+1"]
+    STEP_N --> GATE
+    GATE -->|pass| STEP_N1
+    GATE -->|fail| RETRY["Retry / Abort"]
 ```
 
 Gates serve multiple purposes:
@@ -140,22 +131,16 @@ The latency cost is acceptable in coding agents because:
 
 Nearly every coding agent follows some variant of this four-phase cycle:
 
-```
-┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐
-│ UNDERSTAND │───▶│    PLAN    │───▶│ IMPLEMENT  │───▶│   VERIFY   │
-│            │    │            │    │            │    │            │
-│ Read files │    │ Outline    │    │ Write code │    │ Run tests  │
-│ Grep code  │    │ approach   │    │ Edit files │    │ Check lint │
-│ Map deps   │    │ Identify   │    │ Create new │    │ Validate   │
-│            │    │ risks      │    │ files      │    │ output     │
-└────────────┘    └────────────┘    └────────────┘    └────────────┘
-       │                                                     │
-       └──────────────────┐  ┌───────────────────────────────┘
-                          ▼  ▼
-                      ┌──────────┐
-                      │  ITERATE │
-                      │ (if fail)│
-                      └──────────┘
+```mermaid
+flowchart LR
+    U["UNDERSTAND\nRead files\nGrep code\nMap deps"]
+    P["PLAN\nOutline approach\nIdentify risks"]
+    I["IMPLEMENT\nWrite code\nEdit files\nCreate new files"]
+    V["VERIFY\nRun tests\nCheck lint\nValidate output"]
+    IT["ITERATE\n(if fail)"]
+    U --> P --> I --> V
+    V -->|fail| IT
+    IT --> I
 ```
 
 ### Junie CLI's Explicit Pipeline
@@ -163,8 +148,9 @@ Nearly every coding agent follows some variant of this four-phase cycle:
 Junie CLI (JetBrains) is the most **explicitly chained** coding agent among
 the 17. It implements a rigid 6-step pipeline:
 
-```
-Understand ──▶ Plan ──▶ Implement ──▶ Verify ──▶ Iterate ──▶ Present
+```mermaid
+flowchart LR
+    U["Understand"] --> P["Plan"] --> I["Implement"] --> V["Verify"] --> IT["Iterate"] --> PR["Present"]
 ```
 
 Each phase is a **distinct mode** with its own system prompt, tool access, and
@@ -184,8 +170,9 @@ validation criteria:
 Sage Agent implements the most formalized pipeline with 5 explicitly named
 stages:
 
-```
-TaskAnalysis ──▶ Planning ──▶ Executor ──▶ Observation ──▶ TaskSummary
+```mermaid
+flowchart LR
+    TA["TaskAnalysis"] --> PL["Planning"] --> EX["Executor"] --> OB["Observation"] --> TS["TaskSummary"]
 ```
 
 Each stage is handled by a **dedicated agent**, making it a hybrid of prompt
@@ -196,16 +183,11 @@ step).
 
 Aider implements a two-step chain using **different models for each step**:
 
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│   ARCHITECT MODEL   │────────▶│    EDITOR MODEL     │
-│   (e.g., o1, Opus)  │         │   (e.g., Sonnet)    │
-│                     │         │                     │
-│  • Analyze problem  │         │  • Apply changes    │
-│  • Design solution  │         │  • Write edit blocks│
-│  • Reason deeply    │         │  • Format output    │
-└─────────────────────┘         └─────────────────────┘
-     Expensive, slow                Cheaper, fast
+```mermaid
+flowchart LR
+    ARCH["ARCHITECT MODEL\ne.g. o1, Opus\n• Analyze problem\n• Design solution\n• Reason deeply\nExpensive, slow"]
+    ED["EDITOR MODEL\ne.g. Sonnet\n• Apply changes\n• Write edit blocks\n• Format output\nCheaper, fast"]
+    ARCH --> ED
 ```
 
 Step 1 (Architect): A powerful reasoning model produces a plan. Step 2
@@ -250,13 +232,16 @@ def compilation_gate(code: str, language: str) -> GateResult:
 
 The strongest gate in the coding domain:
 
-```
-┌──────────┐    ┌──────────────────────┐    ┌──────────────┐
-│ Generate │───▶│    TEST GATE         │───▶│ Next Step    │
-│   Code   │    │  Run: pytest/jest/go │    │ (if pass)    │
-└──────────┘    │  Pass? → Continue    │    └──────────────┘
-                │  Fail? → Retry ─────│───▶ Retry w/ error context
-                └──────────────────────┘
+```mermaid
+flowchart LR
+    GEN["Generate\nCode"]
+    TGATE["TEST GATE\nRun: pytest/jest/go\nPass? → Continue\nFail? → Retry"]
+    NEXT["Next Step\n(if pass)"]
+    RETRY["Retry w/ error context"]
+    GEN --> TGATE
+    TGATE -->|pass| NEXT
+    TGATE -->|fail| RETRY
+    RETRY --> GEN
 ```
 
 Used by: Junie CLI (verify phase), Codex CLI (sandbox validation), Claude Code
@@ -278,11 +263,13 @@ def safety_gate(proposed_changes: list[FileChange]) -> GateResult:
 
 ### Human-in-the-Loop Gate
 
-```
-┌──────────┐    ┌──────────────────────────────┐    ┌──────────┐
-│ Generate │───▶│    HUMAN APPROVAL GATE       │───▶│ Apply    │
-│   Plan   │    │  [Approve] [Modify] [Reject] │    │ Changes  │
-└──────────┘    └──────────────────────────────┘    └──────────┘
+```mermaid
+flowchart LR
+    GP["Generate\nPlan"]
+    HAG["HUMAN APPROVAL GATE\n[Approve] [Modify] [Reject]"]
+    AC["Apply\nChanges"]
+    GP --> HAG
+    HAG -->|approved| AC
 ```
 
 Common in: Claude Code (permission prompts), Codex CLI (auto/suggest/safe

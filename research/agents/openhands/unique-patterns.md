@@ -42,22 +42,19 @@ This works but is tightly coupled. The controller directly calls the runtime, hi
 
 OpenHands replaces this with a publish/subscribe event bus — the `EventStream`:
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    EventStream                       │
-│  ┌─────────┐  ┌─────────┐  ┌──────┐  ┌──────────┐  │
-│  │  AGENT   │  │ RUNTIME │  │MEMORY│  │  SERVER  │  │
-│  │CONTROLLER│  │         │  │      │  │ (WebSocket│  │
-│  └────┬─────┘  └────┬────┘  └──┬───┘  │  / API)  │  │
-│       │             │          │      └────┬─────┘  │
-│       ▼             ▼          ▼           ▼        │
-│   subscribe()   subscribe() subscribe() subscribe() │
-│   add_event()   add_event() add_event() add_event() │
-│                                                      │
-│   Events: [e0, e1, e2, e3, e4, ...]                │
-│   Persistence: FileStore / InMemoryStore             │
-│   Replay: from any checkpoint                        │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ES["EventStream\nEvents: [e0, e1, e2, ...]\nPersistence: FileStore / InMemoryStore\nReplay: from any checkpoint"]
+    end
+    AC["AGENT CONTROLLER"]
+    RT["RUNTIME"]
+    MEM["MEMORY"]
+    SRV["SERVER (WebSocket/API)"]
+
+    AC <-->|"subscribe() / add_event()"| ES
+    RT <-->|"subscribe() / add_event()"| ES
+    MEM <-->|"subscribe() / add_event()"| ES
+    SRV <-->|"subscribe() / add_event()"| ES
 ```
 
 Key implementation details from `openhands/events/stream.py`:
@@ -131,18 +128,17 @@ container.exec_run(cmd)
 
 OpenHands runs a full **FastAPI server inside the Docker container** — the `ActionExecutionServer`. Communication is via REST API, not stdin/stdout:
 
-```
-┌──────────────────┐          HTTP/REST          ┌─────────────────────┐
-│   Host Machine   │  ◄──────────────────────►   │   Docker Container  │
-│                  │     POST /execute_action     │                     │
-│  DockerRuntime   │     POST /upload_file        │  ActionExecution    │
-│  (client)        │     GET  /alive              │  Server (FastAPI)   │
-│                  │     POST /list_files          │                     │
-│                  │                               │  - bash sessions    │
-│                  │                               │  - ipython kernel   │
-│                  │                               │  - file operations  │
-│                  │                               │  - browser env      │
-└──────────────────┘                               └─────────────────────┘
+```mermaid
+flowchart LR
+    subgraph HOST["Host Machine"]
+        DR["DockerRuntime (client)"]
+    end
+    subgraph DOCKER["Docker Container"]
+        AES["ActionExecutionServer (FastAPI)\n- bash sessions\n- ipython kernel\n- file operations\n- browser env"]
+    end
+
+    DR -->|"POST /execute_action\nPOST /upload_file\nGET /alive"| AES
+    AES -->|"Observation JSON"| DR
 ```
 
 The `ActionExecutionServer` (from `openhands/runtime/action_execution_server.py`) exposes endpoints:
@@ -216,26 +212,22 @@ This is arguably OpenHands' most unique feature — a **knowledge injection fram
 
 ### Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                 Microagent Manager                        │
-│                                                           │
-│  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐ │
-│  │    Repo       │  │   Knowledge    │  │    Task      │ │
-│  │  Microagent   │  │  Microagent    │  │  Microagent  │ │
-│  │              │  │               │  │              │ │
-│  │ Always active │  │ Keyword-       │  │ /command     │ │
-│  │ from repo     │  │ triggered      │  │ triggered    │ │
-│  │ .openhands/   │  │ expertise      │  │ workflows    │ │
-│  └──────────────┘  └────────────────┘  └──────────────┘ │
-│                                                           │
-│  Loading Hierarchy:                                       │
-│    1. Global  → OpenHands/skills/ (bundled)               │
-│    2. User    → ~/.openhands/microagents/                 │
-│    3. Repo    → {workspace}/.openhands/microagents/       │
-│                                                           │
-│  + MCP Tool Integration (per-microagent)                  │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    G["1. Global → OpenHands/skills/ (bundled)"]
+    U["2. User → ~/.openhands/microagents/"]
+    R["3. Repo → {workspace}/.openhands/microagents/"]
+    subgraph MM["Microagent Manager"]
+        RM["Repo Microagent\n(Always active from repo .openhands/)"]
+        KM["Knowledge Microagent\n(Keyword-triggered expertise)"]
+        TM["Task Microagent\n(/command triggered workflows)"]
+    end
+    MCP["MCP Tool Integration (per-microagent)"]
+
+    G --> MM
+    U --> MM
+    R --> MM
+    MM --> MCP
 ```
 
 ### RepoMicroagent: Always-Active Repository Context
@@ -346,19 +338,13 @@ Most coding agents are CLI-only. OpenHands includes **full browser automation** 
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────┐
-│            Docker Sandbox                      │
-│                                                │
-│  ┌─────────────┐     ┌──────────────────┐    │
-│  │  BrowserEnv  │     │  ActionExecution │    │
-│  │  (Playwright) │◄───│  Server          │    │
-│  │              │     │                  │    │
-│  │  - Chrome    │     │  POST /execute   │    │
-│  │  - headless  │     │  {BrowseAction}  │    │
-│  │  - screenshots│    │                  │    │
-│  └─────────────┘     └──────────────────┘    │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph DS["Docker Sandbox"]
+        AES["ActionExecutionServer\nPOST /execute {BrowseAction}"]
+        BE["BrowserEnv (Playwright)\n- Chrome headless\n- screenshots"]
+        AES --> BE
+    end
 ```
 
 ### Specialized Browsing Agents
@@ -410,31 +396,19 @@ This enables workflows impossible in other agents: "Go to our staging site, log 
 
 ### Hierarchical Agent Model
 
-```
-┌───────────────────────────────────────┐
-│          Parent AgentController        │
-│  Agent: CodeActAgent                   │
-│  EventStream: main                     │
-│                                        │
-│  Action: AgentDelegateAction(          │
-│    agent="BrowsingAgent",              │
-│    inputs={"task": "Check website"}    │
-│  )                                     │
-│         │                              │
-│         ▼                              │
-│  ┌─────────────────────────────┐      │
-│  │   Child AgentController      │      │
-│  │   Agent: BrowsingAgent       │      │
-│  │   EventStream: nested        │      │
-│  │                              │      │
-│  │   ... runs independently ... │      │
-│  │                              │      │
-│  │   Returns:                   │      │
-│  │   AgentDelegateObservation(  │      │
-│  │     outputs={"result": ...}  │      │
-│  │   )                          │      │
-│  └─────────────────────────────┘      │
-└───────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph PAC["Parent AgentController\n(Agent: CodeActAgent, EventStream: main)"]
+        ADA["Action: AgentDelegateAction\n(agent='BrowsingAgent',\ninputs={'task': 'Check website'})"]
+        subgraph CAC["Child AgentController\n(Agent: BrowsingAgent, EventStream: nested)"]
+            CR["... runs independently ..."]
+            ADO["Returns AgentDelegateObservation\n(outputs={'result': ...})"]
+        end
+        CONT["Parent continues with result"]
+    end
+
+    ADA --> CAC
+    CAC --> CONT
 ```
 
 Key implementation detail — the child agent gets a `NestedEventStore` that provides isolated event handling while still being connected to the parent's stream:
@@ -651,38 +625,24 @@ OpenHands is designed as a framework, not just a tool. Every major component has
 
 ### Extension Points
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Extension Points                       │
-│                                                          │
-│  Runtime Layer:                                          │
-│    └─ Subclass Runtime → register in config              │
-│       (DockerRuntime, RemoteRuntime, ModalRuntime, ...)  │
-│                                                          │
-│  Agent Layer:                                            │
-│    └─ Subclass Agent → register in agenthub/             │
-│       (CodeActAgent, BrowsingAgent, LocAgent, ...)       │
-│                                                          │
-│  Condenser Layer:                                        │
-│    └─ Implement Condenser → register CondenserConfig     │
-│       (LLMSummarizing, RecentEvents, Pipeline, ...)     │
-│                                                          │
-│  Plugin Layer:                                           │
-│    └─ Extend runtime with custom requirements            │
-│       (JupyterPlugin, AgentSkillsPlugin, ...)            │
-│                                                          │
-│  MCP Layer:                                              │
-│    └─ Add tools via microagent MCP config                │
-│       (stdio servers, env variables, auto-discovery)     │
-│                                                          │
-│  Microagent Layer:                                       │
-│    └─ Drop .md files in .openhands/microagents/          │
-│       (repo, knowledge, task types)                      │
-│                                                          │
-│  Security Layer:                                         │
-│    └─ SecurityAnalyzer with configurable policies        │
-│       (per-action risk assessment, confirmation flow)    │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    EP["Extension Points"]
+    RL["Runtime Layer\nSubclass Runtime → register in config\n(DockerRuntime, RemoteRuntime, ModalRuntime...)"]
+    AL["Agent Layer\nSubclass Agent → register in agenthub/\n(CodeActAgent, BrowsingAgent, LocAgent...)"]
+    CL["Condenser Layer\nImplement Condenser → register CondenserConfig\n(LLMSummarizing, RecentEvents, Pipeline...)"]
+    PL["Plugin Layer\nExtend runtime with custom requirements\n(JupyterPlugin, AgentSkillsPlugin...)"]
+    ML["MCP Layer\nAdd tools via microagent MCP config\n(stdio servers, env variables, auto-discovery)"]
+    MAL["Microagent Layer\nDrop .md files in .openhands/microagents/\n(repo, knowledge, task types)"]
+    SL["Security Layer\nSecurityAnalyzer with configurable policies\n(per-action risk assessment, confirmation flow)"]
+
+    EP --> RL
+    EP --> AL
+    EP --> CL
+    EP --> PL
+    EP --> ML
+    EP --> MAL
+    EP --> SL
 ```
 
 ### Agent Registration Pattern

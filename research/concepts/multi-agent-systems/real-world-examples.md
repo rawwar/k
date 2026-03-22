@@ -22,31 +22,17 @@ Claude Code implements multi-agent through its **Task tool**, which spawns sub-a
 in isolated context windows. The main agent acts as orchestrator, delegating exploration,
 planning, and implementation to workers.
 
-```
-┌──────────────────────────────────────────────────┐
-│                 MAIN AGENT                       │
-│           (Sonnet/Opus, full tools)              │
-│                                                  │
-│  User: "Refactor auth to use JWT"                │
-│                                                  │
-│  Main agent reasons:                             │
-│  "I need to understand the current auth first"   │
-│                                                  │
-│  → Spawns explore sub-agent                      │
-│  → Gets summary of auth module                   │
-│  → Spawns another explore for test patterns      │
-│  → Plans the refactor                            │
-│  → Implements changes directly                   │
-│  → Runs tests                                    │
-│                                                  │
-├──────────┬──────────┬──────────┬─────────────────┤
-│ Explore  │ Explore  │ Plan     │ General-purpose  │
-│ (Haiku)  │ (Haiku)  │ (Parent) │ (Parent model)   │
-│          │          │          │                  │
-│ Read-only│ Read-only│ Read-only│ All tools        │
-│ Fast,    │ Fast,    │ Analysis │ Full capability  │
-│ cheap    │ cheap    │ only     │                  │
-└──────────┴──────────┴──────────┴─────────────────┘
+```mermaid
+flowchart TD
+    MA["Main Agent (Sonnet/Opus, full tools)\nUser: Refactor auth to use JWT\n→ Spawns explore sub-agent\n→ Gets summary of auth module\n→ Spawns another explore for test patterns\n→ Plans the refactor\n→ Implements changes directly\n→ Runs tests"]
+    E1["Explore (Haiku)\nRead-only\nFast, cheap"]
+    E2["Explore (Haiku)\nRead-only\nFast, cheap"]
+    PL["Plan (Parent model)\nRead-only\nAnalysis only"]
+    GP["General-purpose (Parent model)\nAll tools\nFull capability"]
+    MA --> E1
+    MA --> E2
+    MA --> PL
+    MA --> GP
 ```
 
 **Key architectural decisions:**
@@ -65,31 +51,19 @@ invoked identically to any other tool — no special plumbing required.
 Codex CLI (by OpenAI) implements multi-agent with a Rust-based resource management
 layer that enforces concurrency limits and agent lifecycle management.
 
-```
-┌──────────────────────────────────────────────┐
-│              AgentControl                     │
-│                                              │
-│  ┌──────────────────────────────────────┐   │
-│  │ Guards (atomic resource management)  │   │
-│  │                                      │   │
-│  │ active_agents: Mutex<ActiveAgents>   │   │
-│  │ total_count: AtomicUsize             │   │
-│  │                                      │   │
-│  │ SpawnReservation (RAII cleanup)      │   │
-│  └──────────────────────────────────────┘   │
-│                                              │
-│  ┌────────┐  ┌────────┐  ┌────────┐        │
-│  │Explorer│  │ Worker │  │ Worker │        │
-│  │(fast   │  │(file   │  │(file   │        │
-│  │ model) │  │owner A)│  │owner B)│        │
-│  └────────┘  └────────┘  └────────┘        │
-│                                              │
-│  SQ/EQ Message Passing                      │
-│  ┌──────────────────────────────────────┐   │
-│  │ Submission Queue ──► Event Queue     │   │
-│  │ (multiple frontends: TUI, exec, MCP) │   │
-│  └──────────────────────────────────────┘   │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    AC["AgentControl"]
+    GD["Guards (atomic resource management)\nactive_agents: Mutex\ntotal_count: AtomicUsize\nSpawnReservation (RAII cleanup)"]
+    EX["Explorer\n(fast model)"]
+    WA["Worker\n(file owner A)"]
+    WB["Worker\n(file owner B)"]
+    SQ["SQ/EQ Message Passing\nSubmission Queue → Event Queue\n(TUI, exec, MCP frontends)"]
+    AC --> GD
+    AC --> EX
+    AC --> WA
+    AC --> WB
+    AC --> SQ
 ```
 
 **Key innovations:**
@@ -106,34 +80,27 @@ layer that enforces concurrency limits and agent lifecycle management.
 ForgeCode achieves the highest Terminal-Bench score (81.8%) with a three-agent
 model built on bounded context and enforced verification.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                 ForgeCode Services Runtime               │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │ Context Engine (sem_search, "93% fewer tokens") │   │
-│  ├─────────────────────────────────────────────────┤   │
-│  │ Dynamic Skill Loading                           │   │
-│  ├─────────────────────────────────────────────────┤   │
-│  │ Tool-Call Correction Layer                      │   │
-│  ├─────────────────────────────────────────────────┤   │
-│  │ Todo Enforcement (mandatory for multi-step)     │   │
-│  ├─────────────────────────────────────────────────┤   │
-│  │ Progressive Reasoning Budget                    │   │
-│  │   Msgs 1-10: very high │ 11+: low │ verify: hi │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐             │
-│  │  FORGE   │  │  MUSE    │  │  SAGE    │             │
-│  │ (R+W)    │  │ (R only) │  │ (R only) │             │
-│  │ :forge   │  │ :muse    │  │ internal │             │
-│  │          │  │          │  │ only     │             │
-│  │ Implement│  │ Plan     │  │ Research │             │
-│  └──────────┘  └──────────┘  └──────────┘             │
-│                                                         │
-│  Verification Skill (ENFORCED, not optional)           │
-│  └── Runtime blocks completion until verification pass │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    RT["ForgeCode Services Runtime"]
+    CE["Context Engine\nsem_search — 93% fewer tokens"]
+    DSL["Dynamic Skill Loading"]
+    TCC["Tool-Call Correction Layer"]
+    TE["Todo Enforcement\n(mandatory for multi-step)"]
+    PRB["Progressive Reasoning Budget\nMsgs 1-10: very high | 11+: low | verify: high"]
+    FORGE["FORGE (R+W)\n:forge — Implement"]
+    MUSE["MUSE (R only)\n:muse — Plan"]
+    SAGE["SAGE (R only)\ninternal only — Research"]
+    VER["Verification Skill (ENFORCED)\nRuntime blocks completion until verification pass"]
+    RT --> CE
+    RT --> DSL
+    RT --> TCC
+    RT --> TE
+    RT --> PRB
+    RT --> FORGE
+    RT --> MUSE
+    RT --> SAGE
+    RT --> VER
 ```
 
 **Key innovations:**
@@ -152,41 +119,32 @@ model built on bounded context and enforced verification.
 OpenHands uses an event-sourced architecture where all agent actions are recorded
 as events on a shared EventStream.
 
+```mermaid
+flowchart TD
+    ES["EventStream\nEvent 1: CmdRunAction\nEvent 2: CmdOutputObservation\nEvent 3: FileWriteAction\nEvent 4: FileWriteObservation\nEvent 5: AgentDelegateAction\nEvent 6: AgentDelegateObservation"]
+    AC["AGENT_CONTROLLER"]
+    RES["RESOLVER"]
+    SRV["SERVER"]
+    RUN["RUNTIME"]
+    MEM["MEMORY"]
+    TST["TEST"]
+    ES -->|"subscriber"| AC
+    ES -->|"subscriber"| RES
+    ES -->|"subscriber"| SRV
+    ES -->|"subscriber"| RUN
+    ES -->|"subscriber"| MEM
+    ES -->|"subscriber"| TST
 ```
-┌─────────────────────────────────────────────────────┐
-│                    EventStream                      │
-│                                                     │
-│  Event 1: CmdRunAction("ls src/")                  │
-│  Event 2: CmdOutputObservation(files=[...])        │
-│  Event 3: FileWriteAction("src/auth.ts", content)  │
-│  Event 4: FileWriteObservation(success=true)       │
-│  Event 5: AgentDelegateAction("sub-agent", inputs) │
-│  Event 6: AgentDelegateObservation(results)        │
-│                                                     │
-│  Subscribers (each with own ThreadPoolExecutor):   │
-│  ├── AGENT_CONTROLLER                              │
-│  ├── RESOLVER                                      │
-│  ├── SERVER                                        │
-│  ├── RUNTIME                                       │
-│  ├── MEMORY                                        │
-│  └── TEST                                          │
-└─────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────┐
-│                Microagent System                    │
-│                                                     │
-│  RepoMicroagent                                    │
-│  └── Always active, from .openhands/microagents/   │
-│      Also reads: .cursorrules, AGENTS.md           │
-│                                                     │
-│  KnowledgeMicroagent                               │
-│  └── KEYWORD-TRIGGERED (e.g., "django" → Django    │
-│      expertise injected). Lightweight RAG without   │
-│      embeddings                                     │
-│                                                     │
-│  TaskMicroagent                                    │
-│  └── /command-triggered workflows                  │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    MS["Microagent System"]
+    RM["RepoMicroagent\nAlways active\nfrom .openhands/microagents/\nAlso reads: .cursorrules, AGENTS.md"]
+    KM["KnowledgeMicroagent\nKEYWORD-TRIGGERED\ne.g. 'django' → Django expertise injected\nLightweight RAG without embeddings"]
+    TM["TaskMicroagent\n/command-triggered workflows"]
+    MS --> RM
+    MS --> KM
+    MS --> TM
 ```
 
 **Key innovations:**
@@ -203,24 +161,13 @@ as events on a shared EventStream.
 
 Capy separates planning and execution with enforced capability boundaries:
 
-```
-┌──────────────────────┐        ┌──────────────────────┐
-│      CAPTAIN         │        │       BUILD          │
-│                      │  spec  │                      │
-│  Can:                │───────►│  Can:                │
-│  • Read codebase     │        │  • Edit files        │
-│  • Research docs     │        │  • Run commands      │
-│  • Ask user questions│        │  • Install deps      │
-│  • Write specs       │        │  • Open PRs          │
-│                      │        │                      │
-│  Cannot:             │        │  Cannot:             │
-│  • Write code        │        │  • Ask questions     │
-│  • Run commands      │        │  • Interact with user│
-│  • Push commits      │        │  • Modify spec       │
-└──────────────────────┘        └──────────────────────┘
-
-Parallel: Up to 25 concurrent "jams"
-Each jam: own VM + git worktree + lifecycle
+```mermaid
+flowchart LR
+    CAP["CAPTAIN\nCan: Read codebase, Research docs,\nAsk user questions, Write specs\nCannot: Write code, Run commands,\nPush commits"]
+    BUILD["BUILD\nCan: Edit files, Run commands,\nInstall deps, Open PRs\nCannot: Ask questions,\nInteract with user, Modify spec"]
+    CAP -->|"spec"| BUILD
+    NOTE["Parallel: Up to 25 concurrent jams\nEach jam: own VM + git worktree + lifecycle"]
+    BUILD --- NOTE
 ```
 
 **Key innovations:**
@@ -237,59 +184,33 @@ Each jam: own VM + git worktree + lifecycle
 Goose's unique contribution is the **Agent Communication Protocol (ACP)**, which
 allows using other coding agents as backend LLM providers:
 
-```
-┌──────────────────────────────────────────┐
-│              Goose Core                   │
-│                                          │
-│  MCP-First Architecture:                 │
-│  Everything is an MCP server             │
-│                                          │
-│  Platform Extensions (7 types):          │
-│  ├── developer (file editing)            │
-│  ├── analyze (code analysis)             │
-│  ├── summon (sub-agent delegation)       │
-│  ├── computercontroller                  │
-│  ├── memory                              │
-│  └── ...                                 │
-│                                          │
-│  ACP: Other agents as providers          │
-│  ├── Claude Code ACP                     │
-│  ├── Codex ACP                           │
-│  └── Gemini ACP                          │
-│                                          │
-│  MOIM: Per-turn context injection        │
-│  from all extensions                     │
-│                                          │
-│  Background tool-pair summarization      │
-│  (proactive context management)          │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    GC["Goose Core\n(MCP-First Architecture)"]
+    PE["Platform Extensions (7 types)\ndeveloper, analyze, summon,\ncomputercontroller, memory, ..."]
+    ACP["ACP: Other agents as providers\nClaude Code ACP | Codex ACP | Gemini ACP"]
+    MOIM["MOIM: Per-turn context injection\nfrom all extensions"]
+    BTS["Background tool-pair summarization\n(proactive context management)"]
+    GC --> PE
+    GC --> ACP
+    GC --> MOIM
+    GC --> BTS
 ```
 
 ### SageAgent: Five-Stage Pipeline
 
 SageAgent implements a sequential pipeline with a single feedback loop:
 
-```
-┌───────────┐   ┌───────────┐   ┌───────────┐
-│ Task      │──►│ Planning  │──►│ Executor  │
-│ Analysis  │   │ Agent     │   │ Agent     │
-│ Agent     │   │           │   │           │
-└───────────┘   └─────▲─────┘   └─────┬─────┘
-                      │               │
-                      │ feedback      │
-                      │               ▼
-                ┌─────┴─────┐   ┌───────────┐
-                │Observation│◄──│           │
-                │ Agent     │   │           │
-                └─────┬─────┘   └───────────┘
-                      │
-                 (if done)
-                      │
-                ┌─────▼─────┐
-                │ Task      │
-                │ Summary   │
-                │ Agent     │
-                └───────────┘
+```mermaid
+flowchart TD
+    TA["Task Analysis Agent"]
+    PL["Planning Agent"]
+    EX["Executor Agent"]
+    OB["Observation Agent"]
+    SUM["Task Summary Agent"]
+    TA --> PL --> EX --> OB
+    OB -->|"feedback"| PL
+    OB -->|"done"| SUM
 ```
 
 Two modes: **Deep Research** (full pipeline, feedback enabled) and
@@ -299,22 +220,17 @@ Two modes: **Deep Research** (full pipeline, feedback enabled) and
 
 Junie CLI's innovation is **dynamic model routing** across its three-stage pipeline:
 
-```
-┌──────────────────────────────────────────┐
-│          Multi-Model Router              │
-│                                          │
-│  Complex reasoning → Claude Sonnet/Opus  │
-│  Fast edits        → Gemini Flash        │
-│  Code generation   → Best for language   │
-│  Planning          → Reasoning model     │
-└──────────────────────────────────────────┘
-         │              │              │
-    ┌────▼────┐   ┌────▼────┐   ┌────▼────┐
-    │ Planner │   │Executor │   │Verifier │
-    └─────────┘   └─────────┘   └─────────┘
-
-Result: 71.0% multi-model vs 64.3% single-model
-        = +6.7pp improvement from model routing
+```mermaid
+flowchart TD
+    MMR["Multi-Model Router\nComplex reasoning → Claude Sonnet/Opus\nFast edits → Gemini Flash\nCode generation → Best for language\nPlanning → Reasoning model"]
+    PL["Planner"]
+    EX["Executor"]
+    VR["Verifier"]
+    RES["Result: 71.0% multi-model vs 64.3% single-model\n= +6.7pp improvement from model routing"]
+    MMR --> PL
+    MMR --> EX
+    MMR --> VR
+    VR --> RES
 ```
 
 ### Ante: Lock-Free Meta-Agent
@@ -322,22 +238,17 @@ Result: 71.0% multi-model vs 64.3% single-model
 Ante uses a Meta-Agent that dynamically manages a pool of concurrent sub-agents
 with **zero-mutex concurrency**:
 
-```
-┌──────────────────────────────────┐
-│           META-AGENT             │
-│                                  │
-│  Lock-Free Scheduler             │
-│  (atomic ops, wait-free queues)  │
-│                                  │
-│  ┌────────┐  ┌────────┐         │
-│  │Sub-    │  │Sub-    │  ...    │
-│  │Agent 1 │  │Agent 2 │         │
-│  └────────┘  └────────┘         │
-│                                  │
-│  Fully Rust-native               │
-│  Single binary                   │
-│  Cloud + local inference         │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    MA["META-AGENT\nFully Rust-native | Single binary\nCloud + local inference"]
+    LS["Lock-Free Scheduler\n(atomic ops, wait-free queues)"]
+    S1["Sub-Agent 1"]
+    S2["Sub-Agent 2"]
+    SN["..."]
+    MA --> LS
+    LS --> S1
+    LS --> S2
+    LS --> SN
 ```
 
 ---
@@ -349,43 +260,16 @@ with **zero-mutex concurrency**:
 MetaGPT's core philosophy: `Code = SOP(Team)` — Standard Operating Procedures
 applied to a team of LLM agents that mirrors a software company.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    MetaGPT                              │
-│                                                         │
-│  "One line requirement" ──►  Full software project     │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ Product      │  │ Architect    │  │ Project      │ │
-│  │ Manager      │──►│             │──►│ Manager      │ │
-│  │              │  │              │  │              │ │
-│  │ Requirements │  │ System       │  │ Task         │ │
-│  │ & user       │  │ design,      │  │ breakdown,   │ │
-│  │ stories      │  │ APIs, data   │  │ schedules    │ │
-│  └──────────────┘  │ structures   │  └──────┬───────┘ │
-│                    └──────────────┘         │         │
-│                                             ▼         │
-│                                    ┌──────────────┐   │
-│                                    │ Engineer(s)  │   │
-│                                    │              │   │
-│                                    │ Code         │   │
-│                                    │ generation   │   │
-│                                    │ per module   │   │
-│                                    └──────┬───────┘   │
-│                                           │           │
-│                                    ┌──────▼───────┐   │
-│                                    │ QA Engineer  │   │
-│                                    │              │   │
-│                                    │ Test         │   │
-│                                    │ generation   │   │
-│                                    └──────────────┘   │
-│                                                         │
-│  Communication: Structured artifacts                   │
-│  (PRDs, system designs, task lists, code, tests)       │
-│                                                         │
-│  Key insight: SOPs reduce hallucination by giving      │
-│  agents structured roles with defined deliverables     │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    REQ["One line requirement"]
+    PM["Product Manager\nRequirements & user stories"]
+    AR["Architect\nSystem design, APIs, data structures"]
+    PRJ["Project Manager\nTask breakdown, schedules"]
+    ENG["Engineer(s)\nCode generation per module"]
+    QA["QA Engineer\nTest generation"]
+    OUT["Full software project\n(PRDs, system designs, task lists, code, tests)"]
+    REQ --> PM --> AR --> PRJ --> ENG --> QA --> OUT
 ```
 
 **Output:** User stories, competitive analysis, requirements, data structures,
@@ -395,36 +279,14 @@ APIs, documentation — the full software development pipeline.
 
 ChatDev simulates a software company with agents in conversational roles:
 
-```
-┌─────────────────────────────────────────────┐
-│                 ChatDev                      │
-│                                             │
-│  Phase-based execution:                     │
-│                                             │
-│  1. DESIGN                                  │
-│     CEO ◄──chat──► CTO                     │
-│     "What should we build?"                 │
-│                                             │
-│  2. CODING                                  │
-│     CTO ◄──chat──► Programmer              │
-│     "Here's the design, implement it"       │
-│                                             │
-│  3. TESTING                                 │
-│     Programmer ◄──chat──► Tester           │
-│     "Here's the code, find bugs"            │
-│                                             │
-│  4. DOCUMENTATION                           │
-│     CTO ◄──chat──► Programmer              │
-│     "Write the docs"                        │
-│                                             │
-│  Communication: Chat-based dialogue         │
-│  (natural language conversation pairs)      │
-│                                             │
-│  Innovation: "Thought Instruction" prompts  │
-│  that guide conversation toward productive  │
-│  outcomes. "InstructionFollowAgent" and     │
-│  "AssistantAgent" form a chat pair.         │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    D["Phase 1: DESIGN\nCEO ↔ CTO\n'What should we build?'"]
+    C["Phase 2: CODING\nCTO ↔ Programmer\n'Here's the design, implement it'"]
+    T["Phase 3: TESTING\nProgrammer ↔ Tester\n'Here's the code, find bugs'"]
+    DC["Phase 4: DOCUMENTATION\nCTO ↔ Programmer\n'Write the docs'"]
+    NOTE["Communication: Chat-based dialogue\nInnovation: Thought Instruction prompts"]
+    D --> C --> T --> DC --> NOTE
 ```
 
 **Key insight:** ChatDev's innovation is that agents communicate through
@@ -435,42 +297,19 @@ for nuanced negotiation but introduces unpredictability.
 
 AutoGen provides a layered architecture for building multi-agent applications:
 
-```
-┌──────────────────────────────────────────────────┐
-│                   AutoGen                        │
-│                                                  │
-│  Core API (message passing, event-driven)        │
-│  ┌──────────────────────────────────────┐       │
-│  │ Message passing between agents       │       │
-│  │ Local and distributed runtime        │       │
-│  │ Cross-language (.NET + Python)       │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  AgentChat API (high-level)                     │
-│  ┌──────────────────────────────────────┐       │
-│  │ Two-agent chat                       │       │
-│  │ Group chat (round-robin, selector)   │       │
-│  │ AgentTool (agents-as-tools)          │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  Extensions API                                 │
-│  ┌──────────────────────────────────────┐       │
-│  │ LLM clients (OpenAI, Azure, etc.)   │       │
-│  │ Code execution                       │       │
-│  │ MCP integration                      │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  Multi-Agent Patterns:                          │
-│  ┌──────────────────────────────────────┐       │
-│  │ AgentTool: Agent as callable tool    │       │
-│  │ Handoffs: Transfer control           │       │
-│  │ GroupChat: Round-robin or selective   │       │
-│  │ Termination: Conditions for stopping │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  Magentic-One: State-of-art multi-agent team   │
-│  (web browsing, code execution, file handling)  │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    AG["AutoGen"]
+    CORE["Core API\nMessage passing between agents\nLocal and distributed runtime\nCross-language (.NET + Python)"]
+    CHAT["AgentChat API\nTwo-agent chat\nGroup chat (round-robin, selector)\nAgentTool (agents-as-tools)"]
+    EXT["Extensions API\nLLM clients (OpenAI, Azure, etc.)\nCode execution\nMCP integration"]
+    PAT["Multi-Agent Patterns\nAgentTool | Handoffs | GroupChat | Termination"]
+    M1["Magentic-One\n(web browsing, code execution, file handling)"]
+    AG --> CORE
+    AG --> CHAT
+    AG --> EXT
+    AG --> PAT
+    AG --> M1
 ```
 
 **AutoGen's AgentTool pattern:**
@@ -501,33 +340,16 @@ orchestrator = AssistantAgent(
 CrewAI provides a role-based framework with two complementary concepts:
 **Crews** (autonomous agent teams) and **Flows** (event-driven workflows).
 
-```
-┌──────────────────────────────────────────────────┐
-│                    CrewAI                        │
-│                                                  │
-│  CREWS (autonomous agent teams):                │
-│  ┌──────────────────────────────────────┐       │
-│  │ Agent: role + goal + backstory       │       │
-│  │ Task: description + expected output  │       │
-│  │ Crew: agents + tasks + process       │       │
-│  │                                      │       │
-│  │ Process types:                       │       │
-│  │ ├── sequential (tasks in order)      │       │
-│  │ ├── hierarchical (manager delegates) │       │
-│  │ └── consensual (agents collaborate)  │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  FLOWS (event-driven control):                  │
-│  ┌──────────────────────────────────────┐       │
-│  │ Fine-grained execution paths         │       │
-│  │ State management between tasks       │       │
-│  │ Conditional branching                │       │
-│  │ Integration with Crews               │       │
-│  └──────────────────────────────────────┘       │
-│                                                  │
-│  Combined: Flows orchestrate Crews              │
-│  └── Production architecture                    │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    CA["CrewAI"]
+    CW["CREWS (autonomous agent teams)\nAgent: role + goal + backstory\nTask: description + expected output\nCrew: agents + tasks + process\nProcess: sequential | hierarchical | consensual"]
+    FL["FLOWS (event-driven control)\nFine-grained execution paths\nState management between tasks\nConditional branching\nIntegration with Crews"]
+    PROD["Combined: Flows orchestrate Crews\n(Production architecture)"]
+    CA --> CW
+    CA --> FL
+    CW --> PROD
+    FL --> PROD
 ```
 
 **CrewAI coding example:**
@@ -592,33 +414,14 @@ result = crew.kickoff()
 Devin (by Cognition) operates as a cloud-based coding agent with a multi-agent
 architecture that separates planning, execution, and verification:
 
-```
-┌──────────────────────────────────────────┐
-│              Devin Platform              │
-│                                          │
-│  ┌────────────────────────────────────┐ │
-│  │ Planning Agent                     │ │
-│  │ Analyzes tasks, creates plans      │ │
-│  └──────────────┬─────────────────────┘ │
-│                 │                        │
-│  ┌──────────────▼─────────────────────┐ │
-│  │ Execution Agent(s)                 │ │
-│  │ Full VM access: terminal, browser, │ │
-│  │ editor, git                        │ │
-│  └──────────────┬─────────────────────┘ │
-│                 │                        │
-│  ┌──────────────▼─────────────────────┐ │
-│  │ Verification Agent                 │ │
-│  │ Tests, reviews, validates          │ │
-│  └────────────────────────────────────┘ │
-│                                          │
-│  Key features:                          │
-│  • Full cloud VM per task               │
-│  • Browser automation (web research)    │
-│  • Long-running autonomous execution    │
-│  • Slack/IDE integration                │
-│  • Session replay for debugging         │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    PA["Planning Agent\nAnalyzes tasks, creates plans"]
+    EA["Execution Agent(s)\nFull VM access: terminal, browser, editor, git"]
+    VA["Verification Agent\nTests, reviews, validates"]
+    KF["Key features:\n• Full cloud VM per task\n• Browser automation\n• Long-running autonomous execution\n• Slack/IDE integration\n• Session replay for debugging"]
+    PA --> EA --> VA
+    VA --> KF
 ```
 
 Devin's multi-agent approach is notable for its **full cloud VM** per task, allowing

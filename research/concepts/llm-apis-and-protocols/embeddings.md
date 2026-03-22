@@ -62,11 +62,9 @@ learned during training on massive corpora of text and code.
 
 ### The Embedding Process
 
-```
-┌──────────┐     ┌────────────────┐     ┌──────────────────┐
-│Raw Text/ │ ──► │ Tokenizer      │ ──► │ Transformer      │ ──► [0.02, -0.04, ...]
-│Code      │     │ (text→tokens)  │     │ Encoder Model    │     (dense vector)
-└──────────┘     └────────────────┘     └──────────────────┘
+```mermaid
+flowchart LR
+    A["Raw Text / Code"] --> B["Tokenizer\n(text→tokens)"] --> C["Transformer\nEncoder Model"] --> D["[0.02, -0.04, ...]\n(dense vector)"]
 ```
 
 1. **Tokenization**: Input is split into sub-word tokens (BPE, SentencePiece, etc.)
@@ -586,26 +584,12 @@ Common metadata fields for code embeddings:
 
 The core workflow for RAG in coding agents:
 
-```
-User Query: "Where do we validate JWT tokens?"
-    │
-    ▼
-┌─────────────────┐
-│ Embed Query      │  (using query-optimized embedding)
-│ with voyage-code │
-└────────┬────────┘
-         │ query vector
-         ▼
-┌─────────────────┐
-│ Vector DB Search │  (find top-K nearest code chunks)
-│ (cosine sim)     │
-└────────┬────────┘
-         │ relevant code chunks
-         ▼
-┌─────────────────┐
-│ LLM Generation  │  (answer using retrieved context)
-│ with context     │
-└─────────────────┘
+```mermaid
+flowchart TD
+    Q["User Query: \"Where do we validate JWT tokens?\""] --> A
+    A["Embed Query with voyage-code\n(query-optimized embedding)"] -->|"query vector"| B
+    B["Vector DB Search\n(cosine sim — find top-K nearest code chunks)"] -->|"relevant code chunks"| C
+    C["LLM Generation\n(answer using retrieved context)"]
 ```
 
 ### Repository Indexing Strategies

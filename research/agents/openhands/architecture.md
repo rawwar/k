@@ -2,40 +2,28 @@
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         OpenHands System                            │
-│                                                                     │
-│  ┌───────────┐    ┌──────────────┐    ┌──────────────────────────┐  │
-│  │   User /   │    │   Agent       │    │      EventStream         │  │
-│  │   Server   │───▶│  Controller   │◀──▶│  (pub/sub + persist)     │  │
-│  └───────────┘    └──────┬───────┘    └──────────┬───────────────┘  │
-│                          │                       │                   │
-│                          ▼                       │                   │
-│                   ┌──────────────┐               │                   │
-│                   │  CodeAct      │               │                   │
-│                   │  Agent        │               │                   │
-│                   │  (LLM calls)  │               │                   │
-│                   └──────┬───────┘               │                   │
-│                          │                       │                   │
-│                          │ Actions               │ Events            │
-│                          ▼                       ▼                   │
-│                   ┌──────────────────────────────────────────────┐   │
-│                   │              Runtime Layer                    │   │
-│                   │                                              │   │
-│                   │  ┌─────────────────┐  ┌──────────────────┐  │   │
-│                   │  │ ActionExecution  │  │ ActionExecution   │  │   │
-│                   │  │ Client (host)    │─▶│ Server (sandbox)  │  │   │
-│                   │  └─────────────────┘  └────────┬─────────┘  │   │
-│                   │                                │             │   │
-│                   │                    ┌───────────┼──────────┐  │   │
-│                   │                    ▼           ▼          ▼  │   │
-│                   │               ┌───────┐ ┌─────────┐ ┌────┐  │   │
-│                   │               │ Bash  │ │ Jupyter │ │ 🌐 │  │   │
-│                   │               │ Shell │ │ Kernel  │ │    │  │   │
-│                   │               └───────┘ └─────────┘ └────┘  │   │
-│                   └──────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    US["User / Server"]
+    AC["AgentController"]
+    ES["EventStream\n(pub/sub + persist)"]
+    CA["CodeAct Agent\n(LLM calls)"]
+    RT["Runtime Layer"]
+    AEC["ActionExecutionClient (host)"]
+    AES["ActionExecutionServer (sandbox)"]
+    BASH["Bash Shell"]
+    JUP["Jupyter Kernel"]
+    WEB["Browser"]
+
+    US --> AC
+    AC <--> ES
+    AC --> CA
+    CA -->|"Actions"| RT
+    ES -->|"Events"| RT
+    RT --> AEC --> AES
+    AES --> BASH
+    AES --> JUP
+    AES --> WEB
 ```
 
 ## 1. EventStream — The Central Nervous System
@@ -85,22 +73,22 @@ The `cause` field creates a causal graph: an `Observation` points back to the
 
 ### 1.3 Event Flow
 
-```
-Producer (Agent/User/Runtime)
-        │
-        ▼
-  EventStream.add_event()
-        │
-        ├─▶ assign id, timestamp, source
-        ├─▶ serialize → JSON → FileStore (with secret replacement)
-        └─▶ enqueue event
-              │
-              ▼
-      Background thread dequeues
-              │
-              ├─▶ Subscriber A callback (own ThreadPoolExecutor)
-              ├─▶ Subscriber B callback (own ThreadPoolExecutor)
-              └─▶ Subscriber C callback (own ThreadPoolExecutor)
+```mermaid
+flowchart TD
+    P["Producer (Agent/User/Runtime)"]
+    AE["EventStream.add_event()"]
+    AS["Assign id, timestamp, source"]
+    SER["Serialize → JSON → FileStore\n(with secret replacement)"]
+    EN["Enqueue event"]
+    BG["Background thread dequeues"]
+    SA["Subscriber A callback\n(own ThreadPoolExecutor)"]
+    SB["Subscriber B callback\n(own ThreadPoolExecutor)"]
+    SC["Subscriber C callback\n(own ThreadPoolExecutor)"]
+
+    P --> AE --> AS --> SER --> EN --> BG
+    BG --> SA
+    BG --> SB
+    BG --> SC
 ```
 
 Key details:
@@ -215,18 +203,17 @@ It uses a **client–server split** across a security boundary.
 
 ### 3.1 Client–Server Split
 
-```
- Host Process                          Docker Container (or remote)
-┌──────────────────────┐              ┌──────────────────────────────┐
-│  ActionExecution     │    HTTP      │  ActionExecution             │
-│  Client              │─────────────▶│  Server (FastAPI)            │
-│                      │   /execute   │                              │
-│  - Translates Action │   _action    │  - /execute_action endpoint  │
-│    to HTTP request   │              │  - Manages bash shell        │
-│  - Returns           │◀─────────────│  - Manages Jupyter kernel    │
-│    Observation       │   JSON       │  - Manages browser instance  │
-│                      │              │  - Plugin system              │
-└──────────────────────┘              └──────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph HOST["Host Process"]
+        AEC["ActionExecutionClient\n(translates Action to HTTP request,\nreturns Observation)"]
+    end
+    subgraph DOCKER["Docker Container (or remote)"]
+        AES["ActionExecutionServer (FastAPI)\n/execute_action endpoint\nManages bash shell, Jupyter kernel,\nbrowser instance, plugin system"]
+    end
+
+    AEC -->|"HTTP /execute_action"| AES
+    AES -->|"JSON Observation"| AEC
 ```
 
 The **ActionExecutionClient** (host side) translates `Action` objects into HTTP
@@ -287,28 +274,14 @@ safety/budgeting mechanisms.
 
 ### 4.1 Core Loop
 
-```
-                    ┌─────────────────────┐
-                    │  Wait for new event  │◀──────────────────────┐
-                    └──────────┬──────────┘                       │
-                               │                                  │
-                               ▼                                  │
-                    ┌─────────────────────┐                       │
-                    │  Update State with   │                       │
-                    │  incoming event      │                       │
-                    └──────────┬──────────┘                       │
-                               │                                  │
-                               ▼                                  │
-                    ┌─────────────────────┐                       │
-                    │  Call agent.step()   │                       │
-                    │  → returns Action    │                       │
-                    └──────────┬──────────┘                       │
-                               │                                  │
-                               ▼                                  │
-                    ┌─────────────────────┐                       │
-                    │  Publish Action to   │                       │
-                    │  EventStream         │───────────────────────┘
-                    └─────────────────────┘
+```mermaid
+flowchart TD
+    WE["Wait for new event"]
+    US["Update State with incoming event"]
+    CS["Call agent.step() → returns Action"]
+    PA["Publish Action to EventStream"]
+
+    WE --> US --> CS --> PA --> WE
 ```
 
 The controller subscribes to `EventStream` with ID `AGENT_CONTROLLER`. When an
@@ -339,18 +312,16 @@ The `State` object is the agent's working memory for a single session:
 
 A controller can spawn child controllers for sub-tasks:
 
-```
-Parent Controller
-  │
-  ├─▶ AgentDelegateAction(agent="BrowsingAgent", task="Find X")
-  │
-  │   Child Controller (new agent, shared EventStream)
-  │     │
-  │     ├─▶ ... sub-agent loop ...
-  │     │
-  │     └─▶ AgentFinishAction(result="Found X at ...")
-  │
-  └─▶ AgentDelegateObservation(result="Found X at ...")
+```mermaid
+flowchart TD
+    PC["Parent Controller"]
+    ADA["AgentDelegateAction\n(agent='BrowsingAgent', task='Find X')"]
+    CC["Child Controller (new agent, shared EventStream)"]
+    SL["... sub-agent loop ..."]
+    AFA["AgentFinishAction(result='Found X at ...')"]
+    ADO["AgentDelegateObservation\n(result='Found X at ...')"]
+
+    PC --> ADA --> CC --> SL --> AFA --> ADO --> PC
 ```
 
 The child controller runs its own agent loop with its own state but publishes

@@ -13,14 +13,14 @@ Codebase indexing is the infrastructure that enables agents to find relevant cod
 
 The indexing strategies used by coding agents fall along a spectrum:
 
-```
-No Index          Full-Text Index      Tag-Based Index     Embedding Index      Hybrid Index
-(on-demand)       (ripgrep)            (ctags/repo-map)    (vector search)      (tags + embeddings)
-    │                  │                     │                    │                    │
-    ▼                  ▼                     ▼                    ▼                    ▼
-mini-SWE-agent    Claude Code,          Aider               Cursor,              ForgeCode,
-Codex             Gemini CLI                                Cody                 Ante
-Pi Coding Agent   OpenHands
+```mermaid
+flowchart LR
+    A["No Index<br/>(on-demand)<br/><br/>mini-SWE-agent<br/>Codex, Pi Coding Agent"]
+    B["Full-Text Index<br/>(ripgrep)<br/><br/>Claude Code<br/>Gemini CLI, OpenHands"]
+    C["Tag-Based Index<br/>(ctags/repo-map)<br/><br/>Aider"]
+    D["Embedding Index<br/>(vector search)<br/><br/>Cursor, Cody"]
+    E["Hybrid Index<br/>(tags + embeddings)<br/><br/>ForgeCode, Ante"]
+    A --> B --> C --> D --> E
 ```
 
 | Strategy | Startup Cost | Query Speed | Semantic Awareness | Storage |
@@ -169,27 +169,14 @@ Aider's repo map is the most sophisticated indexing approach among CLI coding ag
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Aider Repo Map                     │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  1. Tree-sitter Parse All Files                      │
-│     └── Extract tags (definitions + references)      │
-│                                                      │
-│  2. Build Reference Graph                            │
-│     └── Files as nodes, tag references as edges      │
-│                                                      │
-│  3. PageRank Ranking                                 │
-│     └── Identify most-connected files and symbols    │
-│                                                      │
-│  4. Token-Budgeted Selection                         │
-│     └── Select top-ranked tags that fit in budget    │
-│                                                      │
-│  5. Map Generation                                   │
-│     └── Render condensed map of selected symbols     │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["1. Tree-sitter Parse All Files<br/>Extract tags (definitions + references)"]
+    B["2. Build Reference Graph<br/>Files as nodes, tag references as edges"]
+    C["3. PageRank Ranking<br/>Identify most-connected files and symbols"]
+    D["4. Token-Budgeted Selection<br/>Select top-ranked tags that fit in budget"]
+    E["5. Map Generation<br/>Render condensed map of selected symbols"]
+    A --> B --> C --> D --> E
 ```
 
 ### Step 1: Tag Extraction
@@ -360,20 +347,13 @@ Code Snippet                    Embedding Vector
 
 ### Architecture of Embedding-Based Code Search
 
-```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  Code Chunking   │────▶│  Embedding Model │────▶│  Vector Database │
-│  (split files    │     │  (OpenAI, local)  │     │  (store & query) │
-│   into chunks)   │     │                   │     │                  │
-└──────────────────┘     └──────────────────┘     └──────────────────┘
-                                                          │
-                                                          ▼
-                              ┌──────────────────────────────────────┐
-                              │  Query: "authentication middleware"   │
-                              │         ↓ embed query ↓              │
-                              │  Find k nearest vectors              │
-                              │  Return matching code chunks         │
-                              └──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Code Chunking<br/>(split files into chunks)"] --> B["Embedding Model<br/>(OpenAI, local)"]
+    B --> C["Vector Database<br/>(store & query)"]
+    Q["Query: 'authentication middleware'"] --> QE["Embed Query"]
+    QE --> C
+    C --> R["Find k nearest vectors<br/>Return matching code chunks"]
 ```
 
 ### Code Chunking Strategies
@@ -608,19 +588,18 @@ class PersistentIndex:
 
 ### Cost-Benefit Analysis
 
-```
-Investment (build time, complexity)
-    ▲
-    │                                              ┌─────────┐
-    │                                    ┌─────────│ Hybrid  │
-    │                          ┌─────────│Embedding│ (tags + │
-    │                ┌─────────│  Tag    │  Index  │embedding│
-    │      ┌─────────│ Ripgrep │  Index  │         │)        │
-    │      │  None   │ (on-    │(ctags/  │         │         │
-    │      │         │ demand) │tree-    │         │         │
-    │      │         │         │sitter)  │         │         │
-    └──────┴─────────┴─────────┴─────────┴─────────┴─────────┴──▶
-                                                     Search Quality
+```mermaid
+flowchart LR
+    subgraph low["Low Investment"]
+        A["None"] --> B["Ripgrep<br/>(on-demand)"]
+    end
+    subgraph med["Medium Investment"]
+        C["Tag Index<br/>(ctags / tree-sitter)"]
+    end
+    subgraph high["High Investment"]
+        D["Embedding Index"] --> E["Hybrid<br/>(tags + embeddings)"]
+    end
+    B --> C --> D
 ```
 
 ---

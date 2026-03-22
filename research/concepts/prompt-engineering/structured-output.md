@@ -32,13 +32,13 @@ The structured output problem is more severe for coding agents than for other LL
 
 Not all structured output is equally constrained:
 
-```
-◄──────────────────────────────────────────────────────────────────────────►
-Freeform text    Loosely structured    Strictly structured    Schema-validated
-(chat response)  (markdown blocks)     (JSON tool calls)      (constrained decoding)
-
-   Aider's          Claude Code's         OpenAI function        llama.cpp GBNF
-   edit blocks       tool_use              calling strict=true    grammar enforcement
+```mermaid
+flowchart LR
+    A["Freeform text<br/>(chat response)"] --> B["Loosely structured<br/>(markdown blocks)"] --> C["Strictly structured<br/>(JSON tool calls)"] --> D["Schema-validated<br/>(constrained decoding)"]
+    AID["Aider's edit blocks"] -.-> B
+    CC["Claude Code's tool_use"] -.-> C
+    OAI["OpenAI function calling strict=true"] -.-> C
+    LLC["llama.cpp GBNF grammar enforcement"] -.-> D
 ```
 
 Most agents in our study operate in the "strictly structured" zone, relying on provider-level
@@ -199,31 +199,11 @@ multiple providers must abstract over these differences.
 
 ### Tool Call Flow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        OpenAI Format                            │
-├─────────────────────────────────────────────────────────────────┤
-│  Request:  tools: [{type: "function", function: {name, ...}}]  │
-│  Response: message.tool_calls: [{id, function: {name, args}}]  │
-│  Result:   {role: "tool", tool_call_id: id, content: "..."}    │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                       Anthropic Format                          │
-├─────────────────────────────────────────────────────────────────┤
-│  Request:  tools: [{name, description, input_schema}]          │
-│  Response: content: [{type: "tool_use", id, name, input}]      │
-│  Result:   {type: "tool_result", tool_use_id: id, content}     │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                        Gemini Format                            │
-├─────────────────────────────────────────────────────────────────┤
-│  Request:  tools: [{function_declarations: [{name, ...}]}]     │
-│  Response: parts: [{function_call: {name, args}}]              │
-│  Result:   parts: [{function_response: {name, response}}]      │
-└─────────────────────────────────────────────────────────────────┘
-```
+| | OpenAI Format | Anthropic Format | Gemini Format |
+|---|---|---|---|
+| **Request** | `tools: [{type: "function", function: {name, ...}}]` | `tools: [{name, description, input_schema}]` | `tools: [{function_declarations: [{name, ...}]}]` |
+| **Response** | `message.tool_calls: [{id, function: {name, args}}]` | `content: [{type: "tool_use", id, name, input}]` | `parts: [{function_call: {name, args}}]` |
+| **Result** | `{role: "tool", tool_call_id: id, content: "..."}` | `{type: "tool_result", tool_use_id: id, content}` | `parts: [{function_response: {name, response}}]` |
 
 ### How Agents Abstract Across Formats
 
@@ -291,18 +271,14 @@ fragility — the parsing relies on the model consistently producing the expecte
 
 ### Trade-offs: Native API vs Freeform Parsing
 
-```
-┌──────────────────────────────┬──────────────────────────────┐
-│     Native Tool Calling      │     Freeform Text Parsing    │
-├──────────────────────────────┼──────────────────────────────┤
-│ ✓ Provider-guaranteed format │ ✓ Works with any model       │
-│ ✓ No custom parser needed    │ ✓ Allows interleaved text    │
-│ ✓ Schema validation free     │ ✓ No provider lock-in        │
-│ ✗ Requires provider support  │ ✗ Fragile regex parsing      │
-│ ✗ Model can't explain inline │ ✗ Edge cases in escaping     │
-│ ✗ Rigid output structure     │ ✗ Must handle partial output │
-└──────────────────────────────┴──────────────────────────────┘
-```
+| Native Tool Calling | Freeform Text Parsing |
+|---|---|
+| ✓ Provider-guaranteed format | ✓ Works with any model |
+| ✓ No custom parser needed | ✓ Allows interleaved text |
+| ✓ Schema validation free | ✓ No provider lock-in |
+| ✗ Requires provider support | ✗ Fragile regex parsing |
+| ✗ Model can't explain inline | ✗ Edge cases in escaping |
+| ✗ Rigid output structure | ✗ Must handle partial output |
 
 ---
 
@@ -403,17 +379,14 @@ the dominant edit format across the agents studied.
 The reason is empirical. **Aider** extensively benchmarked edit formats and found search/replace
 blocks produce significantly fewer edit failures than unified diffs:
 
-```
-Edit Format Performance (Aider benchmarks, approximate)
-┌────────────────────┬──────────────┬──────────────────┐
-│ Format             │ Edit Applies │ Benchmark Score  │
-├────────────────────┼──────────────┼──────────────────┤
-│ search/replace     │ ~98%         │ Highest          │
-│ whole-file         │ ~100%        │ High (but costly)│
-│ unified diff       │ ~85%         │ Lower            │
-│ line-numbered      │ ~80%         │ Lowest           │
-└────────────────────┴──────────────┴──────────────────┘
-```
+**Edit Format Performance (Aider benchmarks, approximate)**
+
+| Format | Edit Applies | Benchmark Score |
+|---|---|---|
+| search/replace | ~98% | Highest |
+| whole-file | ~100% | High (but costly) |
+| unified diff | ~85% | Lower |
+| line-numbered | ~80% | Lowest |
 
 The key insight: language models are better at *reproducing text they've seen* (search/replace)
 than at *counting lines* (udiff, line-numbered). Search/replace leverages the model's
@@ -606,30 +579,13 @@ a single validation layer; all implement multiple fallback mechanisms.
 
 ### The Validation Pipeline
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Model generates output                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 1: Schema Validation (provider-enforced)             │
-│  JSON structure, tool name, required fields, types          │
-└──────────────────────────┬──────────────────────────────────┘
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 2: Regex / Fallback Extraction                       │
-│  Extract JSON from markdown blocks, handle model quirks     │
-└──────────────────────────┬──────────────────────────────────┘
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 3: Semantic Validation                               │
-│  File exists? old_str found? Edit produces parseable code?  │
-└──────────────────────────┬──────────────────────────────────┘
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 4: Apply and Verify                                  │
-│  Apply edit → run linter → retry with error context if fail │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    MG["Model generates output"]
+    MG --> L1["Layer 1: Schema Validation (provider-enforced)<br/>JSON structure, tool name, required fields, types"]
+    L1 --> L2["Layer 2: Regex / Fallback Extraction<br/>Extract JSON from markdown blocks, handle model quirks"]
+    L2 --> L3["Layer 3: Semantic Validation<br/>File exists? old_str found? Edit produces parseable code?"]
+    L3 --> L4["Layer 4: Apply and Verify<br/>Apply edit → run linter → retry with error context if fail"]
 ```
 
 ### Agent-Specific Retry Patterns

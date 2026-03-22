@@ -18,23 +18,21 @@ Think of MCP as "USB for AI agents." Just as USB lets any device work with any c
 
 MCP follows a client-server model built on JSON-RPC 2.0. Your coding agent is the **client** (also called the "host"). External tools and data sources run as **servers**. The protocol defines how they discover each other's capabilities, exchange requests and responses, and manage their lifecycle.
 
-```
-┌─────────────────────┐         ┌──────────────────────┐
-│    Your Agent        │         │   MCP Server         │
-│    (MCP Client)      │         │   (e.g., PostgreSQL) │
-│                      │         │                      │
-│  ┌────────────────┐  │ JSON-RPC│  ┌────────────────┐  │
-│  │ MCP Client Lib │◄─┼────────►│  │ MCP Server Lib │  │
-│  └────────────────┘  │  over   │  └────────────────┘  │
-│                      │ stdio / │                      │
-│  ┌────────────────┐  │ HTTP+SSE│  ┌────────────────┐  │
-│  │ Tool Registry  │  │         │  │ Tool Handlers  │  │
-│  └────────────────┘  │         │  └────────────────┘  │
-│                      │         │                      │
-│  ┌────────────────┐  │         │  ┌────────────────┐  │
-│  │ Agentic Loop   │  │         │  │ Resource Store │  │
-│  └────────────────┘  │         │  └────────────────┘  │
-└─────────────────────┘         └──────────────────────┘
+```mermaid
+flowchart LR
+    subgraph AGENT["Your Agent (MCP Client)"]
+        LIB["MCP Client Lib"]
+        TOOLS["Tool Registry"]
+        LOOP["Agentic Loop"]
+    end
+
+    subgraph SERVER["MCP Server (e.g., PostgreSQL)"]
+        SLIB["MCP Server Lib"]
+        HANDLERS["Tool Handlers"]
+        STORE["Resource Store"]
+    end
+
+    LIB <-->|"JSON-RPC over stdio / HTTP+SSE"| SLIB
 ```
 
 ## Transport Layer

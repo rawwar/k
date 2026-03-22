@@ -388,9 +388,12 @@ asyncio.run(stream_llm())
 WebSocket connections can go silent during long computations. Ping/pong frames
 prevent intermediary proxies and load balancers from closing idle connections:
 
-```
-Client → Server: Ping frame (opcode 0x9)
-Server → Client: Pong frame (opcode 0xA) with same payload
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: Ping frame (opcode 0x9)
+    S->>C: Pong frame (opcode 0xA) with same payload
 ```
 
 Most WebSocket libraries handle ping/pong automatically. Typical intervals:
@@ -829,14 +832,13 @@ tool servers. MCP supports multiple transport layers.
 The simplest transport: the MCP server is a child process, and communication happens
 over stdin/stdout using JSON-RPC 2.0 messages.
 
-```
-Agent Process                    MCP Server Process
-     │                                  │
-     │──── stdin (JSON-RPC request) ───→│
-     │                                  │
-     │←── stdout (JSON-RPC response) ───│
-     │                                  │
-     │←── stdout (JSON-RPC notification)│
+```mermaid
+sequenceDiagram
+    participant A as Agent Process
+    participant M as MCP Server Process
+    A->>M: stdin (JSON-RPC request)
+    M->>A: stdout (JSON-RPC response)
+    M->>A: stdout (JSON-RPC notification)
 ```
 
 Example JSON-RPC over stdio:
@@ -860,15 +862,15 @@ MCP servers.
 The original HTTP-based MCP transport uses SSE for server→client messages and
 POST requests for client→server messages:
 
-```
-Client                              MCP Server
-  │                                     │
-  │── GET /sse ────────────────────────→│  (opens SSE stream)
-  │←── event: endpoint                  │
-  │←── data: /messages?session=abc      │
-  │                                     │
-  │── POST /messages?session=abc ──────→│  (send JSON-RPC request)
-  │←── SSE event with JSON-RPC response │
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as MCP Server
+    C->>S: GET /sse (opens SSE stream)
+    S-->>C: event: endpoint
+    S-->>C: data: /messages?session=abc
+    C->>S: POST /messages?session=abc (JSON-RPC request)
+    S-->>C: SSE event with JSON-RPC response
 ```
 
 This two-channel approach (SSE for receiving, POST for sending) bridges the
@@ -878,14 +880,14 @@ unidirectional nature of SSE for the bidirectional JSON-RPC protocol.
 
 The newer MCP transport simplifies the SSE approach into a single HTTP endpoint:
 
-```
-Client                              MCP Server
-  │                                     │
-  │── POST /mcp (JSON-RPC request) ───→│
-  │←── SSE stream (responses + notifs)  │
-  │                                     │
-  │── POST /mcp (another request) ────→│
-  │←── Single JSON response             │
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as MCP Server
+    C->>S: POST /mcp (JSON-RPC request)
+    S-->>C: SSE stream (responses + notifications)
+    C->>S: POST /mcp (another request)
+    S->>C: Single JSON response
 ```
 
 Key improvements over the legacy SSE transport:

@@ -13,51 +13,21 @@ execution paths and analyzing the multi-model delegation strategy.
 
 ## Core Execution Loop
 
-```
-┌─────────────┐
-│  User Task   │
-└──────┬──────┘
-       │
-       ▼
-┌──────────────┐     ┌──────────────────────┐
-│  Understand   │────▶│ Explore codebase,     │
-│  (Analysis)   │     │ read files, analyze   │
-└──────┬───────┘     │ project structure     │
-       │              └──────────────────────┘
-       ▼
-┌──────────────┐     ┌──────────────────────┐
-│    Plan       │────▶│ Create execution plan,│
-│  (Strategy)   │     │ identify files to     │
-└──────┬───────┘     │ modify, estimate scope│
-       │              └──────────────────────┘
-       ▼
-┌──────────────┐     ┌──────────────────────┐
-│  Implement    │────▶│ Write/modify code,    │
-│  (Execution)  │     │ create new files,     │
-└──────┬───────┘     │ apply refactorings    │
-       │              └──────────────────────┘
-       ▼
-┌──────────────┐     ┌──────────────────────┐
-│   Verify      │────▶│ Run tests, check      │
-│ (Validation)  │     │ inspections, validate │
-└──────┬───────┘     │ compilation           │
-       │              └──────────────────────┘
-       │
-       ▼
-   ┌────────┐     Yes    ┌──────────────┐
-   │ Pass?  │───────────▶│   Present    │
-   └───┬────┘            │  (Results)   │
-       │ No              └──────────────┘
-       │
-       ▼
-┌──────────────┐
-│  Diagnose     │
-│  (Analysis)   │─────────────┐
-└──────────────┘              │
-                              │ Loop back to
-                              │ Implement or Plan
-                              ▼
-                    (Return to appropriate stage)
+```mermaid
+flowchart TD
+    UT[User Task] --> UN["Understand (Analysis)"]
+    UN --> UN2["Explore codebase, read files,\nanalyze project structure"]
+    UN --> PL["Plan (Strategy)"]
+    PL --> PL2["Create execution plan,\nidentify files to modify,\nestimate scope"]
+    PL --> IM["Implement (Execution)"]
+    IM --> IM2["Write/modify code,\ncreate new files,\napply refactorings"]
+    IM --> VR["Verify (Validation)"]
+    VR --> VR2["Run tests, check inspections,\nvalidate compilation"]
+    VR --> PASS{Pass?}
+    PASS -->|yes| PR["Present (Results)"]
+    PASS -->|no| DG["Diagnose (Analysis)"]
+    DG -->|loop back| IM
+    DG -->|reassess| PL
 ```
 
 ## Phase 1: Understanding
@@ -196,51 +166,33 @@ For each step in plan:
 
 #### IDE Mode Implementation
 
-```
-┌────────────────────────────────────────────┐
-│              IDE Implementation             │
-│                                            │
-│  1. Open file in editor (virtual)          │
-│  2. Use PSI to locate exact AST nodes      │
-│  3. Apply refactoring via IntelliJ API:    │
-│     - RenameProcessor                      │
-│     - ExtractMethodProcessor               │
-│     - InlineProcessor                      │
-│     - IntroduceVariableHandler             │
-│  4. Run inspections on modified code       │
-│  5. Auto-format with IDE formatter         │
-│  6. Update imports automatically           │
-│                                            │
-│  Guarantees:                               │
-│  ✅ Semantically correct refactoring       │
-│  ✅ All references updated                 │
-│  ✅ Imports managed correctly              │
-│  ✅ Formatting consistent                  │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Open file in editor] --> B[Use PSI to locate AST nodes]
+    B --> C[Apply refactoring via IntelliJ API]
+    C --> C1[RenameProcessor]
+    C --> C2[ExtractMethodProcessor]
+    C --> C3[InlineProcessor]
+    C --> C4[IntroduceVariableHandler]
+    C1 & C2 & C3 & C4 --> D[Run inspections on modified code]
+    D --> E[Auto-format with IDE formatter]
+    E --> F[Update imports automatically]
+    F --> G["✅ Semantically correct refactoring\n✅ All references updated\n✅ Imports managed correctly\n✅ Formatting consistent"]
 ```
 
 #### CLI Mode Implementation
 
-```
-┌────────────────────────────────────────────┐
-│              CLI Implementation             │
-│                                            │
-│  1. Read file from disk                    │
-│  2. Use LLM to determine edit locations    │
-│  3. Apply changes via:                     │
-│     - Targeted text replacement            │
-│     - Full file rewrite                    │
-│     - Patch application                    │
-│  4. Write modified file to disk            │
-│  5. Run linter/formatter if available      │
-│  6. Check for syntax errors                │
-│                                            │
-│  Trade-offs:                               │
-│  ⚠️  Text-based (no semantic guarantee)    │
-│  ⚠️  References may be missed              │
-│  ⚠️  Import management is heuristic        │
-│  ✅  Still leverages JetBrains knowledge   │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Read file from disk] --> B[Use LLM to determine edit locations]
+    B --> C[Apply changes]
+    C --> C1[Targeted text replacement]
+    C --> C2[Full file rewrite]
+    C --> C3[Patch application]
+    C1 & C2 & C3 --> D[Write modified file to disk]
+    D --> E[Run linter/formatter if available]
+    E --> F[Check for syntax errors]
+    F --> G["⚠️ Text-based — no semantic guarantee\n⚠️ References may be missed\n⚠️ Import management is heuristic\n✅ Still leverages JetBrains knowledge"]
 ```
 
 ### Multi-Model Delegation in Implementation
@@ -262,41 +214,22 @@ treats test execution as a first-class operation, not an afterthought.
 
 ### Test Execution Flow
 
-```
-┌──────────────────┐
-│  Identify Tests   │
-│                  │
-│  - Find test files related to changed code
-│  - Determine test command (mvn test, pytest, npm test, etc.)
-│  - Identify specific test classes/methods if possible
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Execute Tests    │
-│                  │
-│  IDE Mode:  Use IDE test runner (structured results)
-│  CLI Mode:  Run shell command (parse terminal output)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Parse Results    │
-│                  │
-│  - Identify passed/failed/skipped counts
-│  - Extract failure messages and stack traces
-│  - Map failures to source locations
-│  - Determine if failures are related to changes
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Analyze Results  │
-│                  │
-│  All pass → Proceed to present results
-│  Failures → Enter diagnostic loop
-│  Flaky   → May re-run to confirm
-└──────────────────┘
+```mermaid
+flowchart TD
+    A[Identify Tests] --> A1["Find test files related to changed code"]
+    A --> A2["Determine test command (mvn test, pytest, npm test…)"]
+    A --> A3["Identify specific test classes/methods if possible"]
+    A1 & A2 & A3 --> B[Execute Tests]
+    B --> B1["IDE Mode: use IDE test runner (structured results)"]
+    B --> B2["CLI Mode: run shell command (parse terminal output)"]
+    B1 & B2 --> C[Parse Results]
+    C --> C1[Identify passed/failed/skipped counts]
+    C --> C2[Extract failure messages and stack traces]
+    C --> C3[Map failures to source locations]
+    C1 & C2 & C3 --> D[Analyze Results]
+    D -->|all pass| E[Proceed to present results]
+    D -->|failures| F[Enter diagnostic loop]
+    D -->|flaky| G[Re-run to confirm]
 ```
 
 ### IDE vs CLI Verification Differences
@@ -354,34 +287,21 @@ JetBrains' knowledge of test framework output formats.
 
 When tests fail, Junie enters a diagnostic loop:
 
-```
-┌──────────────────────────────────────────────┐
-│              Diagnostic Loop                  │
-│                                              │
-│  1. Analyze test failure:                    │
-│     - Read failure message and stack trace   │
-│     - Identify failing assertion             │
-│     - Determine root cause category:         │
-│       a) Bug in new code                     │
-│       b) Test needs updating                 │
-│       c) Pre-existing issue exposed          │
-│       d) Environment/configuration issue     │
-│                                              │
-│  2. Determine fix strategy:                  │
-│     - Fix the code (most common)             │
-│     - Update the test expectation            │
-│     - Address environment issue              │
-│     - Escalate to user if unclear            │
-│                                              │
-│  3. Apply fix and re-verify                  │
-│                                              │
-│  4. Repeat until:                            │
-│     - All tests pass (success)               │
-│     - Max iterations reached (escalate)      │
-│     - User interrupts (stop)                 │
-│                                              │
-│  Typical max iterations: 3-5                 │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Analyze test failure] --> B[Read failure message and stack trace]
+    B --> C[Identify failing assertion]
+    C --> D{Root cause category}
+    D -->|Bug in new code| E[Fix the code]
+    D -->|Test needs updating| F[Update test expectation]
+    D -->|Pre-existing issue| G[Address or document]
+    D -->|Environment issue| H[Address environment config]
+    D -->|Unclear| I[Escalate to user]
+    E & F & G & H --> J[Apply fix and re-verify]
+    J --> K{All tests pass?}
+    K -->|yes| L[Success]
+    K -->|no — iterate| A
+    K -->|max iterations reached| I
 ```
 
 ### Diagnostic Model Selection
@@ -447,34 +367,15 @@ High Risk (typically requires approval):
 
 ### Approval Flow
 
-```
-Agent wants to execute action
-         │
-         ▼
-┌────────────────┐
-│ Check policy    │
-│ for action type │
-└────────┬───────┘
-         │
-    ┌────┴─────┐
-    │          │
-    ▼          ▼
-Auto-approve  Require approval
-    │          │
-    │          ▼
-    │    ┌─────────────┐
-    │    │ Present to   │
-    │    │ user with    │
-    │    │ explanation  │
-    │    └──────┬──────┘
-    │           │
-    │      ┌────┴────┐
-    │      │         │
-    │      ▼         ▼
-    │   Approved   Rejected
-    │      │         │
-    ▼      ▼         ▼
-  Execute Execute   Skip/Abort
+```mermaid
+flowchart TD
+    B[Check policy for action type]
+    A[Agent wants to execute action] --> B
+    B -->|auto-approve| E[Execute]
+    B -->|require approval| C[Present to user with explanation]
+    C --> D{Decision}
+    D -->|approved| E
+    D -->|rejected| F[Skip/Abort]
 ```
 
 ## Iteration Limits and Safeguards

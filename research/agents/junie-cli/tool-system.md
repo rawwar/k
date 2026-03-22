@@ -132,27 +132,21 @@ The agent has specialized knowledge about test frameworks:
 
 #### Test Framework Knowledge
 
-```
-┌─────────────────────────────────────────────────┐
-│              Test Framework Registry              │
-│                                                 │
-│  Language    Framework    Run Command    Parser  │
-│  ─────────  ──────────   ───────────    ──────  │
-│  Java       JUnit 5      mvn test       JUnit   │
-│  Java       TestNG       mvn test       TestNG  │
-│  Kotlin     JUnit 5      gradle test    JUnit   │
-│  Python     pytest       pytest -v      Pytest  │
-│  Python     unittest     python -m ut   Pytest  │
-│  JavaScript Jest         npx jest       Jest    │
-│  JavaScript Vitest       npx vitest     Vitest  │
-│  TypeScript Jest         npx jest       Jest    │
-│  Go         testing      go test        GoTest  │
-│  Rust       cargo test   cargo test     Cargo   │
-│  Ruby       RSpec        bundle exec    RSpec   │
-│  C#         NUnit        dotnet test    NUnit   │
-│  C#         xUnit        dotnet test    xUnit   │
-└─────────────────────────────────────────────────┘
-```
+| Language   | Framework  | Run Command      | Parser |
+|------------|------------|------------------|--------|
+| Java       | JUnit 5    | mvn test         | JUnit  |
+| Java       | TestNG     | mvn test         | TestNG |
+| Kotlin     | JUnit 5    | gradle test      | JUnit  |
+| Python     | pytest     | pytest -v        | Pytest |
+| Python     | unittest   | python -m ut     | Pytest |
+| JavaScript | Jest       | npx jest         | Jest   |
+| JavaScript | Vitest     | npx vitest       | Vitest |
+| TypeScript | Jest       | npx jest         | Jest   |
+| Go         | testing    | go test          | GoTest |
+| Rust       | cargo test | cargo test       | Cargo  |
+| Ruby       | RSpec      | bundle exec      | RSpec  |
+| C#         | NUnit      | dotnet test      | NUnit  |
+| C#         | xUnit      | dotnet test      | xUnit  |
 
 #### Test Result Parsing
 
@@ -401,26 +395,24 @@ toward Model Context Protocol (MCP) or a similar extension mechanism:
 
 ### Potential MCP Integration Architecture
 
-```
-┌─────────────────────────────────┐
-│         Junie Agent Core         │
-│                                 │
-│  ┌───────────────────────────┐  │
-│  │     Tool Router            │  │
-│  │                           │  │
-│  │  Built-in tools           │  │
-│  │    ├── File operations    │  │
-│  │    ├── Shell execution    │  │
-│  │    ├── Git operations     │  │
-│  │    └── Code search        │  │
-│  │                           │  │
-│  │  MCP servers (external)   │  │
-│  │    ├── Database access    │  │
-│  │    ├── API clients        │  │
-│  │    ├── Custom tools       │  │
-│  │    └── Domain-specific    │  │
-│  └───────────────────────────┘  │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Core["Junie Agent Core"]
+        subgraph Router["Tool Router"]
+            subgraph Builtin["Built-in tools"]
+                B1[File operations]
+                B2[Shell execution]
+                B3[Git operations]
+                B4[Code search]
+            end
+            subgraph MCP["MCP servers (external)"]
+                M1[Database access]
+                M2[API clients]
+                M3[Custom tools]
+                M4[Domain-specific]
+            end
+        end
+    end
 ```
 
 ## Tool Execution Safety

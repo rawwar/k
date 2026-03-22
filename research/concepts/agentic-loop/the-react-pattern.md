@@ -24,25 +24,22 @@ Before ReAct, there were two separate lines of work:
 
 ReAct's insight: **interleave them**. Let the model alternate between generating reasoning traces (Thoughts) and task-specific actions. Reasoning traces help the model induce, track, and update action plans, handle exceptions, and adjust its approach. Actions allow interfacing with external sources — knowledge bases, file systems, APIs, environments — for additional information that the model cannot hallucinate.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     THE KEY DIAGRAM FROM THE PAPER                  │
-│                                                                     │
-│   Chain-of-Thought          Action-Only             ReAct           │
-│   ─────────────────   ─────────────────────   ─────────────────── │
-│   Thought 1            Action 1                Thought 1            │
-│   Thought 2            Observation 1           Action 1             │
-│   Thought 3            Action 2                Observation 1        │
-│   ... (no grounding)   Observation 2           Thought 2            │
-│   Answer               ... (no reasoning)      Action 2             │
-│                        Answer                  Observation 2        │
-│                                                Thought 3            │
-│                                                Answer               │
-│                                                                     │
-│   ✗ Hallucination      ✗ No error recovery     ✓ Grounded          │
-│   ✗ Error propagation  ✗ No planning           ✓ Adaptive           │
-│   ✓ Internal reasoning ✓ Grounded              ✓ Both               │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph cot["Chain-of-Thought"]
+        CT1["Thought 1"] --> CT2["Thought 2"] --> CT3["Thought 3"]
+        CT3 --> CTA["Answer\n(no grounding ✗)"]
+    end
+    subgraph ao["Action-Only"]
+        AA1["Action 1"] --> AO1["Observation 1"]
+        AO1 --> AA2["Action 2"] --> AO2["Observation 2"]
+        AO2 --> AOA["Answer\n(no reasoning ✗)"]
+    end
+    subgraph react["ReAct ✓"]
+        RT1["Thought 1"] --> RA1["Action 1"] --> RO1["Observation 1"]
+        RO1 --> RT2["Thought 2"] --> RA2["Action 2"] --> RO2["Observation 2"]
+        RO2 --> RT3["Thought 3"] --> RAN["Answer\n(grounded + adaptive ✓)"]
+    end
 ```
 
 ### Benchmark Results
@@ -60,21 +57,20 @@ The paper tested ReAct on four benchmarks spanning knowledge-intensive reasoning
 
 The power of ReAct comes from closing the feedback loop between the model's internal world model and the external environment:
 
-```
-Model's internal state          External environment
-┌──────────────────┐            ┌──────────────────┐
-│  Current beliefs │◄───────────│  Observation     │
-│  about the world │  feedback  │  (actual state)  │
-├──────────────────┤            └──────────▲───────┘
-│  Updated plan    │                       │
-│  based on new    │─────────────────────►│
-│  information     │     action           │
-└──────────────────┘                      │
-                                   ┌──────┴───────┐
-                                   │  Environment │
-                                   │  executes    │
-                                   │  action      │
-                                   └──────────────┘
+```mermaid
+flowchart LR
+    subgraph model["Model's internal state"]
+        CB["Current beliefs\nabout the world"]
+        UP["Updated plan\nbased on new information"]
+        CB --> UP
+    end
+    subgraph env["External environment"]
+        OBS["Observation\n(actual state)"]
+        ENV["Environment\nexecutes action"]
+    end
+    OBS -->|feedback| CB
+    UP -->|action| ENV
+    ENV --> OBS
 ```
 
 - **Reasoning provides grounding**: The model articulates *why* it's taking an action, making it less likely to take random or hallucinated actions.
@@ -123,24 +119,35 @@ The result of executing the action, fed back to the model as new context. In mod
 
 The ReAct cycle maps directly to the message format used by every major LLM provider:
 
-```
-Original ReAct Paper              Modern LLM API (OpenAI/Anthropic/Google)
-─────────────────────────         ──────────────────────────────────────────
-                                  messages = [
-System context                        {role: "system", content: "You are..."},
-Task description                      {role: "user",   content: "Fix the bug..."},
-                                  ]
-
-Thought 1: I should look at...    → response = llm.chat(messages)
-Action 1: Search[bug location]    → response.tool_calls = [{name: "grep", args: {...}}]
-
-                                  messages.append(response)  // assistant message WITH tool_calls
-
-Observation 1: Found in main.py   → messages.append({role: "tool", content: "main.py:42: ..."})
-
-Thought 2: The bug is on line 42  → response = llm.chat(messages)
-Action 2: Edit[main.py, ...]      → response.tool_calls = [{name: "edit", args: {...}}]
-...                                ...
+```mermaid
+flowchart LR
+    subgraph paper["Original ReAct Paper"]
+        P1["System context"]
+        P2["Task description"]
+        P3["Thought 1: I should look at..."]
+        P4["Action 1: Search[bug location]"]
+        P5["Observation 1: Found in main.py"]
+        P6["Thought 2: The bug is on line 42"]
+        P7["Action 2: Edit[main.py, ...]"]
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
+    end
+    subgraph api["Modern LLM API"]
+        A1["{role: system, content: 'You are...'}"]
+        A2["{role: user, content: 'Fix the bug...'}"]
+        A3["response = llm.chat(messages)"]
+        A4["response.tool_calls = [{name: 'grep', ...}]"]
+        A5["messages.append({role: 'tool', content: result})"]
+        A6["response = llm.chat(messages)"]
+        A7["response.tool_calls = [{name: 'edit', ...}]"]
+        A1 --> A2 --> A3 --> A4 --> A5 --> A6 --> A7
+    end
+    P1 -.->|maps to| A1
+    P2 -.->|maps to| A2
+    P3 -.->|maps to| A3
+    P4 -.->|maps to| A4
+    P5 -.->|maps to| A5
+    P6 -.->|maps to| A6
+    P7 -.->|maps to| A7
 ```
 
 The API literally formalized the ReAct pattern. What Yao et al. described as text prefixes (`Thought:`, `Action:`, `Observation:`) became structured message roles (`assistant`, `tool_calls`, `tool`).
@@ -519,15 +526,17 @@ final_answer(height)
 
 ### The Evolution
 
-```
-2022: Text-based ReAct ─────► Flexible but fragile
-          │
-          ▼
-2023: Function Calling ─────► Structured but constrained
-          │                     (APIs formalized the pattern)
-          ▼
-2024: Code-as-Action ───────► Expressive but risky
-                                (full programming language as action space)
+```mermaid
+flowchart LR
+    A["2022: Text-based ReAct
+Flexible but fragile"]
+    B["2023: Function Calling
+Structured but constrained
+APIs formalized the pattern"]
+    C["2024: Code-as-Action
+Expressive but risky
+Full programming language as action space"]
+    A --> B --> C
 ```
 
 Each step traded flexibility for reliability or vice versa. Function calling is the dominant equilibrium — reliable enough for production, expressive enough for most tasks. Code-as-action is gaining traction where step efficiency matters.
@@ -544,24 +553,30 @@ mini-SWE-agent proves that the ReAct loop, with nothing added, is sufficient for
 
 ### The Complete Architecture
 
-```
-┌─────────────────────────────────────────────────┐
-│                  DefaultAgent                    │
-│                                                  │
-│  State: messages[], cost, n_calls               │
-│                                                  │
-│  run(task)                                       │
-│    ├── Initialize [system_msg, user_msg]         │
-│    └── while True:                               │
-│          ├── step()                              │
-│          │    ├── query()      ← call the LLM   │
-│          │    └── execute_actions() ← run tools  │
-│          └── if exit: break                      │
-│                                                  │
-│  Dependencies: Model, Environment               │
-│  Config: system_template, instance_template,     │
-│          step_limit, cost_limit, output_path     │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    DA["DefaultAgent"]
+    S["State: messages[], cost, n_calls"]
+    R["run(task)"]
+    I["Initialize [system_msg, user_msg]"]
+    W["while True"]
+    ST["step()"]
+    Q["query() ← call the LLM"]
+    EA["execute_actions() ← run tools"]
+    EX{"if exit: break"}
+    D["Dependencies: Model, Environment"]
+    C["Config: system_template, instance_template,
+step_limit, cost_limit, output_path"]
+    DA --> S
+    DA --> R
+    R --> I
+    R --> W
+    W --> ST
+    ST --> Q
+    ST --> EA
+    W --> EX
+    DA --> D
+    DA --> C
 ```
 
 ### The Two-Line Heart
@@ -854,12 +869,12 @@ Add a mandatory verification step before task completion:
 
 Instead of a linear Thought → Action chain, Tree of Thoughts (Yao et al., 2023) explores multiple reasoning paths in parallel, evaluating each and selecting the best:
 
-```
-                    ┌── Thought A1 → Action → Obs → Thought A2 → ...
-                    │
-Initial State ──────┼── Thought B1 → Action → Obs → Thought B2 → ...
-                    │
-                    └── Thought C1 → Action → Obs → (pruned)
+```mermaid
+flowchart LR
+    IS["Initial State"]
+    IS --> A1["Thought A1 → Action → Obs → Thought A2 → …"]
+    IS --> B1["Thought B1 → Action → Obs → Thought B2 → …"]
+    IS --> C1["Thought C1 → Action → Obs → (pruned)"]
 ```
 
 **Why it's rare in coding agents**: Each branch requires separate LLM calls and separate environment state (you'd need to fork the codebase for each branch). The cost is multiplicative — 3 branches × 10 steps × $0.10/step = $3.00 vs. $1.00 for linear ReAct. For most coding tasks, the linear approach with error recovery is more cost-effective.
@@ -870,20 +885,9 @@ Initial State ──────┼── Thought B1 → Action → Obs → Thou
 
 ReAct is to coding agents what the event loop is to Node.js, what the request-response cycle is to web servers, what map-reduce is to distributed computing. It is the **universal primitive** — the irreducible core that every system implements, even when buried under layers of abstraction.
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│    ReAct is not one pattern among many.                      │
-│    It is THE pattern.                                        │
-│                                                              │
-│    Everything else — streaming, state machines,              │
-│    multi-agent orchestration, context management,            │
-│    verification enforcement — is built on top of it.         │
-│                                                              │
-│    An agent without ReAct is not an agent.                   │
-│    It's a chatbot.                                           │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    REACT["ReAct is not one pattern among many.\nIt is THE pattern.\n\nEverything else — streaming, state machines,\nmulti-agent orchestration, context management,\nverification enforcement — is built on top of it.\n\nAn agent without ReAct is not an agent.\nIt's a chatbot."]
 ```
 
 The Thought → Action → Observation cycle will remain the foundation as long as we have:

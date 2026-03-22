@@ -45,30 +45,16 @@ enforced.
 Anthropic describes the evaluator-optimizer as a two-agent loop where one agent
 generates and another evaluates, iterating until quality criteria are met:
 
-```
-┌─────────────────────────────────────────────────────┐
-│              EVALUATOR-OPTIMIZER LOOP                │
-│                                                     │
-│  ┌────────────┐         ┌────────────┐              │
-│  │ Generator   │────────►│ Evaluator   │              │
-│  │ (Optimizer) │         │ (Critic)    │              │
-│  │             │◄────────│             │              │
-│  │ Generates   │ feedback│ Evaluates   │              │
-│  │ or refines  │         │ and scores  │              │
-│  │ the output  │         │             │              │
-│  └────────────┘         └──────┬─────┘              │
-│                                │                     │
-│                        Meets criteria?               │
-│                         │           │                │
-│                        Yes          No               │
-│                         │           │                │
-│                    ┌────▼───┐  ┌───▼────────────┐   │
-│                    │ ACCEPT  │  │ FEEDBACK to     │   │
-│                    │ output  │  │ generator with  │   │
-│                    └─────────┘  │ specific issues │   │
-│                                 └─────────────────┘   │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    G["Generator (Optimizer)\nGenerates or refines output"]
+    E["Evaluator (Critic)\nEvaluates and scores"]
+    A["ACCEPT output"]
+    F["FEEDBACK to generator\nwith specific issues"]
+    G -->|"output"| E
+    E -->|"meets criteria? Yes"| A
+    E -->|"meets criteria? No"| F
+    F -->|"feedback"| G
 ```
 
 **When to use (from Anthropic):**
@@ -91,19 +77,19 @@ Code is an ideal domain for this pattern because:
 
 The evaluator runs after the implementer completes, acting as a quality gate:
 
-```
-Implementer ──(code changes)──► Evaluator ──(pass/fail)──► Result
-                                    │
-                                    │ (if fail)
-                                    ▼
-                              Feedback to implementer
-                              "Fix these issues: ..."
-                                    │
-                                    ▼
-                              Implementer revises
-                                    │
-                                    ▼
-                              Evaluator re-reviews
+```mermaid
+flowchart TD
+    I["Implementer"]
+    E["Evaluator"]
+    R["Result"]
+    FB["Feedback to implementer\n'Fix these issues: ...'"]
+    IR["Implementer revises"]
+    ER["Evaluator re-reviews"]
+    I -->|"code changes"| E
+    E -->|"pass"| R
+    E -->|"fail"| FB
+    FB --> IR
+    IR --> ER
 ```
 
 ```python
@@ -132,13 +118,15 @@ def implement_with_review(task, max_iterations=3):
 
 SageAgent's ObservationAgent monitors execution continuously, not just at the end:
 
-```
-Planning → Execution → Observation ──(loop)──► Planning
-               │              │
-               │      Observes progress
-               │      after EACH step
-               │              │
-               └──────────────┘
+```mermaid
+flowchart LR
+    PL["Planning"]
+    EX["Execution"]
+    OB["Observation\n(after each step)"]
+    SUM["Summary"]
+    PL --> EX --> OB
+    OB -->|"loop: revise plan"| PL
+    OB -->|"done"| SUM
 ```
 
 ```python
@@ -176,29 +164,18 @@ before Step 3 builds on it.
 ForgeCode's verification is not an LLM review — it's a **programmatic enforcement**
 that requires specific checks to pass before task completion:
 
-```
-Implementer completes task
-  │
-  ▼
-Runtime blocks completion
-  │
-  ├── Switches to reviewer mode
-  │   (high thinking budget)
-  │
-  ├── Generates verification checklist:
-  │   □ All modified files compile
-  │   □ Tests pass
-  │   □ No new linter warnings
-  │   □ Changes match original request
-  │   □ Edge cases addressed
-  │
-  ├── Runs each check programmatically
-  │
-  ├── If any check fails:
-  │   → Returns to implementation with specific failure
-  │
-  └── If all checks pass:
-      → Task marked complete
+```mermaid
+flowchart TD
+    I["Implementer completes task"]
+    R["Runtime blocks completion\n(switches to reviewer mode)"]
+    CL["Generates verification checklist:\n□ Files compile\n□ Tests pass\n□ No new linter warnings\n□ Changes match request\n□ Edge cases addressed"]
+    CH["Runs each check programmatically"]
+    F["Check fails\n→ Return to implementation\nwith specific failure"]
+    P["All checks pass\n→ Task marked complete"]
+    I --> R --> CL --> CH
+    CH -->|"fail"| F
+    CH -->|"pass"| P
+    F --> I
 ```
 
 ```python
@@ -241,29 +218,19 @@ verification mandatory.
 Multiple evaluators independently review the same changes, similar to Anthropic's
 "voting" parallelization pattern:
 
-```
-                    ┌─────────────────┐
-                    │ Code Changes     │
-                    └──┬──────┬──────┬┘
-                       │      │      │
-              ┌────────┘      │      └────────┐
-              ▼               ▼               ▼
-     ┌────────────┐  ┌────────────┐  ┌────────────┐
-     │ Reviewer 1  │  │ Reviewer 2  │  │ Reviewer 3  │
-     │ (bugs)      │  │ (security)  │  │ (perf)      │
-     └──────┬─────┘  └──────┬─────┘  └──────┬─────┘
-            │               │               │
-            ▼               ▼               ▼
-     ┌────────────────────────────────────────┐
-     │         AGGREGATOR                     │
-     │                                        │
-     │  Reviewer 1: "No bugs found"           │
-     │  Reviewer 2: "XSS vulnerability in     │
-     │               input handler"           │
-     │  Reviewer 3: "O(n²) loop in process()" │
-     │                                        │
-     │  Decision: REJECT (2 issues found)     │
-     └────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    CC["Code Changes"]
+    R1["Reviewer 1\n(bugs)"]
+    R2["Reviewer 2\n(security)"]
+    R3["Reviewer 3\n(perf)"]
+    AGG["Aggregator\nReviewer 1: No bugs found\nReviewer 2: XSS vulnerability in input handler\nReviewer 3: O(n²) loop in process()\nDecision: REJECT"]
+    CC --> R1
+    CC --> R2
+    CC --> R3
+    R1 --> AGG
+    R2 --> AGG
+    R3 --> AGG
 ```
 
 ```python
@@ -303,34 +270,13 @@ Quality gates are checkpoints where evaluation must pass before proceeding:
 
 ### Gate Types
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    QUALITY GATES                          │
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│  GATE 1: Pre-Implementation                              │
-│  ├── Plan review: Is the plan complete and correct?      │
-│  ├── Risk assessment: Are edge cases identified?         │
-│  └── Scope check: Does the plan match the request?       │
-│                                                          │
-│  GATE 2: Post-Implementation                             │
-│  ├── Compilation: Does the code compile/parse?           │
-│  ├── Linting: No new warnings or errors?                 │
-│  ├── Tests: All tests pass?                              │
-│  └── Type checking: No type errors?                      │
-│                                                          │
-│  GATE 3: Review                                          │
-│  ├── Code review: Correct, readable, maintainable?       │
-│  ├── Security review: No vulnerabilities introduced?     │
-│  ├── Performance review: No regressions?                 │
-│  └── Requirements match: Does output match input?        │
-│                                                          │
-│  GATE 4: Integration                                     │
-│  ├── Integration tests: Works with existing code?        │
-│  ├── Regression tests: Nothing else broken?              │
-│  └── Documentation: Updated if needed?                   │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    G1["Gate 1: Pre-Implementation\n─ Plan review\n─ Risk assessment\n─ Scope check"]
+    G2["Gate 2: Post-Implementation\n─ Compilation\n─ Linting\n─ Tests\n─ Type checking"]
+    G3["Gate 3: Review\n─ Code review\n─ Security review\n─ Performance review\n─ Requirements match"]
+    G4["Gate 4: Integration\n─ Integration tests\n─ Regression tests\n─ Documentation"]
+    G1 --> G2 --> G3 --> G4
 ```
 
 ### Programmatic vs LLM-Based Gates
@@ -544,19 +490,13 @@ async def multi_aspect_loop(task):
 
 **Best systems use both:**
 
-```
-Code changes
-  │
-  ├── Programmatic verification (fast, reliable)
-  │   ├── Compile ✓
-  │   ├── Lint ✓
-  │   ├── Type check ✓
-  │   └── Tests ✓
-  │
-  └── LLM evaluation (thorough, flexible)
-      ├── Code review
-      ├── Security review
-      └── Requirements match
+```mermaid
+flowchart TD
+    CC["Code changes"]
+    PV["Programmatic verification\n(fast, reliable)\n─ Compile ✓\n─ Lint ✓\n─ Type check ✓\n─ Tests ✓"]
+    LE["LLM evaluation\n(thorough, flexible)\n─ Code review\n─ Security review\n─ Requirements match"]
+    CC --> PV
+    CC --> LE
 ```
 
 ---

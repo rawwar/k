@@ -235,20 +235,11 @@ aider --model claude-opus-4-6 --editor-model claude-sonnet-4-6
 
 **How it works:**
 
-```
-User Request
-    │
-    ▼
-┌──────────────────┐
-│  Architect (o3)  │  ← Reasons about what changes to make
-│  "Plan the edit" │  ← Produces high-level instructions
-└────────┬─────────┘
-         │ Instructions
-         ▼
-┌──────────────────┐
-│  Editor (GPT-4.1)│  ← Translates plan into actual code edits
-│  "Make the edit" │  ← Produces search/replace blocks
-└──────────────────┘
+```mermaid
+flowchart TD
+    UR["User Request"]
+    UR --> ARCH["Architect (o3)\n'Plan the edit'\nReasons about what changes to make\nProduces high-level instructions"]
+    ARCH -->|"Instructions"| ED["Editor (GPT-4.1)\n'Make the edit'\nTranslates plan into actual code edits\nProduces search/replace blocks"]
 ```
 
 **Cost savings:** The expensive reasoning model only produces a short plan; the
@@ -258,18 +249,18 @@ cheaper model does the bulk of the token-heavy code generation.
 
 Claude Code supports switching between Sonnet, Opus, and Haiku:
 
-```
-┌─────────────────────────────────────┐
-│           Claude Code               │
-├─────────────────────────────────────┤
-│  Main Agent                         │
-│  ├── Default: Sonnet 4.6 (fast)    │
-│  ├── Complex: Opus 4.6 (smart)     │
-│  └── User switches via /model      │
-├─────────────────────────────────────┤
-│  Explore Sub-Agent                  │
-│  └── Always: Haiku 4.5 (cheap)     │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CC["Claude Code"]
+        subgraph MA["Main Agent"]
+            D["Default: Sonnet 4.6 (fast)"]
+            C["Complex: Opus 4.6 (smart)"]
+            U["User switches via /model"]
+        end
+        subgraph SA["Explore Sub-Agent"]
+            H["Always: Haiku 4.5 (cheap)"]
+        end
+    end
 ```
 
 The sub-agent pattern is a form of capability routing: quick exploration tasks
@@ -293,13 +284,13 @@ routing:
 Junie CLI (JetBrains) dynamically routes between Claude, GPT, and Gemini based on
 task characteristics:
 
-```
-Task Analysis → Backend Router → Model Selection
-                    │
-                    ├── Simple code → GPT-4.1 mini (cheap, fast)
-                    ├── Complex reasoning → Claude Opus 4.6 (smart)
-                    ├── Large codebase → Gemini 2.5 Pro (1M context)
-                    └── Standard coding → Claude Sonnet 4.6 (balanced)
+```mermaid
+flowchart LR
+    TA["Task Analysis"] --> BR["Backend Router"] --> MS["Model Selection"]
+    BR --> SC["Simple code\nGPT-4.1 mini (cheap, fast)"]
+    BR --> CR["Complex reasoning\nClaude Opus 4.6 (smart)"]
+    BR --> LC["Large codebase\nGemini 2.5 Pro (1M context)"]
+    BR --> ST["Standard coding\nClaude Sonnet 4.6 (balanced)"]
 ```
 
 Junie's multi-model approach reportedly yields a **6.7 percentage point uplift**

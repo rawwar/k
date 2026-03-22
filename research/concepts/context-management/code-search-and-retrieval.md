@@ -663,23 +663,14 @@ Focus on precision over recall.
 
 ### End-to-End Pipeline Architecture
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Git Watcher  │────▶│  Chunker     │────▶│  Embedder    │
-│  (file diffs) │     │  (tree-sitter)│     │  (voyage-3)  │
-└──────────────┘     └──────────────┘     └──────┬───────┘
-                                                  │
-                                                  ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  LLM Context │◀────│  Re-Ranker   │◀────│  Vector DB   │
-│  Assembly    │     │  (LLM-based) │     │  (ChromaDB)  │
-└──────┬───────┘     └──────────────┘     └──────────────┘
-       │
-       ▼
-┌──────────────┐
-│  LLM Agent   │
-│  (generation)│
-└──────────────┘
+```mermaid
+flowchart LR
+    GW["Git Watcher\n(file diffs)"] --> CH["Chunker\n(tree-sitter)"]
+    CH --> EM["Embedder\n(voyage-3)"]
+    EM --> VDB["Vector DB\n(ChromaDB)"]
+    VDB --> RR["Re-Ranker\n(LLM-based)"]
+    RR --> LCA["LLM Context\nAssembly"]
+    LCA --> LLM["LLM Agent\n(generation)"]
 ```
 
 This pipeline—incremental indexing, AST-aware chunking, code-optimized embeddings,

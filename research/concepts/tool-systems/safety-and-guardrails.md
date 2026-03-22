@@ -537,23 +537,14 @@ This remains an **open research problem**. No coding agent has a complete soluti
 No single safety mechanism is sufficient. The only viable approach is defense in depth —
 multiple independent layers, each catching what the others miss.
 
-```
-┌─────────────────────────────────────────────────┐
-│  Layer 1: Permission System                      │
-│  Gate which tools can be called and when          │
-├─────────────────────────────────────────────────┤
-│  Layer 2: Input Validation                       │
-│  Validate tool arguments before execution         │
-├─────────────────────────────────────────────────┤
-│  Layer 3: Sandbox / Isolation                    │
-│  Kernel-enforced filesystem and network limits    │
-├─────────────────────────────────────────────────┤
-│  Layer 4: Output Filtering                       │
-│  Validate tool results, redact credentials        │
-├─────────────────────────────────────────────────┤
-│  Layer 5: Audit Logging                          │
-│  Record all actions for review and forensics      │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: Permission System<br/>Gate which tools can be called and when"]
+    L2["Layer 2: Input Validation<br/>Validate tool arguments before execution"]
+    L3["Layer 3: Sandbox / Isolation<br/>Kernel-enforced filesystem and network limits"]
+    L4["Layer 4: Output Filtering<br/>Validate tool results, redact credentials"]
+    L5["Layer 5: Audit Logging<br/>Record all actions for review and forensics"]
+    L1 --> L2 --> L3 --> L4 --> L5
 ```
 
 ### Layer 1: Permission System

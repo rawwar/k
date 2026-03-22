@@ -68,15 +68,17 @@ is likely to skip steps, make changes before understanding the problem, or fail
 to verify its work. Chain-of-thought prompting — whether explicit or implicit —
 is the mechanism that forces sequential reasoning through this dependency chain.
 
+```mermaid
+flowchart LR
+    subgraph chatbot["Chatbot"]
+        Q["Query"] --> A["Answer"]
+    end
+    subgraph agent["Agent (with CoT)"]
+        T["Task"] --> P["Plan"] --> R["Read"] --> An["Analyze"] --> E["Edit"] --> Te["Test"] --> V["Verify"]
+    end
 ```
-Chatbot:  Query ─────────────────────────────────────► Answer
 
-Agent:    Task → Plan → Read → Analyze → Edit → Test → Verify
-           │      │      │       │        │      │       │
-           └Think─┘ Think─┘  Think─┘  Think─┘ Think─┘ Think─┘
-
-Each "Think" is a reasoning trace. Without CoT, agents skip to Edit.
-```
+Each "Think" is a reasoning trace interleaved between steps. Without CoT, agents skip directly to Edit.
 
 ---
 
@@ -174,20 +176,10 @@ reasoning traces with actions. The key insight is that neither pure reasoning
 (CoT alone) nor pure acting (tool calls without reasoning) is optimal — the
 combination outperforms both.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     The ReAct Loop                           │
-│                                                             │
-│   ┌──────────┐    ┌──────────┐    ┌──────────┐             │
-│   │  THINK   │───►│   ACT    │───►│ OBSERVE  │──┐          │
-│   │          │    │          │    │          │  │          │
-│   │ Reasoning│    │ Tool Call│    │ Tool     │  │          │
-│   │ trace    │    │ execution│    │ output   │  │          │
-│   └──────────┘    └──────────┘    └──────────┘  │          │
-│        ▲                                         │          │
-│        └─────────────────────────────────────────┘          │
-│                    (loop until done)                         │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    TH["THINK<br/>Reasoning trace"] --> AC["ACT<br/>Tool call execution"] --> OB["OBSERVE<br/>Tool output"]
+    OB -->|loop until done| TH
 ```
 
 ### 3.2 ReAct in Coding Agents
@@ -419,16 +411,11 @@ code does, state what the new code should do, then use the edit tool."
 reasoning and execution through its "architect mode." In this configuration,
 two different models are used:
 
-```
-┌──────────────────────────────────────────────┐
-│  Architect Model (e.g., Claude Sonnet)       │
-│  → Analyzes codebase, plans changes          │
-│  → Does NOT write edit blocks                │
-├──────────────────────────────────────────────┤
-│  Editor Model (e.g., DeepSeek)               │
-│  → Receives architect's plan                 │
-│  → Generates precise edit blocks             │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Architect Model (e.g., Claude Sonnet)<br/>→ Analyzes codebase, plans changes<br/>→ Does NOT write edit blocks"]
+    B["Editor Model (e.g., DeepSeek)<br/>→ Receives architect's plan<br/>→ Generates precise edit blocks"]
+    A -->|plan| B
 ```
 
 This is chain-of-thought elevated to an architectural pattern: the reasoning
@@ -458,18 +445,13 @@ Tree-of-Thought, introduced by Yao et al. (2023), extends chain-of-thought
 by exploring multiple reasoning paths simultaneously and using evaluation
 to select the most promising branch:
 
-```
-                        ┌─── Path A: Refactor into classes
-                        │    Score: 7/10
-          ┌── Step 1 ───┤
-          │             └─── Path B: Use functional approach
-          │                  Score: 5/10
-Problem ──┤
-          │             ┌─── Path C: Modify existing module
-          └── Step 1' ──┤    Score: 8/10 ← Selected
-                        │
-                        └─── Path D: Create new module
-                             Score: 6/10
+```mermaid
+flowchart TD
+    P["Problem"] --> S1["Step 1"] & S2["Step 1'"]
+    S1 --> PA["Path A: Refactor into classes<br/>Score: 7/10"]
+    S1 --> PB["Path B: Use functional approach<br/>Score: 5/10"]
+    S2 --> PC["Path C: Modify existing module<br/>Score: 8/10 ← Selected"]
+    S2 --> PD["Path D: Create new module<br/>Score: 6/10"]
 ```
 
 ### 6.2 Self-Consistency
@@ -516,19 +498,13 @@ tool output for errors and adjusting behavior accordingly.
 
 The basic reflection loop:
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Take Action │────►│ Check Result │────►│   Reflect    │
-│  (tool call) │     │ (observe)    │     │  (reason)    │
-└──────────────┘     └──────────────┘     └──────┬───────┘
-                                                  │
-                                    ┌─────────────┴─────────────┐
-                                    │                           │
-                              ┌─────▼─────┐             ┌──────▼──────┐
-                              │  Success  │             │   Failure   │
-                              │  Move on  │             │  Diagnose   │
-                              └───────────┘             │  and retry  │
-                                                        └─────────────┘
+```mermaid
+flowchart LR
+    TA["Take Action<br/>(tool call)"] --> CR["Check Result<br/>(observe)"] --> RE["Reflect<br/>(reason)"]
+    RE --> SC{"Outcome?"}
+    SC -->|Success| MO["Move on"]
+    SC -->|Failure| FA["Diagnose and retry"]
+    FA --> TA
 ```
 
 ### 7.2 Retry-with-Reasoning Patterns

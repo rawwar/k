@@ -187,30 +187,29 @@ Look at the `agent_turn` function carefully. It contains the inner loop -- the `
 
 Let's visualize the complete structure:
 
-```text
-OUTER LOOP (REPL - user-driven):
-  +--> Read user input
-  |    |
-  |    v
-  |    INNER LOOP (Agentic - model-driven):
-  |      +--> Call LLM with history + tools
-  |      |    |
-  |      |    v
-  |      |    Stop reason = end_turn? --YES--> Collect final text
-  |      |    |                                     |
-  |      |    NO (tool_use)                         |
-  |      |    |                                     |
-  |      |    v                                     |
-  |      |    Execute tool                          |
-  |      |    |                                     |
-  |      |    v                                     |
-  |      |    Add tool result to history            |
-  |      |    |                                     |
-  |      +----+                                     |
-  |                                                 |
-  |    <------- Print final text <------------------+
-  |    |
-  +----+
+```mermaid
+flowchart TD
+    UI["Read user input"]
+    PRINT["Print final text"]
+
+    UI --> CALL
+
+    subgraph INNER["Inner Loop (Agentic - model-driven)"]
+        CALL["Call LLM with history + tools"]
+        CHECK{"stop_reason = end_turn?"}
+        COLLECT["Collect final text"]
+        EXEC["Execute tool"]
+        ADD["Add tool result to history"]
+
+        CALL --> CHECK
+        CHECK -->|YES| COLLECT
+        CHECK -->|"NO (tool_use)"| EXEC
+        EXEC --> ADD
+        ADD --> CALL
+    end
+
+    COLLECT --> PRINT
+    PRINT --> UI
 ```
 
 The outer loop is controlled by the user -- they decide when to send a message and when to stop. The inner loop is controlled by the model -- it decides when to use tools and when it has enough information to respond. Your code provides the infrastructure for both loops, but the decision-making is split between the human and the LLM.

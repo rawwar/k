@@ -23,38 +23,29 @@ remains low, concentrated in a handful of tools that solve immediate, measurable
 The tooling landscape can be organized by the stage of the prompt lifecycle it
 addresses:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                 PROMPT ENGINEERING TOOL LANDSCAPE                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────┐   ┌──────────────┐   ┌──────────────────────────┐ │
-│  │  AUTHORING   │   │  OPTIMIZING  │   │  CONSTRAINING            │ │
-│  │             │   │              │   │                          │ │
-│  │ LangChain   │   │ DSPy         │   │ Outlines (logit-level)  │ │
-│  │ LlamaIndex  │   │ TextGrad     │   │ Guidance (grammar)      │ │
-│  │ Priompt     │   │ APE          │   │ Instructor (validation) │ │
-│  │ (raw code)  │   │              │   │ LMQL (constraints)      │ │
-│  │             │   │              │   │ GBNF (llama.cpp)        │ │
-│  └──────┬──────┘   └──────┬───────┘   └────────────┬─────────────┘ │
-│         │                 │                         │               │
-│         ▼                 ▼                         ▼               │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    TESTING & EVALUATION                         ││
-│  │  PromptFoo · LangSmith · Braintrust · Aider Benchmarks         ││
-│  └─────────────────────────────────────────────────────────────────┘│
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    VERSIONING & MANAGEMENT                      ││
-│  │  PromptLayer · W&B Prompts · Git-based (dominant in agents)     ││
-│  └─────────────────────────────────────────────────────────────────┘│
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    PROVIDER PLAYGROUNDS                         ││
-│  │  Anthropic Workbench · OpenAI Playground · Google AI Studio     ││
-│  └─────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph auth["AUTHORING"]
+        A1["LangChain"]
+        A2["LlamaIndex"]
+        A3["Priompt"]
+        A4["(raw code)"]
+    end
+    subgraph opt["OPTIMIZING"]
+        O1["DSPy"]
+        O2["TextGrad"]
+        O3["APE"]
+    end
+    subgraph con["CONSTRAINING"]
+        C1["Outlines (logit-level)"]
+        C2["Guidance (grammar)"]
+        C3["Instructor (validation)"]
+        C4["LMQL (constraints)"]
+        C5["GBNF (llama.cpp)"]
+    end
+    auth & opt & con --> TE["TESTING & EVALUATION<br/>PromptFoo · LangSmith · Braintrust · Aider Benchmarks"]
+    TE --> VM["VERSIONING & MANAGEMENT<br/>PromptLayer · W&B Prompts · Git-based (dominant in agents)"]
+    PP["PROVIDER PLAYGROUNDS<br/>Anthropic Workbench · OpenAI Playground · Google AI Studio"]
 ```
 
 🟢 **Observed in 10+ agents** — The dominant "tool" for prompt engineering in production
@@ -528,23 +519,15 @@ for coding agents.
 evaluation infrastructure among the 17 agents. Its benchmark suite tests edit format
 accuracy across models using Exercism exercises and SWE-bench tasks.
 
-```
-┌──────────────────────────────────────────────────┐
-│           Aider's Benchmark Pipeline             │
-├──────────────────────────────────────────────────┤
-│                                                  │
-│  1. Select exercise set (Exercism / SWE-bench)   │
-│  2. Configure model and edit format              │
-│  3. Run Aider against each exercise              │
-│  4. Measure:                                     │
-│     - % exercises solved (pass@1)                │
-│     - Edit format compliance (% valid edits)     │
-│     - Token usage per exercise                   │
-│     - Cost per exercise                          │
-│  5. Compare against baseline (previous prompt)   │
-│  6. Publish results to aider.chat/leaderboards   │
-│                                                  │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1["1. Select exercise set (Exercism / SWE-bench)"]
+    S2["2. Configure model and edit format"]
+    S3["3. Run Aider against each exercise"]
+    S4["4. Measure:<br/>• % exercises solved (pass@1)<br/>• Edit format compliance (% valid edits)<br/>• Token usage per exercise<br/>• Cost per exercise"]
+    S5["5. Compare against baseline (previous prompt)"]
+    S6["6. Publish results to aider.chat/leaderboards"]
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6
 ```
 
 This benchmark-driven approach means every prompt change in Aider is validated against

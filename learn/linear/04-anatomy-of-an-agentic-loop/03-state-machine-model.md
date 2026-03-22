@@ -90,45 +90,26 @@ Notice that some states carry data. `ToolDetected` holds the parsed tool calls. 
 
 Here are all valid transitions between states, described as a directed graph:
 
-```text
-                  User sends message
-    [Idle] ─────────────────────────────> [Processing]
-      ^                                       |
-      |                                       | LLM responds
-      |                                       v
-      |                        ┌──── stop_reason = end_turn ────> [Done]
-      |                        |                                    |
-      |                   [Processing]                              |
-      |                        |                                    |
-      |                        └──── stop_reason = tool_use ──> [ToolDetected]
-      |                                                             |
-      |                                                     Execute tools
-      |                                                             |
-      |                                                             v
-      |                                                      [ToolExecuting]
-      |                                                             |
-      |                                                    Tools complete
-      |                                                             |
-      |                                                             v
-      |                                                   [ObservationReady]
-      |                                                             |
-      |                                               Call LLM with results
-      |                                                             |
-      |                                                             v
-      |                                                       [Processing]
-      |                                                        (re-enters)
-      |
-      |     Display response
-      +──── <────────────── [Done]
-      |
-      |     Report error
-      +──── <────────────── [Error]
-      |
-      |     Acknowledge cancellation
-      +──── <────────────── [Cancelled]
-
-  Any state ──── API/tool error ──────> [Error]
-  Any state ──── User interrupt ──────> [Cancelled]
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing : User sends message
+    Processing --> Done : stop_reason = end_turn
+    Processing --> ToolDetected : stop_reason = tool_use
+    Processing --> Error : API call fails
+    ToolDetected --> ToolExecuting : Begin tool execution
+    ToolExecuting --> ObservationReady : All tools complete
+    ToolExecuting --> Error : Unrecoverable tool error
+    ObservationReady --> Processing : Results added, call LLM again
+    ObservationReady --> Error : Iteration limit exceeded
+    Done --> Idle : Response displayed
+    Error --> Idle : Error reported
+    Cancelled --> Idle : Cancellation acknowledged
+    Processing --> Cancelled : User interrupt
+    ToolDetected --> Cancelled : User interrupt
+    ToolExecuting --> Cancelled : User interrupt
+    ObservationReady --> Cancelled : User interrupt
+    Done --> Cancelled : User interrupt
 ```
 
 Read this diagram carefully. The key cycle is: **Processing -> ToolDetected -> ToolExecuting -> ObservationReady -> Processing**. This is the inner loop. It repeats until the LLM decides to produce a final response (`end_turn`), at which point the transition goes to Done instead of ToolDetected.

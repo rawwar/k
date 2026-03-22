@@ -24,22 +24,16 @@ The protocol has three core concepts:
 
 An MCP server is a process that implements one or more of these capabilities. An MCP client (your agent) connects to servers, discovers what they offer, and makes those capabilities available to the LLM.
 
-```
-┌──────────────┐     MCP Protocol      ┌──────────────────┐
-│              │ ◄──────────────────── │  MCP Server:     │
-│  Your Agent  │     (JSON-RPC)        │  File System     │
-│  (MCP Client)│ ────────────────────► │                  │
-│              │                        └──────────────────┘
-│              │     MCP Protocol      ┌──────────────────┐
-│              │ ◄──────────────────── │  MCP Server:     │
-│              │     (JSON-RPC)        │  Database         │
-│              │ ────────────────────► │                  │
-│              │                        └──────────────────┘
-│              │     MCP Protocol      ┌──────────────────┐
-│              │ ◄──────────────────── │  MCP Server:     │
-│              │     (JSON-RPC)        │  GitHub API       │
-└──────────────┘ ────────────────────► │                  │
-                                        └──────────────────┘
+```mermaid
+flowchart LR
+    AGENT["Your Agent\nMCP Client"]
+    FS["MCP Server:\nFile System"]
+    DB["MCP Server:\nDatabase"]
+    GH["MCP Server:\nGitHub API"]
+
+    AGENT <-->|"MCP Protocol (JSON-RPC)"| FS
+    AGENT <-->|"MCP Protocol (JSON-RPC)"| DB
+    AGENT <-->|"MCP Protocol (JSON-RPC)"| GH
 ```
 
 ::: python Coming from Python
@@ -266,19 +260,17 @@ MCP supports two primary transports:
 
 The client spawns the MCP server as a child process and communicates over stdin/stdout:
 
-```
-Client Process                    Server Process
-     │                                 │
-     │──── spawn ──────────────────────│
-     │                                 │
-     │──── stdin: JSON-RPC request ───►│
-     │◄─── stdout: JSON-RPC response ──│
-     │                                 │
-     │──── stdin: JSON-RPC request ───►│
-     │◄─── stdout: JSON-RPC response ──│
-     │                                 │
-     │──── close stdin ────────────────│
-     │                                 X
+```mermaid
+sequenceDiagram
+    participant C as Client Process
+    participant S as Server Process
+
+    C->>S: spawn
+    C->>S: stdin: JSON-RPC request
+    S->>C: stdout: JSON-RPC response
+    C->>S: stdin: JSON-RPC request
+    S->>C: stdout: JSON-RPC response
+    C->>S: close stdin
 ```
 
 Stdio is the simplest transport and the most common for local development. The server runs as a child process -- no network configuration needed. Messages are newline-delimited JSON.
@@ -287,21 +279,18 @@ Stdio is the simplest transport and the most common for local development. The s
 
 For remote servers or multi-client scenarios, MCP uses HTTP. The client sends requests via HTTP POST and receives responses and notifications through a Server-Sent Events stream:
 
-```
-Client                           Server (remote)
-  │                                    │
-  │─── POST /message ────────────────►│
-  │    (initialize request)            │
-  │◄── SSE: initialize response ──────│
-  │                                    │
-  │─── POST /message ────────────────►│
-  │    (tools/list)                    │
-  │◄── SSE: tools/list response ──────│
-  │                                    │
-  │─── POST /message ────────────────►│
-  │    (tools/call)                    │
-  │◄── SSE: progress notification ────│
-  │◄── SSE: tools/call response ──────│
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server (remote)
+
+    C->>S: POST /message (initialize request)
+    S->>C: SSE: initialize response
+    C->>S: POST /message (tools/list)
+    S->>C: SSE: tools/list response
+    C->>S: POST /message (tools/call)
+    S->>C: SSE: progress notification
+    S->>C: SSE: tools/call response
 ```
 
 The HTTP transport enables sharing a single MCP server across multiple agent instances, running servers on remote machines, and connecting through firewalls.

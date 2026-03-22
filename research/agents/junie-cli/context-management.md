@@ -337,31 +337,16 @@ amounts and types of context. Junie's multi-model router must decide:
 
 ### Context Routing Strategy
 
-```
-┌──────────────────────────────────────────────────┐
-│              Context Router                       │
-│                                                  │
-│  Input: Sub-task + available context             │
-│                                                  │
-│  Step 1: Classify the sub-task                   │
-│    - Planning? → Full context, reasoning model   │
-│    - Simple edit? → Minimal context, fast model  │
-│    - Debugging? → Error + code context, strong   │
-│    - Analysis? → Broad context, reasoning model  │
-│                                                  │
-│  Step 2: Select relevant context                 │
-│    - Always include: AGENTS.md, task description │
-│    - For edits: Target file + nearby files       │
-│    - For debugging: Error output + relevant code │
-│    - For planning: Project structure + task       │
-│                                                  │
-│  Step 3: Format for target model                 │
-│    - Each model may prefer different formats     │
-│    - Token budget varies by model                │
-│    - System prompt tailored to model strengths   │
-│                                                  │
-│  Step 4: Execute and collect response            │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    IN["Input: Sub-task + available context"] --> CL{Step 1: Classify sub-task}
+    CL -->|planning| M1["Full context → reasoning model"]
+    CL -->|simple edit| M2["Minimal context → fast model"]
+    CL -->|debugging| M3["Error + code context → strong model"]
+    CL -->|analysis| M4["Broad context → reasoning model"]
+    M1 & M2 & M3 & M4 --> CTX["Step 2: Select relevant context\n(always: AGENTS.md + task description;\nfor edits: target + nearby files;\nfor debugging: error output + code;\nfor planning: project structure)"]
+    CTX --> FMT["Step 3: Format for target model\n(token budget, system prompt,\nmodel-specific format)"]
+    FMT --> EX["Step 4: Execute and collect response"]
 ```
 
 ### Context Budget Management
@@ -417,54 +402,16 @@ or suboptimal results.
 
 ## Context Construction Pipeline
 
-```
-User Request
-     │
-     ▼
-┌─────────────────┐
-│  Parse Request    │ Extract intent, scope, constraints
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Load Project    │ Build files, AGENTS.md, directory structure
-│  Metadata        │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Identify        │ Use project structure + request to find
-│  Relevant Files  │ files that need to be in context
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Load File       │ Read relevant files, potentially
-│  Contents        │ summarizing large files
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Add IDE Context │ Inspections, type info, test results
-│  (if available)  │ (IDE mode only)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Load Git        │ Recent commits, current branch,
-│  Context         │ uncommitted changes
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Format for      │ Assemble context, respect token budget,
-│  Target Model    │ format for selected model
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Submit to LLM   │ Send formatted context + task to model
-└─────────────────┘
+```mermaid
+flowchart TD
+    UR[User Request] --> PR["Parse Request\n(extract intent, scope, constraints)"]
+    PR --> LPM["Load Project Metadata\n(build files, AGENTS.md, directory structure)"]
+    LPM --> IRF["Identify Relevant Files\n(use project structure + request)"]
+    IRF --> LFC["Load File Contents\n(read relevant files, summarize large ones)"]
+    LFC --> AIC["Add IDE Context if available\n(inspections, type info, test results)"]
+    AIC --> LGC["Load Git Context\n(recent commits, current branch,\nuncommitted changes)"]
+    LGC --> FMT["Format for Target Model\n(assemble context, respect token budget)"]
+    FMT --> LLM["Submit to LLM"]
 ```
 
 ## IDE Mode vs CLI Mode Context Comparison

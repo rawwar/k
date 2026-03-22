@@ -43,26 +43,14 @@ simultaneously:
 Production agents rarely use a single example. They compose examples at multiple
 layers:
 
-```
-┌─────────────────────────────────────┐
-│  System Prompt                      │
-│  ┌───────────────────────────────┐  │
-│  │ Edit Format Examples          │  │  ← How to format code changes
-│  │ (search/replace, diff, whole) │  │
-│  └───────────────────────────────┘  │
-│  ┌───────────────────────────────┐  │
-│  │ Tool Use Examples             │  │  ← How to invoke available tools
-│  │ (shell, file ops, search)     │  │
-│  └───────────────────────────────┘  │
-│  ┌───────────────────────────────┐  │
-│  │ Workflow Examples             │  │  ← Multi-step task patterns
-│  │ (debug loop, refactor, test)  │  │
-│  └───────────────────────────────┘  │
-│  ┌───────────────────────────────┐  │
-│  │ Domain Knowledge Examples     │  │  ← Framework-specific patterns
-│  │ (React, Django, Rust, etc.)   │  │
-│  └───────────────────────────────┘  │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SP["System Prompt"]
+        EFE["Edit Format Examples<br/>(search/replace, diff, whole)<br/>← How to format code changes"]
+        TUE["Tool Use Examples<br/>(shell, file ops, search)<br/>← How to invoke available tools"]
+        WFE["Workflow Examples<br/>(debug loop, refactor, test)<br/>← Multi-step task patterns"]
+        DKE["Domain Knowledge Examples<br/>(React, Django, Rust, etc.)<br/>← Framework-specific patterns"]
+    end
 ```
 
 ---
@@ -110,17 +98,23 @@ for reasoning.
 
 ### The Helpfulness Spectrum
 
-```
-STRONGLY HELPS                              ACTIVELY HURTS
-◄──────────────────────────────────────────────────────────►
-
-Simple format    Tool invocation   Complex JSON    Over-specified
-demonstration    patterns          schemas         workflow
-                                                   templates
-
-Shell commands   Search/replace    Function-call   Multi-step
-with flags       block syntax      edit formats    recipes for
-                                                   novel tasks
+```mermaid
+flowchart LR
+    subgraph sh["✅ Strongly Helps"]
+        A["Simple format demonstration"]
+        B["Shell commands with flags"]
+    end
+    subgraph mi["⚠️ Mixed"]
+        C["Tool invocation patterns"]
+        D["Search/replace block syntax"]
+    end
+    subgraph ah["❌ Actively Hurts"]
+        E["Complex JSON schemas"]
+        F["Function-call edit formats"]
+        G["Over-specified workflow templates"]
+        H["Multi-step recipes for novel tasks"]
+    end
+    sh --> mi --> ah
 ```
 
 ### Conditions Where Few-Shot Reliably Helps
@@ -260,17 +254,9 @@ Framework and language-specific patterns that inject expertise.
 
 Fixed examples embedded in the system prompt, loaded for every interaction.
 
-```
-┌─────────────────────────┐
-│  System Prompt           │
-│                          │
-│  [Always-loaded examples]│
-│  - Edit format           │
-│  - Basic tool use        │
-│  - Core workflow         │
-│                          │
-│  Cost: Fixed ~2000 tokens│
-└─────────────────────────┘
+```mermaid
+flowchart TD
+    A["System Prompt<br/><br/>Always-loaded examples:<br/>• Edit format<br/>• Basic tool use<br/>• Core workflow<br/><br/>Cost: Fixed ~2000 tokens"]
 ```
 
 **Advantages:**
@@ -287,19 +273,15 @@ Fixed examples embedded in the system prompt, loaded for every interaction.
 
 Selected based on the current task, user input, or conversation state.
 
-```
-┌─────────────────────────────────────┐
-│  Task: "Add React component"        │
-│                                      │
-│  Selected examples:                  │
-│  ✓ React component creation pattern │
-│  ✓ JSX file editing format          │
-│  ✓ Test file co-location pattern    │
-│  ✗ Python migration workflow        │  ← Not selected
-│  ✗ Rust borrow-checker patterns     │  ← Not selected
-│                                      │
-│  Cost: ~800 tokens (task-specific)  │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    T["Task: 'Add React component'"] --> SEL["Example Selection"]
+    SEL -->|selected| RC["✓ React component creation pattern"]
+    SEL -->|selected| JSX["✓ JSX file editing format"]
+    SEL -->|selected| TF["✓ Test file co-location pattern"]
+    SEL -->|not selected| PY["✗ Python migration workflow"]
+    SEL -->|not selected| RS["✗ Rust borrow-checker patterns"]
+    RC & JSX & TF --> COST["Cost: ~800 tokens (task-specific)"]
 ```
 
 **Selection strategies:**
@@ -320,28 +302,15 @@ Selected based on the current task, user input, or conversation state.
 Gemini CLI pioneered a progressive disclosure pattern for few-shot examples
 disguised as "skills":
 
-```
-Phase 1: System Prompt (~500 tokens)
-┌────────────────────────────────────────────┐
-│  Available skills (metadata only):          │
-│  - web_search: "Search the web for info"    │
-│  - code_review: "Review code for issues"    │
-│  - test_gen: "Generate test cases"          │
-│  - refactor: "Refactor code safely"         │
-│                                             │
-│  Use activate_skill(name) to load a skill.  │
-└────────────────────────────────────────────┘
-
-Phase 2: On-Demand Loading (~2000 tokens when activated)
-┌────────────────────────────────────────────┐
-│  activate_skill("code_review")              │
-│                                             │
-│  [Full skill content loaded]:               │
-│  - Detailed review checklist                │
-│  - Example review comments                  │
-│  - Severity classification guide            │
-│  - Common anti-patterns to flag             │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph phase1["Phase 1: System Prompt (~500 tokens)"]
+        META["Available skills (metadata only):<br/>• web_search: 'Search the web for info'<br/>• code_review: 'Review code for issues'<br/>• test_gen: 'Generate test cases'<br/>• refactor: 'Refactor code safely'<br/><br/>Use activate_skill(name) to load a skill."]
+    end
+    subgraph phase2["Phase 2: On-Demand Loading (~2000 tokens when activated)"]
+        LOADED["activate_skill('code_review')<br/><br/>Full skill content loaded:<br/>• Detailed review checklist<br/>• Example review comments<br/>• Severity classification guide<br/>• Common anti-patterns to flag"]
+    end
+    phase1 -->|"activate_skill('code_review')"| phase2
 ```
 
 **The key insight:** skills function as stored few-shot examples or domain
@@ -363,15 +332,14 @@ No examples                     0              0 (but more errors)
 OpenHands implements keyword-triggered expertise injection — what they call a
 "lightweight form of RAG that requires no embedding model or vector database."
 
-```
-Trigger: User message contains "github"
-  → Inject: GitHub API patterns, authentication examples, common operations
-
-Trigger: User message contains "docker"
-  → Inject: Dockerfile best practices, common commands, debugging patterns
-
-Trigger: User message contains "postgres"
-  → Inject: Connection patterns, migration examples, query optimization tips
+```mermaid
+flowchart TD
+    M["User Message"] --> G{"Contains 'github'?"}
+    M --> D{"Contains 'docker'?"}
+    M --> P{"Contains 'postgres'?"}
+    G -->|Yes| GI["Inject: GitHub API patterns,<br/>authentication examples, common operations"]
+    D -->|Yes| DI["Inject: Dockerfile best practices,<br/>common commands, debugging patterns"]
+    P -->|Yes| PI["Inject: Connection patterns,<br/>migration examples, query optimization tips"]
 ```
 
 This is few-shot examples implemented as a reactive system rather than a static
@@ -646,35 +614,14 @@ represents a distinct architectural approach to few-shot example delivery.
 
 ### Architecture
 
-```
-User Message: "Fix the GitHub Actions workflow"
-                │
-                ▼
-        ┌───────────────┐
-        │ Keyword Scan   │
-        │ "github"  ──── │──► GitHub microagent knowledge
-        │ "actions" ──── │──► CI/CD microagent knowledge
-        │ "workflow" ─── │──► (covered by above)
-        └───────────────┘
-                │
-                ▼
-        ┌───────────────────────────────────┐
-        │ Injected Context (~2000+ tokens): │
-        │                                    │
-        │ GitHub Actions best practices:     │
-        │ - Use pinned action versions       │
-        │ - Cache dependencies               │
-        │ - Use matrix for multi-version     │
-        │                                    │
-        │ Common workflow patterns:           │
-        │ - CI: lint → test → build → deploy │
-        │ - PR: label, review, merge checks  │
-        │                                    │
-        │ Debugging patterns:                │
-        │ - Check runner logs first           │
-        │ - Validate YAML syntax             │
-        │ - Test locally with `act`          │
-        └───────────────────────────────────┘
+```mermaid
+flowchart TD
+    M["User Message: 'Fix the GitHub Actions workflow'"]
+    M --> KS["Keyword Scan"]
+    KS -->|github| GMA["GitHub microagent knowledge"]
+    KS -->|actions| CIA["CI/CD microagent knowledge"]
+    KS -->|workflow| COV["(covered by above)"]
+    GMA & CIA --> IC["Injected Context (~2000+ tokens):<br/>GitHub Actions best practices,<br/>common workflow patterns,<br/>debugging patterns"]
 ```
 
 ### Why "Lightweight RAG" Is an Apt Description
@@ -857,12 +804,12 @@ to *recover* from format errors is as important as teaching the format itself.
 
 ### Practice 1: Match Example Complexity to Task Complexity
 
-```
-Simple format teaching     →  1 concise example (~200 tokens)
-Tool invocation patterns   →  1 example per tool (~100 tokens each)
-Complex workflow patterns  →  1 realistic example (~500 tokens)
-Domain-specific knowledge  →  Load on demand (0 tokens until needed)
-```
+| Task Type | Recommendation |
+|---|---|
+| Simple format teaching | 1 concise example (~200 tokens) |
+| Tool invocation patterns | 1 example per tool (~100 tokens each) |
+| Complex workflow patterns | 1 realistic example (~500 tokens) |
+| Domain-specific knowledge | Load on demand (0 tokens until needed) |
 
 ### Practice 2: Use Realistic, Non-Trivial Examples
 
@@ -960,13 +907,10 @@ ForgeCode's approach challenges the assumption that few-shot examples are always
 needed. Their correction layer compensates for model errors rather than
 preventing them:
 
-```
-Model Output → Correction Layer → Valid Output
-                    │
-                    ├── Fix JSON syntax errors
-                    ├── Repair malformed diffs
-                    ├── Normalize file paths
-                    └── Validate tool call schemas
+```mermaid
+flowchart LR
+    MO["Model Output"] --> CL["Correction Layer<br/>• Fix JSON syntax errors<br/>• Repair malformed diffs<br/>• Normalize file paths<br/>• Validate tool call schemas"]
+    CL --> VO["Valid Output"]
 ```
 
 **When to prefer correction over few-shot:**
@@ -1014,26 +958,22 @@ it requires user awareness and explicit invocation.
 
 When designing few-shot examples for a coding agent, use this decision tree:
 
-```
-Is the output format novel to the model?
-├── Yes → Include 1-2 format examples (always loaded)
-└── No  → Skip format examples, rely on model priors
-
-Does the task involve custom tools?
-├── Yes → Include 1 example per tool (always loaded, minimal)
-└── No  → Skip tool examples
-
-Is domain expertise required?
-├── Yes → Load domain examples on demand (keyword or skill trigger)
-└── No  → Skip domain examples
-
-Are there known failure modes?
-├── Yes → Include recovery/error-handling examples
-└── No  → Skip recovery examples
-
-Is the output format complex (JSON, function calls)?
-├── Yes → Consider correction layer instead of more examples
-└── No  → Few-shot examples should work well
+```mermaid
+flowchart TD
+    Q1{"Output format novel\nto the model?"} -->|Yes| A1["Include 1-2 format examples (always loaded)"]
+    Q1 -->|No| B1["Skip format examples, rely on model priors"]
+    A1 & B1 --> Q2{"Task involves\ncustom tools?"}
+    Q2 -->|Yes| A2["Include 1 example per tool (always loaded, minimal)"]
+    Q2 -->|No| B2["Skip tool examples"]
+    A2 & B2 --> Q3{"Domain expertise\nrequired?"}
+    Q3 -->|Yes| A3["Load domain examples on demand"]
+    Q3 -->|No| B3["Skip domain examples"]
+    A3 & B3 --> Q4{"Known failure\nmodes exist?"}
+    Q4 -->|Yes| A4["Include recovery/error-handling examples"]
+    Q4 -->|No| B4["Skip recovery examples"]
+    A4 & B4 --> Q5{"Output format\ncomplex (JSON, function calls)?"}
+    Q5 -->|Yes| A5["Consider correction layer instead of more examples"]
+    Q5 -->|No| B5["Few-shot examples should work well"]
 ```
 
 The most effective coding agents don't treat few-shot examples as a monolithic

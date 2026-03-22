@@ -347,15 +347,25 @@ src/
 ```
 
 **Expected dependency flow:**
-```
-api → services → models → database
-  ↘      ↘         ↘
-   middleware  utils   utils
+
+```mermaid
+flowchart LR
+    api --> services
+    services --> models
+    models --> database
+    api --> middleware
+    services --> utils
+    models --> utils
 ```
 
 **Circular dependencies indicate architectural problems:**
-```
-api → services → models → api  ❌ (circular!)
+
+```mermaid
+flowchart LR
+    api --> services --> models --> api
+    style api fill:#ffcccc
+    style services fill:#ffcccc
+    style models fill:#ffcccc
 ```
 
 ### Detecting Circular Dependencies

@@ -10,36 +10,13 @@ Capy's context management strategy is fundamentally shaped by its **two-agent ar
 
 The central context management pattern in Capy is the **spec document** produced by Captain:
 
-```
-┌─────────────────────────────────┐
-│        Captain's Context        │
-│                                 │
-│  • User's task description      │
-│  • Codebase exploration results │
-│  • Clarification Q&A history    │
-│  • Research findings            │
-│                                 │
-│  Distilled into:                │
-│  ┌───────────────────────────┐  │
-│  │         THE SPEC          │  │
-│  │  (compact, structured,    │  │
-│  │   actionable document)    │  │
-│  └─────────────┬─────────────┘  │
-└────────────────┼────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────┐
-│         Build's Context         │
-│                                 │
-│  • The spec (from Captain)      │
-│  • Access to the full codebase  │
-│  • VM environment state         │
-│                                 │
-│  Does NOT receive:              │
-│  • Captain's exploration trace  │
-│  • User Q&A conversation        │
-│  • Research raw materials       │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    CC["Captain's Context\ntask description · codebase exploration\nclarification Q&A · research findings"]
+    SPEC["THE SPEC\ncompact · structured · actionable document"]
+    BC["Build's Context\nspec · full codebase access · VM state\n— does NOT receive: exploration trace,\nQ&A conversation, research raw materials —"]
+
+    CC -->|"distilled into"| SPEC -->|"handed off to"| BC
 ```
 
 This is architecturally significant because:

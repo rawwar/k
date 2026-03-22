@@ -17,19 +17,19 @@ to cleanly revert, each failure compounds the next.
 entire verify-and-retry paradigm to work at scale. Without it, the agent must succeed
 on the first attempt or accumulate damage. With it, the agent can explore freely.
 
-```
-Without rollback:                    With rollback:
-
-  Edit → Test → FAIL                   Edit → Test → FAIL
-    │                                     │
-    ▼                                     ▼
-  Edit (on broken state) → FAIL        Revert → Edit → Test → FAIL
-    │                                     │
-    ▼                                     ▼
-  Edit (worse state) → FAIL            Revert → Edit → Test → PASS ✓
-    │
-    ▼
-  Give up (codebase damaged)
+```mermaid
+flowchart TD
+    subgraph without["Without rollback"]
+        A1["Edit"] --> B1["Test"] --> C1["FAIL"]
+        C1 --> D1["Edit on broken state"] --> E1["FAIL"]
+        E1 --> F1["Edit on worse state"] --> G1["FAIL"]
+        G1 --> H1["Give up (codebase damaged)"]
+    end
+    subgraph with["With rollback"]
+        A2["Edit"] --> B2["Test"] --> C2["FAIL"]
+        C2 --> D2["Revert"] --> E2["Edit"] --> F2["Test"] --> G2["FAIL"]
+        G2 --> H2["Revert"] --> I2["Edit"] --> J2["Test"] --> K2["PASS ✓"]
+    end
 ```
 
 The practical impact is measurable. Agents with proper rollback attempt 3–5 fix
@@ -44,16 +44,9 @@ Not all rollback is created equal. The 17 agents in this research library span a
 spectrum of rollback sophistication, from agents with no rollback mechanism at all to
 those with full VM-level snapshot/restore capabilities.
 
-```
-Sophistication ──────────────────────────────────────────────────────────►
-
-No rollback    File backup    Git stash/     Checkpoints    Event        VM/Container
-               & restore      reset                        sourcing     snapshots
-─────────────────────────────────────────────────────────────────────────────────────
-mini-SWE       ForgeCode      Aider          Claude Code    OpenHands    Capy
-               Droid          Gemini CLI     Codex
-                              Goose          Junie CLI
-                              Warp
+```mermaid
+flowchart LR
+    N["No rollback (mini-SWE)"] --> FB["File backup & restore (ForgeCode, Droid)"] --> G["Git stash/reset (Aider, Gemini CLI, Goose, Warp)"] --> C["Checkpoints (Claude Code, Codex, Junie CLI)"] --> E["Event sourcing (OpenHands)"] --> V["VM/Container snapshots (Capy)"]
 ```
 
 Each step up the spectrum adds both capability and complexity:
@@ -112,20 +105,10 @@ def cmd_undo(self, args):
 making AI edits. This ensures that user work is never lost — the undo only affects
 the AI's changes, not the developer's uncommitted work.
 
-```
-Timeline:
-  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-  │  User's       │     │  Auto-commit │     │  AI edit      │
-  │  dirty files  │────▶│  user work   │────▶│  committed    │
-  │  (uncommitted)│     │  (protected) │     │  (undoable)   │
-  └──────────────┘     └──────────────┘     └──────────────┘
-                                                   │
-                                            /undo  │
-                                                   ▼
-                                            ┌──────────────┐
-                                            │  Back to      │
-                                            │  user's state │
-                                            └──────────────┘
+```mermaid
+flowchart LR
+    A["User's dirty files (uncommitted)"] -->|"auto-commit user work"| B["User work committed (protected)"] -->|"AI edit"| C["AI edit committed (undoable)"]
+    C -->|"/undo"| D["Back to user's state"]
 ```
 
 ### Gemini CLI: Shadow Git for Checkpoints
@@ -169,16 +152,10 @@ Claude Code takes the most aggressive checkpoint approach: a file snapshot is ca
 **before every single edit**. This creates a fine-grained timeline that the user can
 navigate with the `/rewind` command or by pressing `Esc+Esc`.
 
-```
-Checkpoint timeline:
-
-  CP-0       CP-1       CP-2       CP-3       CP-4
-  ──●──────────●──────────●──────────●──────────●── time
-  Initial    Edit       Edit       Edit       Current
-  state      auth.py    db.py      auth.py    state
-
-  /rewind to CP-2: restores auth.py and db.py to pre-CP-2 state
-  Options: restore code only, conversation only, or both
+```mermaid
+flowchart LR
+    CP0["CP-0: Initial state"] --> CP1["CP-1: Edit auth.py"] --> CP2["CP-2: Edit db.py"] --> CP3["CP-3: Edit auth.py"] --> CP4["CP-4: Current state"]
+    CP2 -->|"/rewind to CP-2"| RW["Restore auth.py & db.py (code only, conversation only, or both)"]
 ```
 
 **Persistence across sessions:** Claude Code checkpoints survive session restarts —
@@ -284,25 +261,15 @@ the entire conversation history. If that history contains three failed attempts 
 misleading error messages, the model keeps trying variations of the same broken
 approach instead of trying something fundamentally different.
 
-```
-Without conversation rollback:
-
-  Turn 1: "Edit auth.py to add JWT validation"
-  Turn 2: [AI edits auth.py — introduces bug]
-  Turn 3: [Tests fail: "TypeError: expected str, got bytes"]
-  Turn 4: [AI tries to fix — adds .decode() in wrong place]
-  Turn 5: [Tests fail: "AttributeError: 'NoneType' has no 'decode'"]
-  ...
-  Turn 12: [AI hopelessly lost, context polluted with 10 failed attempts]
-
-With conversation rollback:
-
-  Turn 1: "Edit auth.py to add JWT validation"
-  Turn 2: [AI edits — introduces bug]
-  Turn 3: [Tests fail]
-  ──── ROLLBACK to Turn 1 + keep error insight ────
-  Turn 2': [AI tries fresh approach, informed by error but not polluted]
-  Turn 3': [Tests pass ✓]
+```mermaid
+flowchart TD
+    subgraph without["Without conversation rollback"]
+        T1["Turn 1: Edit auth.py for JWT validation"] --> T2["Turn 2: AI edits — introduces bug"] --> T3["Turn 3: Tests fail — TypeError"] --> T4["Turn 4: AI tries fix — wrong place"] --> T5["Turn 5: Tests fail — AttributeError"] --> T12["Turn 12: AI lost, context polluted"]
+    end
+    subgraph with["With conversation rollback"]
+        R1["Turn 1: Edit auth.py for JWT validation"] --> R2["Turn 2: AI edits — introduces bug"] --> R3["Turn 3: Tests fail"]
+        R3 -->|"ROLLBACK to Turn 1 + keep error insight"| R2p["Turn 2: Fresh approach"] --> R3p["Turn 3: Tests pass ✓"]
+    end
 ```
 
 ### Codex: Structured Undo and Rollback
@@ -442,20 +409,12 @@ The tradeoff is complexity. Replaying hundreds of events to reconstruct state is
 slower than maintaining a mutable checkpoint. OpenHands mitigates this with periodic
 state snapshots that serve as replay acceleration points:
 
-```
-Event stream with snapshot optimization:
-
-  Event 0  Event 1  ... Event 99  Event 100  Event 101  ... Event 150
-  ─────────────────────────●──────────────────────────────────●
-                           │                                   │
-                      Snapshot S1                         Snapshot S2
-                      (cached state                      (cached state
-                       at event 99)                       at event 150)
-
-  To reconstruct state at Event 120:
-    1. Load Snapshot S1 (state at Event 99)
-    2. Replay Events 100-120 only
-    (Instead of replaying all 121 events from scratch)
+```mermaid
+flowchart TD
+    E0["Event 0"] --> E1["Event 1"] --> Edot["..."] --> E99["Event 99"] --> E100["Event 100"] --> Edot2["..."] --> E150["Event 150"]
+    E99 --> S1["Snapshot S1 (cached state at Event 99)"]
+    E150 --> S2["Snapshot S2 (cached state at Event 150)"]
+    S1 -->|"+ replay Events 100–120"| Rec["Reconstructed state at Event 120"]
 ```
 
 ---
@@ -470,15 +429,13 @@ agent detects failing tests and automatically reverts before trying again.
 Junie CLI implements the most explicit version: it tracks which tests were passing
 before the AI edit and detects **regressions** (previously passing tests now failing).
 
-```
-Junie's implement-verify cycle (1 of 3-5):
-
-  1. Record baseline: tests A, B, C passing
-  2. AI edits code
-  3. Run tests
-  4. A, B, C still passing + new tests pass → SUCCESS ✓
-     A, B, C still passing + new tests fail → continue cycle
-     Regression detected (A/B/C failing)    → ROLLBACK, next cycle
+```mermaid
+flowchart TD
+    Start["Record baseline: tests A, B, C passing"] --> Edit["AI edits code"] --> RunTests["Run tests"]
+    RunTests --> Q{"A, B, C still passing?"}
+    Q -->|"Yes + new tests pass"| Pass["SUCCESS ✓"]
+    Q -->|"Yes + new tests fail"| Edit
+    Q -->|"No — regression detected"| Rollback["ROLLBACK → next cycle"] --> Edit
 ```
 
 Junie typically runs 3–5 implement-verify cycles before escalating to the user.
@@ -557,19 +514,9 @@ OpenHands' StuckDetector uses three-stage escalation:
 Some agents implement **fallback chains** — a sequence of increasingly aggressive
 strategies when the primary approach fails:
 
-```
-Edit strategy fallback chain:
-
-  1. Line-level edit (surgical, precise)
-     │ fails
-     ▼
-  2. Block-level replace (replace function body)
-     │ fails
-     ▼
-  3. Whole-file rewrite (regenerate entire file)
-     │ fails
-     ▼
-  4. Escalate to human with diff of attempted changes
+```mermaid
+flowchart TD
+    A["Line-level edit (surgical, precise)"] -->|"fails"| B["Block-level replace (replace function body)"] -->|"fails"| C["Whole-file rewrite (regenerate entire file)"] -->|"fails"| D["Escalate to human with diff of attempted changes"]
 ```
 
 This pattern appears implicitly in several agents — ForgeCode may fall back from
@@ -644,11 +591,11 @@ Capy provisions a complete Ubuntu VM for each task, destroyed after completion.
 This provides the ultimate rollback — if anything goes wrong, the entire environment
 can be wiped and reprovisioned from scratch.
 
-```
-Capy's VM lifecycle:
-
-  Task received → Provision fresh VM → Agent works → Success? Extract & destroy
-                                                   → Failure? Snapshot & destroy
+```mermaid
+flowchart LR
+    A["Task received"] --> B["Provision fresh VM"] --> C["Agent works"] --> D{"Done?"}
+    D -->|"Success"| E["Extract & destroy"]
+    D -->|"Failure"| F["Snapshot & destroy"]
 ```
 
 The VM provides **total isolation**: the agent cannot corrupt the host, and any
@@ -659,22 +606,12 @@ damage is contained and disposable.
 OpenHands runs tool execution inside a Docker container. If the agent corrupts
 the environment, the container can be restarted from its base image.
 
-```
-OpenHands container architecture:
-
-  ┌──────────────────────────────┐
-  │  Host System                  │
-  │  ┌────────────────────────┐  │
-  │  │  Agent Controller      │  │
-  │  │  (event stream, LLM)   │──┼──── LLM API
-  │  └───────────┬────────────┘  │
-  │              │ tool calls     │
-  │  ┌───────────▼────────────┐  │
-  │  │  Docker Container      │  │
-  │  │  (filesystem, shell)   │  │
-  │  │  Restartable from base │  │
-  │  └────────────────────────┘  │
-  └──────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph host["Host System"]
+        AC["Agent Controller (event stream, LLM)"] -->|"tool calls"| DC["Docker Container (filesystem, shell) — Restartable from base"]
+    end
+    LLM["LLM API"] <-->|"API calls"| AC
 ```
 
 ### Cloud MicroVM Providers

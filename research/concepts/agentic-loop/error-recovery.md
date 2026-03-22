@@ -12,24 +12,15 @@ retry policies, circuit breakers, loop detectors, and graceful degradation paths
 
 A robust agent must handle errors at every layer of the stack:
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Agent Loop                      │
-│                                                  │
-│   ┌───────────┐    ┌──────────┐    ┌──────────┐ │
-│   │ Model API │───▶│ Tool Call │───▶│ Tool Exec│ │
-│   │  Errors   │    │ Parsing  │    │  Errors  │ │
-│   └─────┬─────┘    └────┬─────┘    └────┬─────┘ │
-│         │               │               │        │
-│         ▼               ▼               ▼        │
-│   ┌───────────┐    ┌──────────┐    ┌──────────┐ │
-│   │  Retry /  │    │  Correct │    │ Feed Back│ │
-│   │  Backoff  │    │  / Coerce│    │  to LLM  │ │
-│   └───────────┘    └──────────┘    └──────────┘ │
-│                                                  │
-│   Cross-cutting: Loop Detection, Budget Limits,  │
-│   Context Mgmt, Graceful Degradation             │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph loop["Agent Loop"]
+        MAE["Model API Errors"] -->|"Retry / Backoff"| R["Retry / Backoff"]
+        TCP["Tool Call Parsing"] -->|"Correct / Coerce"| C["Correct / Coerce"]
+        TEE["Tool Exec Errors"] -->|"Feed back"| FB["Feed Back to LLM"]
+    end
+    CC["Cross-cutting concerns:\nLoop Detection · Budget Limits\nContext Mgmt · Graceful Degradation"]
+    loop --- CC
 ```
 
 The key insight: **most errors are recoverable if the agent has the right strategy**.
@@ -318,13 +309,14 @@ def call_model_with_retry(messages, max_retries=8, base_delay=1.0, max_delay=60.
 simultaneously will all retry at the exact same time, causing a "thundering herd"
 that triggers another rate limit. Adding randomness spreads the retries out.
 
-```
-Without jitter:       With jitter:
-  ████                  █  █
-  ████                 █  █ █
-  ████                █ █  █ █
-──────── time ──▶    ──────── time ──▶
-  (all at once)       (spread out)
+```mermaid
+flowchart LR
+    subgraph nojitter["Without jitter — all at once"]
+        N1["retry 1"] & N2["retry 2"] & N3["retry 3"] --> NT["same moment\n(thundering herd)"]
+    end
+    subgraph jitter["With jitter — spread out"]
+        J1["retry 1\n(t=1s)"] --> J2["retry 2\n(t=3s)"] --> J3["retry 3\n(t=6s)"]
+    end
 ```
 
 ### Implementation Examples Across Agents
@@ -725,11 +717,10 @@ class ContextManager:
 ```
 
 **Codex — Auto-compaction at 90%:**
-```
-Context usage: ████████████████████░░░ 87%  — normal operation
-Context usage: █████████████████████░░ 91%  — trigger compaction
-                                              ↓
-Context usage: ████████████░░░░░░░░░░░ 52%  — after compaction
+```mermaid
+flowchart LR
+    A["87% context usage\n(normal operation)"] --> B["91% context usage\n(trigger compaction)"]
+    B --> C["52% context usage\n(after compaction)"]
 ```
 
 **Goose — Emergency compaction with escalation:**
@@ -794,13 +785,10 @@ class FallbackChain:
 
 **Model degradation** — fall back to a cheaper/faster model when the primary is unavailable:
 
-```
-Primary model (Claude Sonnet) ──[503]──▶ Secondary (GPT-4.1-mini)
-                                              │
-                                         [also fails]
-                                              │
-                                              ▼
-                                    Tertiary (local model)
+```mermaid
+flowchart LR
+    A["Primary model\n(Claude Sonnet)"] -->|503| B["Secondary\n(GPT-4.1-mini)"]
+    B -->|also fails| C["Tertiary\n(local model)"]
 ```
 
 ### Search Result Degradation
@@ -909,13 +897,11 @@ class SandboxRecovery:
 
 **Sophistication spectrum:**
 
-```
-Simple ──────────────────────────────────────────────▶ Sophisticated
-mini-SWE    OpenCode    Aider    Codex    Goose    OpenHands/ForgeCode
-  │            │          │        │        │           │
-  Feed-back   + Retry    + Fuzzy  + Sandbox + Coerce  + StuckDetector
-  only        w/ backoff  match    escalate   + Block   + 4 strategies
-                                               repeat   + Condensation
+```mermaid
+flowchart LR
+    A["mini-SWE\nFeedback only"] --> B["OpenCode\n+ Retry w/ backoff"] --> C["Aider\n+ Fuzzy match"] --> D["Codex\n+ Sandbox escalate"] --> E["Goose\n+ Coerce + Block repeat"] --> F["OpenHands /\nForgeCode\n+ StuckDetector\n+ 4 strategies\n+ Condensation"]
+    style A fill:#e8f4f8
+    style F fill:#d4edda
 ```
 
 ---

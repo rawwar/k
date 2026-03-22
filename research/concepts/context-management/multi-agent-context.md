@@ -13,27 +13,19 @@ different question entirely: "Why fit everything into one window at all?"
 
 The architecture works like this:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   ORCHESTRATOR AGENT                     │
-│              (maintains high-level state)                │
-│                                                          │
-│   Spawns workers ──┬──────────┬──────────┬────────────  │
-│                    │          │          │               │
-│                    ▼          ▼          ▼               │
-│              ┌─────────┐ ┌─────────┐ ┌─────────┐       │
-│              │ Worker A │ │ Worker B │ │ Worker C │      │
-│              │ 128K ctx │ │ 128K ctx │ │ 128K ctx │     │
-│              │ (fresh)  │ │ (fresh)  │ │ (fresh)  │     │
-│              └────┬─────┘ └────┬─────┘ └────┬─────┘    │
-│                   │            │            │            │
-│              summary A    summary B    summary C         │
-│                   │            │            │            │
-│                   └────────────┼────────────┘            │
-│                                ▼                         │
-│                     Aggregated results                   │
-│                  (few hundred tokens each)                │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Orch["**ORCHESTRATOR AGENT**\n(maintains high-level state)"]
+    WA["Worker A\n128K ctx (fresh)"]
+    WB["Worker B\n128K ctx (fresh)"]
+    WC["Worker C\n128K ctx (fresh)"]
+    Agg["Aggregated results\n(few hundred tokens each)"]
+    Orch -->|"spawn"| WA
+    Orch -->|"spawn"| WB
+    Orch -->|"spawn"| WC
+    WA -->|"summary A"| Agg
+    WB -->|"summary B"| Agg
+    WC -->|"summary C"| Agg
 ```
 
 Each sub-agent gets its own **fresh** context window. It can consume 50K, 80K, even
@@ -106,15 +98,12 @@ The architecture is built around a single principle: **expensive exploration sho
 never happen in the main context window**. Instead, exploration is delegated to
 sub-agents that operate in separate context windows.
 
-```
-Main Context Window                    Sub-Agent Context Window
-┌──────────────────────┐              ┌──────────────────────┐
-│ Your conversation    │              │ Exploration task     │
-│ (preserved)          │   ──spawn──▶ │ Reads 20 files       │
-│                      │              │ Searches codebase    │
-│                      │   ◀─summary─ │ Analyzes patterns    │
-│ + compact summary    │              │ (all discarded)      │
-└──────────────────────┘              └──────────────────────┘
+```mermaid
+flowchart LR
+    Main["**Main Context Window**\nYour conversation (preserved)\n+ compact summary"]
+    Sub["**Sub-Agent Context Window**\nExploration task\nReads files, searches codebase\nAnalyzes patterns\n(all discarded after)"]
+    Main -->|"spawn"| Sub
+    Sub -->|"summary"| Main
 ```
 
 The key insight is quantitative. Consider what happens when you explore a codebase
@@ -178,44 +167,13 @@ sub-agent spawning both token-efficient and cost-efficient.
 ForgeCode implements a strict three-stage pipeline where each agent receives only
 the distilled output of the previous stage:
 
-```
-Stage 1: SAGE (Understanding)
-┌─────────────────────────────────┐
-│ Input: User request + codebase  │
-│ Process:                        │
-│   - Semantic entry-point search │
-│   - Dependency graph traversal  │
-│   - Pattern recognition         │
-│ Output: Structured understanding│
-│   - Relevant files identified   │
-│   - Architecture patterns found │
-│   - Dependencies mapped         │
-└──────────────┬──────────────────┘
-               │ (distilled understanding, NOT raw files)
-               ▼
-Stage 2: MUSE (Planning)
-┌─────────────────────────────────┐
-│ Input: Sage's understanding     │
-│ Process:                        │
-│   - Change planning             │
-│   - Impact analysis             │
-│   - Conflict resolution         │
-│ Output: Specific change plan    │
-│   - Files to modify             │
-│   - Exact changes needed        │
-│   - Order of operations         │
-└──────────────┬──────────────────┘
-               │ (refined plan, NOT exploration context)
-               ▼
-Stage 3: FORGE (Execution)
-┌─────────────────────────────────┐
-│ Input: Muse's change plan       │
-│ Process:                        │
-│   - Code modification           │
-│   - Test execution              │
-│   - Validation                  │
-│ Output: Modified codebase       │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    Sage["**Stage 1: SAGE (Understanding)**\nInput: User request + codebase\nProcess: Semantic entry-point search,\ndependency graph traversal, pattern recognition\nOutput: Relevant files, architecture patterns, dependencies"]
+    Muse["**Stage 2: MUSE (Planning)**\nInput: Sage's understanding\nProcess: Change planning, impact analysis,\nconflict resolution\nOutput: Files to modify, exact changes, order of operations"]
+    Forge["**Stage 3: FORGE (Execution)**\nInput: Muse's change plan\nProcess: Code modification, test execution, validation\nOutput: Modified codebase"]
+    Sage -->|"distilled understanding, NOT raw files"| Muse
+    Muse -->|"refined plan, NOT exploration context"| Forge
 ```
 
 Each stage acts as a **compression boundary**. Sage might read 40 files and analyze
@@ -245,20 +203,19 @@ Ante takes a more dynamic approach to multi-agent coordination. Rather than a fi
 pipeline, it uses a meta-agent that spawns sub-agents on demand based on the task
 requirements.
 
-```
-┌──────────────────────────────────────┐
-│            META-AGENT                │
-│  (task understanding + coordination) │
-│                                      │
-│  Analyzes task ──► Decides decomp    │
-│                                      │
-│  Spawns dynamically:                 │
-│    ├── Sub-agent: "Fix auth bug"     │
-│    ├── Sub-agent: "Update tests"     │
-│    └── Sub-agent: "Update docs"      │
-│                                      │
-│  Collects results ──► Synthesizes    │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Meta["**META-AGENT**\n(task understanding + coordination)\nAnalyzes task → Decides decomposition"]
+    SA1["Sub-agent: Fix auth bug"]
+    SA2["Sub-agent: Update tests"]
+    SA3["Sub-agent: Update docs"]
+    Synth["Collect results → Synthesize"]
+    Meta -->|"spawn"| SA1
+    Meta -->|"spawn"| SA2
+    Meta -->|"spawn"| SA3
+    SA1 --> Synth
+    SA2 --> Synth
+    SA3 --> Synth
 ```
 
 **Key characteristics:**
@@ -287,43 +244,13 @@ each sub-agent's summary, not by the raw exploration each performed.
 Capy implements a two-agent system with a particularly clean compression boundary:
 a structured specification document.
 
-```
-Phase 1: CAPTAIN (Exploration + Planning)
-┌─────────────────────────────────────┐
-│ - Explores codebase extensively     │
-│ - Gathers all relevant information  │
-│ - Understands dependencies          │
-│ - Identifies constraints            │
-│                                     │
-│ Output: STRUCTURED SPEC DOCUMENT    │
-│ ┌─────────────────────────────────┐ │
-│ │ ## Files to Modify              │ │
-│ │ - src/auth.ts: add OAuth flow   │ │
-│ │ - src/routes.ts: new endpoint   │ │
-│ │                                 │ │
-│ │ ## Specific Changes             │ │
-│ │ 1. Add OAuthProvider class...   │ │
-│ │ 2. Register /oauth/callback...  │ │
-│ │                                 │ │
-│ │ ## Dependencies                 │ │
-│ │ - Requires passport package     │ │
-│ │ - Must not break session mgmt   │ │
-│ │                                 │ │
-│ │ ## Test Requirements            │ │
-│ │ - Unit tests for OAuthProvider  │ │
-│ │ - Integration test for flow     │ │
-│ └─────────────────────────────────┘ │
-└──────────────┬──────────────────────┘
-               │ (spec document only)
-               ▼
-Phase 2: BUILD (Execution)
-┌─────────────────────────────────────┐
-│ Input: Spec document + codebase     │
-│ - Follows spec precisely            │
-│ - Reads only files mentioned in spec│
-│ - Makes changes as specified        │
-│ - Runs tests as required            │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Cap["**Phase 1: CAPTAIN (Exploration + Planning)**\nExplores codebase extensively\nGathers all relevant information\nUnderstands dependencies\nIdentifies constraints"]
+    Spec["**STRUCTURED SPEC DOCUMENT**\n## Files to Modify\n- src/auth.ts: add OAuth flow\n- src/routes.ts: new endpoint\n## Specific Changes\n## Dependencies\n## Test Requirements"]
+    Build["**Phase 2: BUILD (Execution)**\nInput: Spec document + codebase\nFollows spec precisely\nReads only files mentioned in spec\nRuns tests as required"]
+    Cap --> Spec
+    Spec -->|"spec document only"| Build
 ```
 
 The spec document serves as a **"lossless summary"** — more structured than a
@@ -366,21 +293,17 @@ collaborate on tasks based on their individual capabilities.
 - **Shared state boundaries**: agents communicate through defined output formats,
   not raw context sharing
 
-```
-Task: "Refactor the payment module"
-
-┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
-│ Code       │  │ Architect │  │ Refactor  │  │ Test      │
-│ Analyzer   │  │ Agent     │  │ Agent     │  │ Agent     │
-│            │  │           │  │           │  │           │
-│ Reads code │  │ Plans new │  │ Executes  │  │ Validates │
-│ Finds deps │  │ structure │  │ changes   │  │ behavior  │
-│ Maps types │  │ Defines   │  │ Moves     │  │ Runs      │
-│            │  │ interfaces│  │ code      │  │ tests     │
-└─────┬──────┘  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘
-      │               │              │              │
-      └───────────────┴──────────────┴──────────────┘
-                  Shared output format
+```mermaid
+flowchart TD
+    CA["**Code Analyzer**\nReads code\nFinds dependencies\nMaps types"]
+    AA["**Architect Agent**\nPlans new structure\nDefines interfaces"]
+    RA["**Refactor Agent**\nExecutes changes\nMoves code"]
+    TA["**Test Agent**\nValidates behavior\nRuns tests"]
+    Out["Shared output format"]
+    CA --> Out
+    AA --> Out
+    RA --> Out
+    TA --> Out
 ```
 
 The important context management insight from TongAgents is **proportional resource
@@ -401,12 +324,9 @@ system. Four primary patterns emerge across the tools we have studied:
 The simplest and most common pattern. Agent A completes its work and produces a
 natural-language summary. Agent B receives this summary as part of its initial prompt.
 
-```
-Agent A                          Agent B
-┌──────────┐                    ┌──────────┐
-│ Does work │ ──text summary──▶ │ Receives │
-│ (50K ctx) │    (500 tokens)   │ summary  │
-└──────────┘                    └──────────┘
+```mermaid
+flowchart LR
+    A["**Agent A**\nDoes work\n(50K ctx)"] -->|"text summary\n(500 tokens)"| B["**Agent B**\nReceives summary"]
 ```
 
 **Used by:** Claude Code sub-agents, most exploration patterns
@@ -419,12 +339,9 @@ Agent A                          Agent B
 Agent A produces a structured document (spec, plan, JSON schema) rather than
 free-form text. Agent B parses and follows the structure.
 
-```
-Agent A                          Agent B
-┌──────────┐                    ┌──────────┐
-│ Does work │ ──structured───▶  │ Follows  │
-│ (50K ctx) │   spec/plan       │ spec     │
-└──────────┘  (2K tokens)       └──────────┘
+```mermaid
+flowchart LR
+    A["**Agent A**\nDoes work\n(50K ctx)"] -->|"structured spec/plan\n(2K tokens)"| B["**Agent B**\nFollows spec"]
 ```
 
 **Used by:** Capy (spec document), ForgeCode (change plans)
@@ -437,13 +354,10 @@ Agent A                          Agent B
 Agents do not directly pass context to each other. Instead, they communicate through
 a shared external state — a file system, database, or event log.
 
-```
-Agent A                 Shared State              Agent B
-┌──────────┐          ┌──────────────┐          ┌──────────┐
-│ Writes   │ ──write─▶│ File system  │◀──read── │ Reads    │
-│ results  │          │ Database     │          │ results  │
-└──────────┘          │ Event stream │          └──────────┘
-                      └──────────────┘
+```mermaid
+flowchart LR
+    A["**Agent A**\nWrites results"] -->|"write"| SS["**Shared State**\nFile system\nDatabase\nEvent stream"]
+    SS -->|"read"| B["**Agent B**\nReads results"]
 ```
 
 **Used by:** OpenHands (EventStream), most file-system-based tools
@@ -457,16 +371,13 @@ Each agent in a pipeline takes the previous agent's output and refines it furthe
 Context narrows at each stage — from broad understanding to specific plan to
 concrete execution.
 
+```mermaid
+flowchart LR
+    A["**Agent A**\nBroad analysis\n(wide context)"] -->|"output"| B["**Agent B**\nRefined planning\n(narrower context)"]
+    B -->|"output"| C["**Agent C**\nSpecific execution\n(focused context)"]
 ```
-Agent A              Agent B              Agent C
-┌──────────┐        ┌──────────┐        ┌──────────┐
-│ Broad    │──out──▶│ Refined  │──out──▶│ Specific │
-│ analysis │        │ planning │        │ execution│
-│ (wide)   │        │ (narrow) │        │ (focused)│
-└──────────┘        └──────────┘        └──────────┘
 
-Context breadth:  ████████     ██████       ███
-```
+Context breadth narrows at each stage.
 
 **Used by:** ForgeCode (Sage → Muse → Forge)
 **Strength:** Natural compression at each stage, clear separation of concerns
@@ -517,21 +428,15 @@ A shared append-only log of events that all agents can read. Each agent subscrib
 to relevant event types and publishes its own events. Enables loose coupling —
 agents do not need to know about each other, only about event types.
 
-```
-┌─────────────────────────────────────────────┐
-│              EVENT STREAM                    │
-│                                             │
-│  [FileRead: auth.ts]                        │
-│  [Analysis: "auth uses JWT"]                │
-│  [PlanCreated: {changes: [...]}]            │
-│  [FileModified: auth.ts]                    │
-│  [TestRun: {passed: 15, failed: 0}]         │
-│  [TaskComplete: "auth refactoring done"]    │
-└─────────────────────────────────────────────┘
-     ▲           ▲           ▲
-     │           │           │
-  Agent A     Agent B     Agent C
- (explorer)  (modifier)  (tester)
+```mermaid
+flowchart TD
+    ES["**EVENT STREAM**\n[FileRead: auth.ts]\n[Analysis: 'auth uses JWT']\n[PlanCreated: {changes: [...]}]\n[FileModified: auth.ts]\n[TestRun: {passed: 15, failed: 0}]\n[TaskComplete: 'auth refactoring done']"]
+    AgA["Agent A\n(explorer)"]
+    AgB["Agent B\n(modifier)"]
+    AgC["Agent C\n(tester)"]
+    AgA -->|"publish / subscribe"| ES
+    AgB -->|"publish / subscribe"| ES
+    AgC -->|"publish / subscribe"| ES
 ```
 
 **Pros:** Loose coupling, full audit trail, enables replay, agents can join/leave
@@ -745,22 +650,17 @@ sub-agent to read all 5 and synthesize the results.
 
 ### Architecture Trade-offs
 
-```
-                    Flexibility
-                        ▲
-                        │
-          Ante ●        │         ● TongAgents
-                        │
-                        │
-    Claude Code ●       │
-                        │
-                        │        ● OpenHands
-                        │
-          Capy ●        │
-                        │         ● ForgeCode
-                        │
-                        └──────────────────────▶ Structure
-                    (loose)                  (rigid)
+```mermaid
+quadrantChart
+    title Flexibility vs Structure
+    x-axis loose --> rigid
+    y-axis low flexibility --> high flexibility
+    Claude Code: [0.25, 0.65]
+    ForgeCode: [0.85, 0.25]
+    Ante: [0.15, 0.85]
+    TongAgents: [0.75, 0.85]
+    Capy: [0.25, 0.35]
+    OpenHands: [0.75, 0.55]
 ```
 
 **Choosing the right architecture depends on the task:**

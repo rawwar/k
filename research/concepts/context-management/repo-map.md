@@ -179,27 +179,17 @@ For a TypeScript file, the tags query would additionally capture:
 
 ### The Parsing Pipeline
 
-```
-Source File (.py)          Tags Query (.scm)
-       │                         │
-       ▼                         ▼
-   tree-sitter              Query Engine
-   parser (C)                    │
-       │                         │
-       ▼                         │
-  Concrete Syntax ──────────────►│
-  Tree (CST)                     │
-                                 ▼
-                          Tag Matches
-                     ┌──────────────────┐
-                     │ auth.py:          │
-                     │   DEF class Auth  │
-                     │   DEF validate()  │
-                     │   DEF login()     │
-                     │   REF User        │
-                     │   REF db.query    │
-                     │   REF hash_pw     │
-                     └──────────────────┘
+```mermaid
+flowchart TD
+    SF["Source File (.py)"]
+    TQ["Tags Query (.scm)"]
+    TSP["tree-sitter parser (C)"]
+    QE["Query Engine"]
+    TM["Tag Matches\n(DEF / REF entries per file)"]
+    SF --> TSP
+    TQ --> QE
+    TSP -->|"Concrete Syntax Tree (CST)"| QE
+    QE --> TM
 ```
 
 Aider maintains custom `tags.scm` files for many languages, optimized for extracting
@@ -232,18 +222,14 @@ defined in `models.py`, the edge weight is 5. More references = stronger depende
 
 ### The Resulting Graph
 
-```
-     auth.py ──────────► models.py
-       │          (3)        ▲
-       │                     │ (5)
-       │ (2)                 │
-       ▼                     │
-   routes.py ──────────► utils.py
-       │          (4)
-       │ (1)
-       ▼
-   middleware.py ─────► config.py
-                  (2)
+```mermaid
+flowchart LR
+    auth["auth.py"] -->|"3"| models["models.py"]
+    auth -->|"2"| routes["routes.py"]
+    routes -->|"4"| utils["utils.py"]
+    utils -->|"5"| models
+    routes -->|"1"| middleware["middleware.py"]
+    middleware -->|"2"| config["config.py"]
 ```
 
 Numbers on edges represent reference counts. This graph captures the structural
@@ -401,33 +387,31 @@ For a typical edit-test cycle:
 
 Here's the complete repo-map pipeline from source files to LLM context:
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                   Aider Repo-Map Pipeline                    │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  1. Source Files ──► tree-sitter ──► Definitions +           │
-│     (*.py, *.js,      (with          References              │
-│      *.ts, etc.)     tags.scm)       (per file)              │
-│                                                              │
-│  2. Definitions + References ──► File-Level Dependency       │
-│     (match refs to defs)          Graph (weighted, directed) │
-│                                                              │
-│  3. Dependency Graph                                         │
-│     + Chat Files (user-added)  ──► Personalized PageRank     │
-│     + Mentioned Identifiers        (biased toward current    │
-│                                     work context)            │
-│                                                              │
-│  4. Ranked Symbols ──► Token Budget ──► Symbol Selection     │
-│     (PageRank order)    (dynamic)       (greedy, top-k)      │
-│                                                              │
-│  5. Selected Symbols ──► Format as ──► Repo Map String       │
-│                          compact text   (signatures + ⋮...)   │
-│                                                              │
-│  6. Repo Map String ──► LLM Context Window                   │
-│     (alongside user message, system prompt, file contents)   │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SF["Source Files
+(*.py, *.js, *.ts, etc.)"]
+    TS["tree-sitter
+(with tags.scm)"]
+    DR["Definitions + References
+(per file)"]
+    DG["File-Level Dependency Graph
+(weighted, directed)"]
+    CF["Chat Files + Mentioned Identifiers"]
+    PR["Personalized PageRank
+(biased toward current work context)"]
+    RS["Ranked Symbols
+(PageRank order)"]
+    TB["Token Budget
+(dynamic)"]
+    SS["Symbol Selection
+(greedy, top-k)"]
+    RMS["Repo Map String
+(signatures + ...)"]
+    LCW["LLM Context Window"]
+    SF --> TS --> DR --> DG --> PR
+    CF --> PR
+    PR --> RS --> TB --> SS --> RMS --> LCW
 ```
 
 The pipeline runs on every LLM turn, but steps 1-2 are largely cached so the

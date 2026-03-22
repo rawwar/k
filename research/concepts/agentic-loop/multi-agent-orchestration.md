@@ -20,19 +20,18 @@ A single agent with a single context window hits fundamental limits:
 
 Multi-agent architectures address these by splitting responsibilities across **isolated context windows**, each optimized for its role. The cost: orchestration complexity.
 
-```
-Single Agent:                    Multi-Agent:
-
-┌─────────────┐                 ┌──────────────┐
-│   User       │                 │  Orchestrator │
-│   ↓          │                 │   ↓     ↓     │
-│   LLM ←→ Tools│                 │  Agent  Agent  │
-│   ↓          │                 │   A      B     │
-│   Response   │                 │   ↓      ↓     │
-└─────────────┘                 │  Synthesize   │
-                                │   ↓           │
-                                │  Response     │
-                                └──────────────┘
+```mermaid
+flowchart LR
+    subgraph single["Single Agent"]
+        U1["User"] --> LLM["LLM ↔ Tools"] --> R1["Response"]
+    end
+    subgraph multi["Multi-Agent"]
+        U2["User"] --> ORC["Orchestrator"]
+        ORC --> AA["Agent A"]
+        ORC --> AB["Agent B"]
+        AA & AB --> SYN["Synthesize"]
+        SYN --> R2["Response"]
+    end
 ```
 
 ---
@@ -43,28 +42,13 @@ ForgeCode (the TermBench #1 agent) is the clearest example of purpose-built mult
 
 ### Architecture
 
-```
-                    ┌─────────────────┐
-                    │  Skill Router    │
-                    │  (entry point)   │
-                    └───────┬─────────┘
-                            │
-                  ┌─────────┼──────────┐
-                  ▼         ▼          ▼
-           ┌──────────┐ ┌──────────┐ ┌──────────┐
-           │   Muse   │ │  Forge   │ │   Sage   │
-           │ (Planner)│ │(Executor)│ │(Researcher│
-           │ read-only│ │read-write│ │ read-only │
-           │ high-think│ │low-think │ │ high-think│
-           └──────────┘ └──────────┘ └──────────┘
-                │              │            │
-                │              ▼            │
-                │        ┌──────────┐       │
-                └───────►│  Shared  │◄──────┘
-                         │  State   │
-                         │(todo_list│
-                         │  files)  │
-                         └──────────┘
+```mermaid
+flowchart TD
+    SR["Skill Router\n(entry point)"]
+    SR --> Muse["Muse (Planner)\nread-only · high-think"]
+    SR --> Forge["Forge (Executor)\nread-write · low-think"]
+    SR --> Sage["Sage (Researcher)\nread-only · high-think"]
+    Muse & Forge & Sage --> SS["Shared State\n(todo_list, files)"]
 ```
 
 - **Muse**: Read-only planning agent. High thinking budget. Produces structured implementation plans with TODO lists. **Cannot modify files.** This hard constraint means Muse can think freely without accidentally breaking anything.
@@ -77,47 +61,14 @@ ForgeCode (the TermBench #1 agent) is the clearest example of purpose-built mult
 
 The flow is a 5-step pipeline that wraps every user request:
 
-```
-User Request
-     │
-     ▼
-┌─────────────────────────────────┐
-│ 1. Entry-Point Discovery        │  Semantic search before ANY agent
-│    - Embed user query           │  runs. Pre-populate context with
-│    - Search codebase index      │  relevant files so the agent
-│    - Inject top-k results       │  doesn't waste turns searching.
-└─────────────┬───────────────────┘
-              ▼
-┌─────────────────────────────────┐
-│ 2. Skill Routing                │  Match task to specialized skill
-│    - Pattern match on intent    │  (e.g., "refactor" → Muse first,
-│    - Select agent + tool set    │  "fix test" → Forge directly,
-│    - Configure thinking budget  │  "explain" → Sage).
-└─────────────┬───────────────────┘
-              ▼
-┌─────────────────────────────────┐
-│ 3. Active Agent Process         │  The selected agent runs its
-│    - Inner agentic loop         │  standard ReAct loop. Muse
-│    - Tool calls + observations  │  produces plans. Forge produces
-│    - May delegate to Sage       │  code changes. Both may call
-│                                 │  Sage for research.
-└─────────────┬───────────────────┘
-              ▼
-┌─────────────────────────────────┐
-│ 4. Tool-Call Correction         │  Runtime intercepts tool calls
-│    - Validate paths exist       │  and auto-fixes common mistakes.
-│    - Fix relative → absolute    │  This is NOT prompting — it's
-│    - Retry on schema errors     │  programmatic correction of the
-│                                 │  tool call before execution.
-└─────────────┬───────────────────┘
-              ▼
-┌─────────────────────────────────┐
-│ 5. Verification Enforcement     │  Runtime REQUIRES a verification
-│    - Generate checklist         │  pass. Not optional. Not "please
-│    - Check: requested vs done   │  check." The system forces the
-│    - Evidence + missing items   │  agent to verify with high
-│    - Thinking budget → HIGH     │  thinking budget.
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    UR["User Request"]
+    UR --> S1["1. Entry-Point Discovery\nEmbed query · search codebase index\ninject top-k results into context"]
+    S1 --> S2["2. Skill Routing\nPattern-match intent · select agent + tool set\nconfigure thinking budget"]
+    S2 --> S3["3. Active Agent Process\nInner ReAct loop · tool calls + observations\nmay delegate to Sage for research"]
+    S3 --> S4["4. Tool-Call Correction\nValidate paths · fix relative→absolute\nretry on schema errors (programmatic, not prompting)"]
+    S4 --> S5["5. Verification Enforcement\nGenerate checklist · check requested vs done\nHigh thinking budget · REQUIRED, not optional"]
 ```
 
 ### Progressive Thinking Policy
@@ -215,24 +166,19 @@ Claude Code takes a different approach: a single main agent that **spawns specia
 
 The main agent follows a fluid three-phase pattern:
 
-```
-┌──────────────────────────────────────────────┐
-│              Main Agent Loop                  │
-│                                              │
-│   ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-│   │ Gather   │→│  Take    │→│ Verify   │  │
-│   │ Context  │  │  Action  │  │ Results  │  │
-│   └──────────┘  └──────────┘  └──────────┘  │
-│        │              │             │         │
-│        ▼              ▼             ▼         │
-│   spawn explore  direct edit   spawn task    │
-│   agent          + bash        agent         │
-│        │              │             │         │
-│        └──────────────┴─────────────┘         │
-│                    │                          │
-│              Continue or                      │
-│              respond to user                  │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph loop["Main Agent Loop"]
+        G["Gather Context"]
+        A["Take Action"]
+        V["Verify Results"]
+        G --> A --> V
+        V -->|continue| G
+    end
+    G -->|spawn| EX["explore agent"]
+    A -->|direct| ED["edit + bash"]
+    V -->|spawn| TA["task agent"]
+    EX & ED & TA -->|results| CONT["Continue or respond to user"]
 ```
 
 Phases blend fluidly. A simple `fix the typo in README.md` might skip gathering and go straight to action. A complex refactor might spend 10 turns gathering before any action.
@@ -270,12 +216,12 @@ function spawnSubAgent(agent: SubAgent): string {
 
 ### Key Constraint: No Recursive Spawning
 
-```
-Main Agent
-  ├── spawns Explore Agent      ✅
-  ├── spawns Task Agent         ✅
-  └── spawns General-Purpose    ✅
-        └── spawns Explore      ❌ BLOCKED
+```mermaid
+flowchart TD
+    M[Main Agent] --> EA["Explore Agent ✅"]
+    M --> TA["Task Agent ✅"]
+    M --> GP["General-Purpose ✅"]
+    GP -. spawns .-> X["❌ BLOCKED: Explore Agent"]
 ```
 
 Sub-agents **cannot spawn other sub-agents.** This prevents:
@@ -289,15 +235,16 @@ Each sub-agent runs in its **own isolated context window**. When it finishes, on
 
 Claude Code can spawn multiple explore agents in parallel:
 
-```
-Main Agent: "I need to understand auth, database, and API layers"
-
-  ┌── Explore Agent 1: "How does auth work?" ──────────┐
-  ├── Explore Agent 2: "What's the DB schema?" ────────┤  parallel
-  └── Explore Agent 3: "What API endpoints exist?" ────┘
-
-  Results: [auth_summary, db_summary, api_summary]
-  → Main agent synthesizes all three into a plan
+```mermaid
+flowchart TD
+    M["Main Agent: I need to understand auth, database, and API layers"]
+    M -->|parallel| E1["Explore Agent 1: How does auth work?"]
+    M -->|parallel| E2["Explore Agent 2: What's the DB schema?"]
+    M -->|parallel| E3["Explore Agent 3: What API endpoints exist?"]
+    E1 --> R[Results: auth_summary + db_summary + api_summary]
+    E2 --> R
+    E3 --> R
+    R --> S[Main agent synthesizes all three into a plan]
 ```
 
 This is safe because explore agents are read-only. No race conditions, no conflicting writes.
@@ -310,36 +257,24 @@ Ante (built in Rust) takes multi-agent to its logical extreme: a **meta-agent** 
 
 ### Meta-Agent Orchestrator
 
-```
-                     User Request
-                          │
-                          ▼
-                  ┌───────────────┐
-                  │  Meta-Agent   │
-                  │  (Orchestrator)│
-                  └───────┬───────┘
-                          │
-              ┌───────────┼───────────┐      Fan-Out
-              ▼           ▼           ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │Sub-Agent │ │Sub-Agent │ │Sub-Agent │
-        │    A     │ │    B     │ │    C     │
-        │(frontend)│ │(backend) │ │(tests)   │
-        └────┬─────┘ └────┬─────┘ └────┬─────┘
-             │            │            │
-             ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ Result A │ │ Result B │ │ Result C │
-        └────┬─────┘ └────┬─────┘ └────┬─────┘
-             │            │            │
-             └────────────┼────────────┘      Fan-In
-                          ▼
-                  ┌───────────────┐
-                  │  Meta-Agent   │
-                  │  (Synthesize) │
-                  └───────┬───────┘
-                          ▼
-                    Final Response
+```mermaid
+flowchart TD
+    U[User Request] --> M[Meta-Agent
+Orchestrator]
+    M -->|Fan-Out| SA[Sub-Agent A
+frontend]
+    M -->|Fan-Out| SB[Sub-Agent B
+backend]
+    M -->|Fan-Out| SC[Sub-Agent C
+tests]
+    SA --> RA[Result A]
+    SB --> RB[Result B]
+    SC --> RC[Result C]
+    RA -->|Fan-In| MS[Meta-Agent
+Synthesize]
+    RB -->|Fan-In| MS
+    RC -->|Fan-In| MS
+    MS --> F[Final Response]
 ```
 
 The meta-agent's job:
@@ -355,18 +290,14 @@ The meta-agent's job:
 
 Each sub-agent runs its own agentic loop independently:
 
-```
-┌─────────────────────────────────────┐
-│         Sub-Agent Inner Loop         │
-│                                     │
-│   Plan → Act → Observe → Decide    │
-│     │                       │       │
-│     │    ┌──────────────┐   │       │
-│     └────┤  Continue?   ├───┘       │
-│          │  yes → loop  │           │
-│          │  no → return │           │
-│          └──────────────┘           │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    P[Plan] --> A[Act]
+    A --> O[Observe]
+    O --> D{Continue?}
+    D -->|yes - loop| P
+    D -->|no| R[Return result
+to Main Agent]
 ```
 
 ### Key Implementation: Rust + Lock-Free Scheduling
@@ -428,29 +359,19 @@ SageAgent uses a **linear pipeline** with a single feedback loop — the simples
 
 ### Linear Pipeline with Feedback
 
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ TaskAnalysis │───►│   Planning   │───►│   Executor   │
-│              │    │              │    │              │
-│ Understand   │    │ Decompose    │    │ Run subtasks │
-│ requirements │    │ into steps   │    │ with tools   │
-└──────────────┘    └──────┬───────┘    └──────┬───────┘
-     (runs once)           ▲                    │
-                           │                    ▼
-                    ┌──────┴───────┐    ┌──────────────┐
-                    │  incomplete  │◄───│ Observation  │
-                    │  re-plan     │    │              │
-                    │  with gaps   │    │ Evaluate:    │
-                    └──────────────┘    │ complete? Y/N│
-                                       └──────┬───────┘
-                                              │ complete
-                                              ▼
-                                       ┌──────────────┐
-                                       │ TaskSummary  │
-                                       │              │
-                                       │ Generate     │
-                                       │ final output │
-                                       └──────────────┘
+```mermaid
+flowchart TD
+    TA["TaskAnalysis\n(runs once)\nUnderstand requirements"]
+    PL["Planning\n(1+ times)\nDecompose into steps"]
+    EX["Executor\n(1+ times)\nRun subtasks with tools"]
+    OB["Observation\n(1+ times)\nEvaluate: complete? Y/N"]
+    RP["re-plan with gaps"]
+    TS["TaskSummary\n(runs once)\nGenerate final output"]
+
+    TA --> PL --> EX --> OB
+    OB -->|incomplete| RP
+    RP --> PL
+    OB -->|complete| TS
 ```
 
 ### Agent Roles
@@ -509,18 +430,16 @@ The mode isn't configured — it emerges naturally from whether the Observation 
 
 TongAgents (from BIGAI — Beijing Institute for General AI Intelligence) scored 80.2% on Terminal-Bench. The architecture is inferred from the plural name, the research group's focus, and their performance characteristics:
 
-```
-Likely Architecture:
-
-┌──────────────┐
-│ Orchestrator │  ← Cognitive architecture layer
-├──────────────┤
-│   Planner    │  ← Deliberative planning (BIGAI specialty)
-├──────────────┤
-│   Executor   │  ← Tool execution
-├──────────────┤
-│   Verifier   │  ← Output validation
-└──────────────┘
+```mermaid
+flowchart TD
+    O[Orchestrator
+Cognitive architecture layer]
+    O --> P[Planner
+Deliberative planning - BIGAI specialty]
+    P --> E[Executor
+Tool execution]
+    E --> V[Verifier
+Output validation]
 ```
 
 BIGAI's research emphasis on **cognitive architecture** and **deliberative planning** suggests:
@@ -536,16 +455,15 @@ Capy uses the cleanest multi-agent architecture: exactly two agents with a hard 
 
 ### Architecture
 
-```
-User ←→ Captain ──spec──→ Build ──→ Result
-         │                  │
-         │ CAN ask user     │ CANNOT ask user
-         │ questions         │ questions
-         │                  │
-         │ CANNOT write     │ CAN write code
-         │ code             │
-         └──────────────────┘
-              Hard boundary
+```mermaid
+flowchart LR
+    U[User] <-->|questions / answers| C[Captain]
+    C -->|spec| B[Build]
+    B --> R[Result]
+    C --- N1["CAN ask user questions
+CANNOT write code"]
+    B --- N2["CANNOT ask user questions
+CAN write code"]
 ```
 
 - **Captain**: Planning agent. **CAN** ask the user questions for clarification. **CANNOT** write code or modify files. Produces a specification (spec) as output.
@@ -554,20 +472,27 @@ User ←→ Captain ──spec──→ Build ──→ Result
 
 ### Why Hard Constraints Work
 
-```
-Captain's output (spec) is the SOLE interface to Build.
-
-Captain                          Build
-┌────────────────────┐          ┌────────────────────┐
-│ Reads user request │          │ Reads spec ONLY    │
-│ Asks clarifications│          │ No user access     │
-│ Analyzes codebase  │          │ Executes plan      │
-│ Produces spec:     │─────────►│ Writes code        │
-│   - Requirements   │  spec    │ Runs tests         │
-│   - File targets   │  only    │ Iterates until     │
-│   - Approach       │          │ spec is satisfied  │
-│   - Constraints    │          │                    │
-└────────────────────┘          └────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Captain
+        C1[Reads user request]
+        C2[Asks clarifications]
+        C3[Analyzes codebase]
+        C4["Produces spec:
+- Requirements
+- File targets
+- Approach
+- Constraints"]
+    end
+    subgraph Build
+        B1[Reads spec ONLY]
+        B2[No user access]
+        B3[Executes plan]
+        B4[Writes code]
+        B5[Runs tests]
+        B6[Iterates until spec is satisfied]
+    end
+    C4 -->|spec only| B1
 ```
 
 The hard constraints create **natural quality gates**:
@@ -584,27 +509,15 @@ Droid works across interfaces (CLI, Slack, Linear, CI) and emphasizes **autonomy
 
 ### Multi-Interface Architecture
 
-```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│     CLI      │  │    Slack     │  │   Linear     │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-       │                 │                 │
-       └─────────────────┼─────────────────┘
-                         ▼
-              ┌─────────────────────┐
-              │    Droid Agent      │
-              │                     │
-              │  Specification Mode:│
-              │  ┌───────────────┐  │
-              │  │ Reasoning     │  │  ← o1/o3 class model
-              │  │ Model (plan)  │  │
-              │  └───────┬───────┘  │
-              │          ▼          │
-              │  ┌───────────────┐  │
-              │  │ Efficient     │  │  ← gpt-4o class model
-              │  │ Model (exec)  │  │
-              │  └───────────────┘  │
-              └─────────────────────┘
+```mermaid
+flowchart TD
+    CLI[CLI] --> DA[Droid Agent]
+    Slack[Slack] --> DA
+    Linear[Linear] --> DA
+    DA --> RM["Reasoning Model (plan)
+o1/o3 class"]
+    RM --> EM["Efficient Model (exec)
+gpt-4o class"]
 ```
 
 ### Autonomy Ratio
@@ -627,16 +540,11 @@ Across all systems, four fundamental orchestration patterns emerge:
 
 ### 1. Orchestrator-Worker
 
-```
-        ┌──────────────┐
-        │ Orchestrator  │
-        └──┬───┬───┬───┘
-           │   │   │
-           ▼   ▼   ▼
-        ┌───┐┌───┐┌───┐
-        │ W ││ W ││ W │
-        │ 1 ││ 2 ││ 3 │
-        └───┘└───┘└───┘
+```mermaid
+flowchart TD
+    O[Orchestrator] --> W1[Worker 1]
+    O --> W2[Worker 2]
+    O --> W3[Worker 3]
 ```
 
 One controller agent delegates to specialized workers. The most common pattern.
@@ -650,10 +558,9 @@ One controller agent delegates to specialized workers. The most common pattern.
 
 ### 2. Pipeline
 
-```
-┌───┐ → ┌───┐ → ┌───┐ → ┌───┐ → ┌───┐
-│ A │   │ B │   │ C │   │ D │   │ E │
-└───┘   └───┘   └───┘   └───┘   └───┘
+```mermaid
+flowchart LR
+    A --> B --> C --> D --> E
 ```
 
 Agents arranged in sequence, each processing and passing forward.
@@ -667,13 +574,11 @@ Agents arranged in sequence, each processing and passing forward.
 
 ### 3. Peer-to-Peer
 
-```
-┌───┐ ←──→ ┌───┐
-│ A │       │ B │
-└─┬─┘       └─┬─┘
-  │   ┌───┐   │
-  └──→│ C │←──┘
-      └───┘
+```mermaid
+flowchart TD
+    A <--> B
+    A --> C
+    B --> C
 ```
 
 Agents communicate directly with each other, no central controller.
@@ -687,20 +592,17 @@ Agents communicate directly with each other, no central controller.
 
 ### 4. Hierarchical
 
-```
-          ┌───┐
-          │ A │           (root)
-          └─┬─┘
-        ┌───┼───┐
-        ▼   ▼   ▼
-      ┌───┐┌───┐┌───┐    (level 1)
-      │ B ││ C ││ D │
-      └─┬─┘└───┘└─┬─┘
-      ┌─┼─┐      ┌─┼─┐
-      ▼ ▼ ▼      ▼ ▼ ▼
-     ┌─┐┌─┐┌─┐ ┌─┐┌─┐┌─┐  (level 2)
-     │E││F││G│ │H││I││J│
-     └─┘└─┘└─┘ └─┘└─┘└─┘
+```mermaid
+flowchart TD
+    A[A - root] --> B[B]
+    A --> C[C]
+    A --> D[D]
+    B --> E[E]
+    B --> F[F]
+    B --> G[G]
+    D --> H[H]
+    D --> I[I]
+    D --> J[J]
 ```
 
 Tree of agents: parent delegates to children, children may delegate further.
@@ -720,13 +622,24 @@ How agents share (or isolate) context is the most consequential architectural de
 
 ### Strategies
 
-```
-Strategy            Context Size per Agent    Coordination Cost
-─────────────────   ──────────────────────    ─────────────────
-Full Sharing        O(N × total_context)      Low (everyone knows)
-Isolated            O(task_specific)           High (must communicate)
-Shared State        O(task + state_obj)        Medium
-Event Filtering     O(task + relevant_events)  Medium
+```mermaid
+flowchart TD
+    subgraph "Full Sharing"
+        FS["Context: O(N × total_context)
+Coordination Cost: Low"]
+    end
+    subgraph "Isolated"
+        IS["Context: O(task_specific)
+Coordination Cost: High"]
+    end
+    subgraph "Shared State"
+        SS["Context: O(task + state_obj)
+Coordination Cost: Medium"]
+    end
+    subgraph "Event Filtering"
+        EF["Context: O(task + relevant_events)
+Coordination Cost: Medium"]
+    end
 ```
 
 **Full context sharing**: All agents see everything. Simple but wasteful — each agent pays the full context cost even if 90% is irrelevant.
@@ -761,15 +674,15 @@ How agents send results to each other:
 
 The simplest protocol. Sub-agent returns its result as the tool call response.
 
-```
-Main Agent                    Sub-Agent
-    │                             │
-    │── spawn(task) ─────────────►│
-    │                             │── runs inner loop
-    │                             │── produces result
-    │◄── return(summary) ─────────│
-    │                             │
-    ▼ continues with summary
+```mermaid
+sequenceDiagram
+    participant M as Main Agent
+    participant S as Sub-Agent
+    M->>S: spawn(task)
+    Note over S: runs inner loop
+    Note over S: produces result
+    S-->>M: return(summary)
+    Note over M: continues with summary
 ```
 
 **Used by**: Claude Code (explore agent returns summary), OpenCode (`AgentTool` returns result)
@@ -781,16 +694,18 @@ Main Agent                    Sub-Agent
 
 Agents read/write shared objects asynchronously.
 
-```
-Agent A                   Shared State              Agent B
-    │                         │                         │
-    │── todo_write(plan) ────►│                         │
-    │                         │◄── todo_read() ─────────│
-    │                         │── return(plan) ─────────►│
-    │                         │                         │── execute
-    │                         │◄── todo_update(done) ───│
-    │── todo_read() ─────────►│                         │
-    │◄── return(status) ──────│                         │
+```mermaid
+sequenceDiagram
+    participant A as Agent A
+    participant S as Shared State
+    participant B as Agent B
+    A->>S: todo_write(plan)
+    B->>S: todo_read()
+    S-->>B: return(plan)
+    Note over B: execute
+    B->>S: todo_update(done)
+    A->>S: todo_read()
+    S-->>A: return(status)
 ```
 
 **Used by**: ForgeCode (`todo_write`, `todo_read` tools), CrewAI (shared memory)
@@ -802,17 +717,13 @@ Agent A                   Shared State              Agent B
 
 Agents publish/subscribe to events on a shared stream.
 
-```
-┌─────────────────────────────────────────┐
-│              Event Stream                │
-│  [FileEdit, CmdRun, AgentMsg, ...]      │
-├─────────────────────────────────────────┤
-│                                         │
-│  Agent A ──publish──► ◄──subscribe── Agent B
-│                                         │
-│  Agent C ──publish──► ◄──subscribe── Agent D
-│                                         │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    ES["Event Stream\n[FileEdit, CmdRun, AgentMsg, …]"]
+    A["Agent A"] -->|publish| ES
+    C["Agent C"] -->|publish| ES
+    ES -->|subscribe| B["Agent B"]
+    ES -->|subscribe| D["Agent D"]
 ```
 
 **Used by**: OpenHands (`EventStream` with `EventSource` tagging), SWE-agent (event-based observation)
@@ -824,15 +735,15 @@ Agents publish/subscribe to events on a shared stream.
 
 Agent A returns Agent B as the next handler. Control transfers completely.
 
-```
-Agent A                              Agent B
-    │                                    │
-    │── "I can't handle this" ──────────►│
-    │   returns: {agent: "Agent B",      │
-    │             context: {...}}         │
-    │                                    │── takes over
-    │         (A is done)                │── runs full loop
-    │                                    │── returns to user
+```mermaid
+sequenceDiagram
+    participant A as Agent A
+    participant B as Agent B
+    A->>B: "I can't handle this"\nreturns {agent: "Agent B", context: {...}}
+    Note over A: done
+    Note over B: takes over
+    Note over B: runs full loop
+    Note over B: returns to user
 ```
 
 **Used by**: OpenAI Swarm, OpenAI Agents SDK (built-in handoff primitive)
@@ -997,22 +908,17 @@ Multi-agent orchestration is not always the right choice. It adds complexity, la
 
 ### The Decision Framework
 
-```
-Is the task complex enough to fill a context window?
-  NO  → Single agent
-  YES ↓
-
-Can the task be decomposed into independent sub-tasks?
-  NO  → Pipeline (SageAgent pattern)
-  YES ↓
-
-Do sub-tasks need different capabilities (read-only vs read-write)?
-  NO  → Fan-out/fan-in (Ante pattern)
-  YES ↓
-
-Is verification critical?
-  NO  → Orchestrator-worker (Claude Code pattern)
-  YES → Named agents with hard constraints (ForgeCode pattern)
+```mermaid
+flowchart TD
+    Q1{"Complex enough to\nfill context window?"}
+    Q1 -->|No| R1["Single agent"]
+    Q1 -->|Yes| Q2{"Decomposable into\nindependent sub-tasks?"}
+    Q2 -->|No| R2["Pipeline\n(SageAgent pattern)"]
+    Q2 -->|Yes| Q3{"Sub-tasks need different\ncapabilities?"}
+    Q3 -->|No| R3["Fan-out / fan-in\n(Ante pattern)"]
+    Q3 -->|Yes| Q4{"Verification critical?"}
+    Q4 -->|No| R4["Orchestrator-worker\n(Claude Code pattern)"]
+    Q4 -->|Yes| R5["Named agents with\nhard constraints\n(ForgeCode pattern)"]
 ```
 
 ---

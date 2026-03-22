@@ -39,24 +39,16 @@ code **15–25% of the time**. Without a build gate, these errors cascade — by
 an agent typically has 3–4 compounding failures that are far harder to diagnose than the
 original error.
 
-```
-Verification Hierarchy (cost vs. coverage)
-
-  Coverage ▲
-           │
-     ┌─────┴──────────────────────────────────────────┐
-     │  E2E / Integration Tests                       │  Minutes
-     ├────────────────────────────────────────────────┤
-     │  Unit Tests                                    │  Seconds–Minutes
-     ├────────────────────────────────────────────────┤
-     │  ██ BUILD VERIFICATION ██                      │  Seconds–Minutes
-     ├────────────────────────────────────────────────┤
-     │  Type Checking                                 │  Seconds
-     ├────────────────────────────────────────────────┤
-     │  Linting / Formatting                          │  Milliseconds
-     └─────┬──────────────────────────────────────────┘
-           │
-     Cost  ▼
+```mermaid
+flowchart TD
+    subgraph hierarchy["Verification Hierarchy — Coverage ▲  |  Cost ▼"]
+        E2E["E2E / Integration Tests — Minutes"]
+        UT["Unit Tests — Seconds–Minutes"]
+        BV["BUILD VERIFICATION — Seconds–Minutes"]
+        TC["Type Checking — Seconds"]
+        LF["Linting / Formatting — Milliseconds"]
+        E2E --> UT --> BV --> TC --> LF
+    end
 ```
 
 **The key insight:** build verification is the cheapest check that exercises the *entire*
@@ -164,25 +156,16 @@ non-standard build setups.
 
 The canonical pattern is **edit → build → diagnose → fix → rebuild**:
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Build-Verify Loop                   │
-│                                                      │
-│   ┌──────┐    ┌───────┐    ┌──────────┐             │
-│   │ Edit │───►│ Build │───►│ Success? │──► Done     │
-│   └──────┘    └───────┘    └────┬─────┘             │
-│       ▲                         │ No                 │
-│       │                         ▼                    │
-│       │                   ┌───────────┐              │
-│       │                   │ Parse     │              │
-│       │                   │ Errors    │              │
-│       │                   └─────┬─────┘              │
-│       │                         │                    │
-│       │                   ┌─────▼─────┐              │
-│       │                   │ Feed to   │              │
-│       └───────────────────│ LLM       │              │
-│                           └───────────┘              │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph loop["Build-Verify Loop"]
+        Edit --> Build
+        Build --> Success{"Success?"}
+        Success -- Yes --> Done
+        Success -- No --> Parse["Parse Errors"]
+        Parse --> LLM["Feed to LLM"]
+        LLM --> Edit
+    end
 ```
 
 ### Agent-Specific Patterns
@@ -533,22 +516,13 @@ dependency isn't installed. The agent must then install the dependency and retry
 
 ### The Dependency Installation Loop
 
-```
-┌──────────┐     ┌───────┐     ┌─────────────────┐
-│ Add      │────►│ Build │────►│ "Module not      │
-│ import   │     │       │     │  found: axios"   │
-└──────────┘     └───────┘     └────────┬─────────┘
-                                        │
-                                        ▼
-                                 ┌──────────────┐
-                                 │ npm install   │
-                                 │ axios         │
-                                 └──────┬───────┘
-                                        │
-                                        ▼
-                                 ┌──────────────┐
-                                 │ Rebuild       │──► Success
-                                 └──────────────┘
+```mermaid
+flowchart LR
+    A["Add import"] --> B[Build]
+    B --> C["Module not found: axios"]
+    C --> D["npm install axios"]
+    D --> E[Rebuild]
+    E --> F[Success]
 ```
 
 ### Sandbox Implications
@@ -561,20 +535,15 @@ traffic to package registries (PyPI, npm, crates.io) while blocking all other
 network access. This enables `npm install` and `pip install` within the sandbox
 without allowing data exfiltration:
 
-```
-┌──────────────────────────────────────────────┐
-│                Codex Sandbox                  │
-│                                              │
-│  Agent ──► npm install axios                 │
-│              │                               │
-│              ▼                               │
-│  ┌─────────────────────┐                     │
-│  │ Network Proxy        │                    │
-│  │ ✅ registry.npmjs.org │                    │
-│  │ ✅ pypi.org           │                    │
-│  │ ❌ evil-server.com    │                    │
-│  └─────────────────────┘                     │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Sandbox["Codex Sandbox"]
+        Agent --> install["npm install axios"]
+        install --> Proxy["Network Proxy"]
+        Proxy --> npmjs["✅ registry.npmjs.org"]
+        Proxy --> pypi["✅ pypi.org"]
+        Proxy --> evil["❌ evil-server.com"]
+    end
 ```
 
 **Capy** runs in isolated Ubuntu VMs with full network access — the Build agent
@@ -647,11 +616,11 @@ the LSP server produces type errors, missing import warnings, and unresolved
 reference diagnostics — providing much of the same signal as a build, in
 milliseconds rather than seconds:
 
-```
-Edit file ──► LSP analyzes ──► Diagnostics returned
-                                 • error: Cannot find module 'axios'
-                                 • error: Type 'string' not assignable to 'number'
-                                 • warning: Unused variable 'tmp'
+```mermaid
+flowchart LR
+    A["Edit file"] --> B["LSP analyzes"]
+    B --> C["Diagnostics returned"]
+    C --> D["• error: Cannot find module 'axios'<br>• error: Type 'string' not assignable to 'number'<br>• warning: Unused variable 'tmp'"]
 ```
 
 **Limitation:** LSP diagnostics don't cover linking, resource bundling, or

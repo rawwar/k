@@ -573,22 +573,20 @@ possible integration with the Anthropic platform:
 
 ### Architecture
 
-```
-┌────────────────────────────────────────────┐
-│              Claude Code CLI               │
-├────────────────────────────────────────────┤
-│  Main Agent (Sonnet 4.6 or Opus 4.6)      │
-│  ├── Extended Thinking (enabled)           │
-│  ├── Prompt Caching (system + context)     │
-│  ├── Tool Use (file edit, bash, search)    │
-│  └── Streaming (real-time output)          │
-├────────────────────────────────────────────┤
-│  Explore Sub-Agent (Haiku 4.5)             │
-│  └── Quick file exploration, cheap queries │
-├────────────────────────────────────────────┤
-│  Direct Anthropic Messages API             │
-│  └── No abstraction layer (native SDK)     │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CC["Claude Code CLI"]
+        subgraph MA["Main Agent (Sonnet 4.6 or Opus 4.6)"]
+            ET["Extended Thinking (enabled)"]
+            PC["Prompt Caching (system + context)"]
+            TU["Tool Use (file edit, bash, search)"]
+            ST["Streaming (real-time output)"]
+        end
+        subgraph SA["Explore Sub-Agent (Haiku 4.5)"]
+            EX["Quick file exploration, cheap queries"]
+        end
+        API["Direct Anthropic Messages API\n(No abstraction layer — native SDK)"]
+    end
 ```
 
 ### Key Integration Patterns

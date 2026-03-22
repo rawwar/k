@@ -31,26 +31,21 @@ Each decorator implements `Provider`, so they compose transparently.
 
 **Layer 5: Runtime Switching.** The agent holds the provider behind `Arc<RwLock<Box<dyn Provider>>>`, enabling hot-swapping via the `/model` command. Conversation history transfers automatically because it is stored in canonical types.
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Agent / REPL                    │
-│  ┌───────────────────────────────────────────┐  │
-│  │         Arc<RwLock<Box<dyn Provider>>>     │  │
-│  │  ┌─────────────────────────────────────┐  │  │
-│  │  │         TrackingProvider             │  │  │
-│  │  │  ┌───────────────────────────────┐  │  │  │
-│  │  │  │       RetryProvider           │  │  │  │
-│  │  │  │  ┌─────────────────────────┐  │  │  │  │
-│  │  │  │  │    FallbackProvider     │  │  │  │  │
-│  │  │  │  │  ┌───────┐ ┌────────┐  │  │  │  │  │
-│  │  │  │  │  │Anthro.│ │OpenAI  │  │  │  │  │  │
-│  │  │  │  │  └───────┘ └────────┘  │  │  │  │  │
-│  │  │  │  └─────────────────────────┘  │  │  │  │
-│  │  │  └───────────────────────────────┘  │  │  │
-│  │  └─────────────────────────────────────┘  │  │
-│  └───────────────────────────────────────────┘  │
-│                 ModelRegistry                    │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph AGENT["Agent / REPL"]
+        subgraph ARC["Arc&lt;RwLock&lt;Box&lt;dyn Provider&gt;&gt;&gt;"]
+            subgraph TP["TrackingProvider"]
+                subgraph RP["RetryProvider"]
+                    subgraph FP["FallbackProvider"]
+                        ANTHRO["AnthropicProvider"]
+                        OPENAI["OpenAIProvider"]
+                    end
+                end
+            end
+        end
+        REG["ModelRegistry"]
+    end
 ```
 
 ## What You Gained

@@ -47,10 +47,13 @@ attention layer. Prompt caching extends this across requests: if two requests sh
 the same prefix, the KV-cache from the first is reused. The model skips the forward
 pass for cached tokens and begins computation only where the request diverges.
 
-```
-Request 1:  [tools][system][msg1][msg2]        → compute KV for all tokens
-Request 2:  [tools][system][msg1][msg2][msg3]   → reuse KV for prefix, compute only msg3
-Request 3:  [tools][system][msg1][msg2][msg3][msg4] → reuse prefix, compute only msg4
+```mermaid
+flowchart LR
+    R1["Request 1:\n[tools][system][msg1][msg2]"] --> C1["Compute KV\nfor all tokens"]
+    C1 --> R2["Request 2:\n[tools][system][msg1][msg2][msg3]"]
+    R2 --> C2["Reuse prefix KV,\ncompute only msg3"]
+    C2 --> R3["Request 3:\n[tools][system][msg1][msg2][msg3][msg4]"]
+    R3 --> C3["Reuse prefix KV,\ncompute only msg4"]
 ```
 
 ---
@@ -252,18 +255,14 @@ first, dynamic content last.
 
 ### 5.1 The Canonical Ordering Pattern
 
-```
-┌──────────────────────────────┐
-│  Tool Definitions (static)   │  ← Cached (rarely changes within session)
-├──────────────────────────────┤
-│  System Prompt (static)      │  ← Cached (rarely changes within session)
-├──────────────────────────────┤
-│  Project Context (session)   │  ← Cached (loaded once per session)
-├──────────────────────────────┤
-│  Conversation History        │  ← Partially cached (prefix grows each turn)
-├──────────────────────────────┤
-│  Current User Message        │  ← Never cached (new each request)
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+    TD["Tool Definitions (static)<br/>← Cached: rarely changes within session"]
+    SP["System Prompt (static)<br/>← Cached: rarely changes within session"]
+    PC["Project Context (session)<br/>← Cached: loaded once per session"]
+    CH["Conversation History<br/>← Partially cached: prefix grows each turn"]
+    UM["Current User Message<br/>← Never cached: new each request"]
+    TD --> SP --> PC --> CH --> UM
 ```
 
 🟡 **Observed in 4–9 agents** — Explicit cache breakpoint placement at layer

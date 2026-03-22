@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 import container from 'markdown-it-container'
 import type Token from 'markdown-it/lib/token.mjs'
 import fs from 'node:fs'
@@ -94,7 +95,7 @@ function buildNestedSidebar(parentDir: string) {
     })
 }
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   srcExclude: [
     '**/README.md',
     '**/AUTHORING-GUIDE.md',
@@ -178,5 +179,28 @@ export default defineConfig({
     outline: {
       level: [2, 3]
     }
-  }
-})
+  },
+
+  mermaid: {
+    theme: 'dark',
+    themeVariables: {
+      // Match catppuccin-mocha palette
+      primaryColor: '#89b4fa',
+      primaryTextColor: '#cdd6f4',
+      primaryBorderColor: '#45475a',
+      lineColor: '#6c7086',
+      secondaryColor: '#313244',
+      tertiaryColor: '#1e1e2e',
+      background: '#1e1e2e',
+      nodeBorder: '#45475a',
+      clusterBkg: '#181825',
+      titleColor: '#cdd6f4',
+      edgeLabelBackground: '#313244',
+      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    },
+  },
+
+  mermaidPlugin: {
+    class: 'mermaid',
+  },
+}))

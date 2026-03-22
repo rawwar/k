@@ -131,18 +131,14 @@ images, audio, and PDFs as first-class inputs.
 
 ### Multimodal Context Integration
 
-```
-User Input (multimodal)
-├── Text: "Build a login form that matches this design"
-├── Image: [screenshot of Figma design]
-└── PDF: [API documentation for auth endpoint]
-    │
-    v
-Gemini Model (unified understanding)
-├── Extracts visual layout from screenshot
-├── Extracts API contract from PDF
-├── Combines with text instruction
-└── Generates code that satisfies all three inputs
+```mermaid
+flowchart TD
+    TXT["Text: 'Build a login form that matches this design'"]
+    IMG["Image: screenshot of Figma design"]
+    PDF["PDF: API documentation for auth endpoint"]
+
+    TXT & IMG & PDF --> GEM["Gemini Model (unified understanding)<br/>Extracts layout from image<br/>Extracts API contract from PDF<br/>Combines with text instruction"]
+    GEM --> OUT["Generated code satisfying all three inputs"]
 ```
 
 ## 3. Google Ecosystem Integration
@@ -169,28 +165,12 @@ Claude Code has web_fetch for URL retrieval, but no search engine integration.
 
 For enterprise users, Gemini CLI connects to Google Cloud's Vertex AI:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                Authentication Options                    │
-│                                                          │
-│  1. Google OAuth (Free Tier)                             │
-│     └── 60 req/min, 1000 req/day                        │
-│     └── Uses Google AI Studio endpoints                  │
-│     └── No API key needed                                │
-│                                                          │
-│  2. Gemini API Key                                       │
-│     └── Pay-per-use, model selection                     │
-│     └── Uses Google AI Studio endpoints                  │
-│     └── Token caching available                          │
-│     └── Higher rate limits                               │
-│                                                          │
-│  3. Vertex AI                                            │
-│     └── Enterprise Google Cloud integration              │
-│     └── Highest rate limits                              │
-│     └── VPC and security controls                        │
-│     └── Data residency compliance                        │
-│     └── Organization-level management                    │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    AUTH["Authentication Options"]
+    AUTH --> OA["1. Google OAuth (Free Tier)<br/>60 req/min, 1000 req/day<br/>Google AI Studio endpoints<br/>No API key needed"]
+    AUTH --> AK["2. Gemini API Key<br/>Pay-per-use, model selection<br/>Google AI Studio endpoints<br/>Token caching available<br/>Higher rate limits"]
+    AUTH --> VA["3. Vertex AI<br/>Enterprise Google Cloud integration<br/>Highest rate limits<br/>VPC and security controls<br/>Data residency compliance<br/>Organization-level management"]
 ```
 
 ### GitHub Actions Integration
@@ -308,65 +288,41 @@ No isolation      | None               | Fastest, no protection
 
 ### Adaptive Sandbox Selection
 
-```
-┌─────────────────────────────────────────────────────────┐
-│             Sandbox Selection Logic                       │
-│                                                          │
-│  1. Check explicit configuration                         │
-│     └── GEMINI_SANDBOX env var or settings.json          │
-│                                                          │
-│  2. Auto-detect platform capabilities                    │
-│     ├── macOS -> Seatbelt (default)                      │
-│     ├── Linux + Docker -> Docker                         │
-│     ├── Linux + gVisor -> gVisor (if preferred)          │
-│     └── Fallback -> None (with warning)                  │
-│                                                          │
-│  3. Per-command customization                            │
-│     └── SANDBOX_FLAGS for additional restrictions        │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SS["Sandbox Selection"] --> A{Explicit configuration?}
+    A -- yes --> CONF["Use configured backend<br/>(GEMINI_SANDBOX env or settings.json)"]
+    A -- no --> B{Platform auto-detect}
+    B -- macOS --> SB["Seatbelt (default)"]
+    B -- "Linux + Docker" --> DOCK["Docker"]
+    B -- "Linux + gVisor" --> GV["gVisor (if preferred)"]
+    B -- fallback --> NONE["None (with warning)"]
+    CONF & SB & DOCK & GV & NONE --> PCUST["Apply per-command SANDBOX_FLAGS"]
 ```
 
 ### Seatbelt Profile System
 
 macOS Seatbelt uses SBPL (Seatbelt Profile Language) profiles:
 
-```
-Multiple profiles for different tool types:
-├── read-only profile: file reads, grep, glob
-│   └── Allow: file-read*, process-exec (limited)
-│   └── Deny: file-write*, network-outbound
-│
-├── write profile: file modifications
-│   └── Allow: file-read*, file-write* (project dir only)
-│   └── Deny: network-outbound, file-write* (system dirs)
-│
-└── shell profile: command execution
-    └── Allow: file-read*, file-write* (project dir), process-exec
-    └── Deny: file-write* (system dirs), network-outbound (optional)
+```mermaid
+flowchart TD
+    SB["macOS Seatbelt<br/>Multiple profiles for different tool types"]
+    SB --> RO["read-only profile<br/>Allow: file-read, process-exec (limited)<br/>Deny: file-write, network-outbound"]
+    SB --> WR["write profile<br/>Allow: file-read, file-write (project dir only)<br/>Deny: network-outbound, file-write (system dirs)"]
+    SB --> SH["shell profile<br/>Allow: file-read, file-write (project dir), process-exec<br/>Deny: file-write (system dirs), network-outbound (optional)"]
 ```
 
 ## 6. Confirmation Bus as Event Architecture
 
 The confirmation bus is more than a yes/no prompt — it's a full event-driven system:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│              Confirmation Bus Architecture                │
-│                                                          │
-│  Producers:           Bus:            Consumers:         │
-│  ┌──────────┐     ┌──────────┐     ┌──────────┐        │
-│  │ Tool     │────>│ Confirm  │────>│ Policy   │        │
-│  │ Scheduler│     │ Bus      │     │ Engine   │        │
-│  └──────────┘     │          │     └──────────┘        │
-│                    │          │     ┌──────────┐        │
-│                    │          │────>│ UI       │        │
-│                    │          │     │ Renderer │        │
-│                    │          │     └──────────┘        │
-│                    │          │     ┌──────────┐        │
-│                    │          │────>│ Headless │        │
-│                    │          │     │ Handler  │        │
-│                    └──────────┘     └──────────┘        │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    TS["Tool Scheduler<br/>(Producer)"] --> CB["Confirmation Bus"]
+    CB --> PE["Policy Engine"]
+    CB --> UIR["UI Renderer"]
+    CB --> HH["Headless Handler"]
+    PE & UIR & HH --> RESULT["Confirmation Decision<br/>→ Tool Execution"]
 ```
 
 This separation means:

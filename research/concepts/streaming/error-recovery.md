@@ -122,16 +122,17 @@ if the server can't resume token generation from token #42.
 
 Most agents treat a dropped stream as a failed turn and retry from scratch:
 
-```
-[Turn N]
-User: "Refactor the auth module"
-                                    ← Stream starts
-Assistant: "I'll refactor the..."   ← Stream drops here
-                                    ← Agent detects failure
-[Turn N, Attempt 2]
-User: "Refactor the auth module"    ← Same request re-sent
-                                    ← Full conversation history included
-Assistant: "I'll refactor the..."   ← Fresh generation
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Agent
+    U->>A: "Refactor the auth module"
+    Note over A: Stream starts
+    A-->>U: "I'll refactor the..." (stream drops)
+    Note over A: Agent detects failure
+    Note over U,A: Turn N — Attempt 2
+    U->>A: "Refactor the auth module" (re-sent, full history)
+    A-->>U: "I'll refactor the..." (fresh generation)
 ```
 
 ### Anthropic's Error Recovery (Partial Response Continuation)
@@ -248,11 +249,11 @@ in the best case.
 The simplest approach — if the stream fails, throw away whatever was received and
 retry the entire request:
 
-```
-Stream: "I'll start by reading the fi" ← connection drops
-Action: Discard partial content
-Retry:  Full request re-sent
-Result: "I'll start by reading the file..." ← complete response
+```mermaid
+flowchart TD
+    A["Stream: 'I'll start by reading the fi'"] -->|"connection drops"| B["Discard partial content"]
+    B --> C["Full request re-sent"]
+    C --> D["Result: complete response"]
 ```
 
 **Used by**: OpenCode, Codex, Gemini CLI (default behavior)

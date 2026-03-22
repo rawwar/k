@@ -26,22 +26,14 @@ treat the human as a source of yes/no signals. Others maintain conversational co
 from corrections, and proactively solicit guidance. This document catalogs feedback
 architectures across 17 agents and synthesizes design patterns.
 
-```
-                        Human-in-the-Loop Mechanisms
-    ┌──────────────────────────────────────────────────────────┐
-    │                                                          │
-    │   Permission Prompts ──── Binary gate (allow/deny)       │
-    │   (./permission-prompts.md)                              │
-    │                                                          │
-    │   Plan & Confirm ──────── Upfront review of strategy     │
-    │   (./plan-and-confirm.md)                                │
-    │                                                          │
-    │   Feedback Loops ──────── Ongoing steering [this doc]    │
-    │                                                          │
-    │   Interactive Debug ───── Co-investigation of failures   │
-    │   (./interactive-debugging.md)                           │
-    │                                                          │
-    └──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph HITL["Human-in-the-Loop Mechanisms"]
+        PP["Permission Prompts — Binary gate (allow/deny)<br/>(./permission-prompts.md)"]
+        PC["Plan & Confirm — Upfront review of strategy<br/>(./plan-and-confirm.md)"]
+        FL["Feedback Loops — Ongoing steering (this doc)"]
+        ID["Interactive Debug — Co-investigation of failures<br/>(./interactive-debugging.md)"]
+    end
 ```
 
 ---
@@ -51,34 +43,18 @@ architectures across 17 agents and synthesizes design patterns.
 Feedback varies along two axes: **when** it arrives relative to execution, and **how
 persistent** its effects are.
 
-```
-                              Feedback Taxonomy
-                                                              Persistence
-    ┌─────────────────────────────────────────────────────┐   ──────────►
-    │                                                     │
-    │   PRE-EXECUTION          MID-EXECUTION              │   Ephemeral
-    │   ┌───────────────┐      ┌───────────────┐          │   (this turn)
-    │   │ "Use React,   │      │ "Stop—use a   │          │
-    │   │  not Vue"     │      │  different     │          │
-    │   │               │      │  approach"     │          │
-    │   │ Planning      │      │ Inline         │          │
-    │   │ phase input   │      │ correction     │          │
-    │   └───────┬───────┘      └───────┬───────┘          │
-    │           │                      │                  │
-    │           ▼                      ▼                  │
-    │   POST-EXECUTION         PERSISTENT                 │   Durable
-    │   ┌───────────────┐      ┌───────────────┐          │   (across
-    │   │ "Close, but   │      │ CLAUDE.md     │          │    sessions)
-    │   │  change the   │      │ .goosehints   │          │
-    │   │  error msg"   │      │ .aider.conf   │          │
-    │   │               │      │               │          │
-    │   │ Review &      │      │ Memory files  │          │
-    │   │ revise cycle  │      │ & project     │          │
-    │   └───────────────┘      │ rules         │          │
-    │                          └───────────────┘          │
-    └─────────────────────────────────────────────────────┘
-         ◄──────────────────────────────────────────────
-                         Execution Timeline
+```mermaid
+flowchart TD
+    subgraph Eph["Ephemeral — this turn"]
+        PRE["PRE-EXECUTION<br/>'Use React, not Vue'<br/>Planning phase input"]
+        MID["MID-EXECUTION<br/>'Stop—use a different approach'<br/>Inline correction"]
+    end
+    subgraph Dur["Durable — across sessions"]
+        POST["POST-EXECUTION<br/>'Close, but change the error msg'<br/>Review & revise cycle"]
+        PERS["PERSISTENT<br/>CLAUDE.md / .goosehints / .aider.conf<br/>Memory files & project rules"]
+    end
+    PRE -.->|"execution timeline"| POST
+    MID -.->|"execution timeline"| PERS
 ```
 
 **Pre-execution** feedback includes initial prompt refinement and plan review (see
@@ -187,18 +163,14 @@ The decision of when to ask versus when to proceed is one of the hardest design 
 
 ### The Ask-vs-Guess Spectrum
 
-```
-    Always Ask                                         Never Ask
-    (annoying)                                        (dangerous)
-        │                                                  │
-        ▼                                                  ▼
-    ┌────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐
-    │ Every  │  │ Ambig-   │  │ High-    │  │ Only on  │  │ Full   │
-    │ action │  │ uous     │  │ impact   │  │ error    │  │ auto   │
-    │ gets a │  │ requests │  │ actions  │  │ recovery │  │        │
-    │ prompt │  │ get a    │  │ get a    │  │          │  │        │
-    │        │  │ question │  │ check-in │  │          │  │        │
-    └────────┘  └──────────┘  └──────────┘  └──────────┘  └────────┘
+```mermaid
+flowchart LR
+    A["Every action\ngets a prompt\n(annoying)"]
+    B["Ambiguous requests\nget a question"]
+    C["High-impact actions\nget a check-in"]
+    D["Only on\nerror recovery"]
+    E["Full auto\n(dangerous)"]
+    A --> B --> C --> D --> E
 ```
 
 **Claude Code** can use extended thinking to identify uncertainty and surface it to the
@@ -247,29 +219,15 @@ The most common feedback pattern in practice is the **edit-review-revise** cycle
 
 ### The Refinement State Machine
 
-```
-    ┌─────────────────────────────────────────────────────────┐
-    │                                                         │
-    │   ┌──────────┐    ┌──────────┐    ┌──────────────┐     │
-    │   │  AGENT   ├───►│  HUMAN   ├───►│  AGENT       │     │
-    │   │  EDITS   │    │  REVIEWS │    │  REVISES     │     │
-    │   └──────────┘    └────┬─────┘    └──────┬───────┘     │
-    │                        │                 │             │
-    │                   ┌────┴─────┐           │             │
-    │                   │ ACCEPT   │◄──────────┘             │
-    │                   └──────────┘  (if "looks good")      │
-    │                   ┌──────────┐                         │
-    │                   │ REJECT   │  (start over / abort)   │
-    │                   └──────────┘                         │
-    │                   ┌──────────────┐                     │
-    │                   │ REFINE       │──┐                  │
-    │                   │ "close, but  │  │                  │
-    │                   │  change X"   │  │                  │
-    │                   └──────────────┘  │                  │
-    │              ▲                      │                  │
-    │              └──────────────────────┘                  │
-    │                  (loop until satisfied)                │
-    └─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    AE["AGENT EDITS"] --> HR["HUMAN REVIEWS"]
+    HR --> AR["AGENT REVISES"]
+    AR -->|"if looks good"| ACC["ACCEPT"]
+    HR --> ACC
+    HR --> REJ["REJECT<br/>start over / abort"]
+    HR --> REF["REFINE<br/>'close, but change X'"]
+    REF -->|"loop until satisfied"| AE
 ```
 
 A well-designed refinement loop **converges**: each iteration brings output closer to
@@ -424,17 +382,15 @@ function buildSystemPrompt(base: string, memory: MemoryContext): string {
 
 ### The Feedback-to-Memory Pipeline
 
-```
-    User corrects agent ──► Agent applies fix
-           │                       │
-           ▼                       ▼
-    Same correction ──► Agent detects pattern ──► Proposes writing
-    recurs 2-3 times                              to memory file
-                                                       │
-                                                       ▼
-                                                  User approves ──► File updated
-                                                                    Future sessions
-                                                                    inherit the rule
+```mermaid
+flowchart TD
+    UCA["User corrects agent"] --> AAF["Agent applies fix"]
+    UCA -->|"recurs 2–3 times"| SCR["Same correction recurs"]
+    AAF --> ADP["Agent detects pattern"]
+    SCR --> ADP
+    ADP --> PW["Proposes writing to memory file"]
+    PW --> UA["User approves"]
+    UA --> FU["File updated — future sessions inherit the rule"]
 ```
 
 ---
@@ -539,14 +495,16 @@ delivered through a chat panel alongside a live workspace. [Droid](../../agents/
 Not all feedback carries equal information. Actionability depends on specificity,
 actionability, and consistency with previous context.
 
-```
-  Low Signal                                              High Signal
-      │                                                       │
-      ▼                                                       ▼
-  "This is        "Make it       "The error      "Change the     "On line 42,
-   wrong"          better"        handling        return type     change
-                                  is off"         to Result<T>"   Ok(()) to
-                                                                  Err(e.into())"
+```mermaid
+flowchart LR
+    LS(["Low Signal"])
+    A["'This is wrong'"]
+    B["'Make it better'"]
+    C["'The error handling is off'"]
+    D["'Change the return type to Result&lt;T&gt;'"]
+    E["'On line 42, change Ok(()) to Err(e.into())'"]
+    HS(["High Signal"])
+    LS --> A --> B --> C --> D --> E --> HS
 ```
 
 When feedback is vague, agents can: ask clarifying questions, propose interpretations,

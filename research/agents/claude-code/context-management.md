@@ -148,15 +148,13 @@ Skills are knowledge packages that load only when relevant:
 
 **Sub-agents are the most powerful context management tool.** They run in completely separate context windows:
 
-```
-Main Context Window                    Sub-Agent Context Window
-┌──────────────────────┐              ┌──────────────────────┐
-│ Your conversation    │              │ Exploration task     │
-│ (preserved)          │   ──spawn──▶ │ Reads 20 files       │
-│                      │              │ Searches codebase    │
-│                      │   ◀─summary─ │ Analyzes patterns    │
-│ + compact summary    │              │ (all discarded)      │
-└──────────────────────┘              └──────────────────────┘
+```mermaid
+flowchart LR
+    A["Main Context Window<br/>Your conversation (preserved)<br/>+ compact summary"]
+    B["Sub-Agent Context Window<br/>Exploration task<br/>Reads 20 files<br/>Searches codebase<br/>Analyzes patterns<br/>(all discarded)"]
+
+    A -->|"spawn"| B
+    B -->|"summary"| A
 ```
 
 **Why this matters**: When Claude explores a codebase, it reads many files — each consuming context. With sub-agents, the exploration happens in a separate window. Only the summary comes back. Your main conversation stays clean.

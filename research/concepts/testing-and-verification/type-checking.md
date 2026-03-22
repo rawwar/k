@@ -230,22 +230,15 @@ This structured data is superior to parsing text because:
 
 **Gemini CLI** takes a different approach through its VS Code companion extension. When running inside VS Code, the extension shares the editor's diagnostics (which include type errors from TypeScript, pyright, and other language extensions) with the agent:
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│                GEMINI CLI + VS CODE                            │
-│                                                                │
-│   VS Code                          Gemini CLI                  │
-│   ┌──────────────┐                 ┌──────────────┐           │
-│   │ TypeScript   │  diagnostics    │              │           │
-│   │ Language     │ ───────────────>│  Agent sees   │           │
-│   │ Server       │  (via ext.)     │  type errors  │           │
-│   └──────────────┘                 │  in real time │           │
-│   ┌──────────────┐                 │              │           │
-│   │ Pyright      │  diagnostics    │  No need to   │           │
-│   │ Extension    │ ───────────────>│  run tsc or   │           │
-│   └──────────────┘                 │  mypy manually│           │
-│                                    └──────────────┘           │
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph VSCode["VS Code"]
+        TS["TypeScript\nLanguage Server"]
+        PY["Pyright\nExtension"]
+    end
+    AG["Gemini CLI Agent\n(sees type errors in real time;\nno need to run tsc or mypy)"]
+    TS -->|"diagnostics (via ext.)"| AG
+    PY -->|"diagnostics"| AG
 ```
 
 This is the most seamless integration: the agent gets type errors as a side effect of the editor already running language servers. No extra commands, no parsing, no latency.
@@ -639,8 +632,9 @@ The highest-level question is: **when should an agent run the type checker?** Th
 
 ### Strategy 1: Check After Every Edit
 
-```
-edit file A → tsc → fix errors → tsc → edit file B → tsc → fix errors → tsc → done
+```mermaid
+flowchart LR
+    A["edit file A"] --> B["tsc"] --> C["fix errors"] --> D["tsc"] --> E["edit file B"] --> F["tsc"] --> G["fix errors"] --> H["tsc"] --> I["done"]
 ```
 
 **Pros**: Errors are caught immediately, before they cascade. Each fix is small and targeted.
@@ -649,8 +643,9 @@ edit file A → tsc → fix errors → tsc → edit file B → tsc → fix error
 
 ### Strategy 2: Check After All Edits
 
-```
-edit file A → edit file B → edit file C → tsc → fix all errors → tsc → done
+```mermaid
+flowchart LR
+    A["edit file A"] --> B["edit file B"] --> C["edit file C"] --> D["tsc"] --> E["fix all errors"] --> F["tsc"] --> G["done"]
 ```
 
 **Pros**: Only 2 type-checker invocations (check + verify). Maximally efficient.
@@ -659,8 +654,9 @@ edit file A → edit file B → edit file C → tsc → fix all errors → tsc �
 
 ### Strategy 3: Check at Milestones
 
-```
-edit A → edit B → tsc → fix → edit C → edit D → tsc → fix → done
+```mermaid
+flowchart LR
+    A["edit A"] --> B["edit B"] --> C["tsc"] --> D["fix"] --> E["edit C"] --> F["edit D"] --> G["tsc"] --> H["fix"] --> I["done"]
 ```
 
 **Pros**: Balanced approach. Groups related edits, checks between logical units.

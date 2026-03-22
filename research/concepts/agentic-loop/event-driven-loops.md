@@ -21,33 +21,23 @@ The key insight: **every action the agent wants to take and every result it rece
 is a first-class Event**. This turns an opaque agent loop into an observable, replayable,
 debuggable system.
 
-```
-┌────────────┐     step()      ┌────────────┐
-│            │ ──────────────▶ │            │
-│  Agent     │   Action        │ Controller │
-│  (Brain)   │ ◀────────────── │ (State     │
-│            │                 │  Machine)  │
-└────────────┘                 └─────┬──────┘
-                                     │ publish(Action)
-                                     ▼
-                              ┌──────────────┐
-                              │              │
-                              │ EventStream  │
-                              │ (append-only │
-                              │  log)        │
-                              │              │
-                              └──────┬───────┘
-                    ┌────────────────┼────────────────┐
-                    ▼                ▼                 ▼
-            ┌──────────┐    ┌──────────────┐   ┌───────────┐
-            │ Runtime  │    │  Security    │   │ Logger /  │
-            │ (sandbox)│    │  Analyzer    │   │ UI        │
-            └────┬─────┘    └──────────────┘   └───────────┘
-                 │ publish(Observation)
-                 ▼
-          ┌──────────────┐
-          │ EventStream  │  (observation appended)
-          └──────────────┘
+```mermaid
+flowchart TD
+    AG["Agent (Brain)"]
+    CT["Controller\n(State Machine)"]
+    ES1["EventStream\n(append-only log)"]
+    RT["Runtime (sandbox)"]
+    SA["Security Analyzer"]
+    UI["Logger / UI"]
+    ES2["EventStream\n(observation appended)"]
+
+    AG -->|"step() → Action"| CT
+    CT -->|"Action"| AG
+    CT -->|"publish(Action)"| ES1
+    ES1 --> RT
+    ES1 --> SA
+    ES1 --> UI
+    RT -->|"publish(Observation)"| ES2
 ```
 
 ---
@@ -188,41 +178,21 @@ class AgentState(str, Enum):
 
 ### Transition Diagram
 
-```
-                    ┌─────────────────────────────────────────┐
-                    │                                         │
-                    ▼                                         │
-              ┌──────────┐                                    │
-              │  LOADING  │                                   │
-              └─────┬─────┘                                   │
-                    │ resources ready                          │
-                    ▼                                          │
-              ┌──────────┐                                    │
-              │   INIT   │                                    │
-              └─────┬─────┘                                   │
-                    │ controller.start()                       │
-                    ▼                                          │
-              ┌──────────┐◀──────────────────────────┐        │
-              │ RUNNING  │                           │        │
-              └──┬──┬──┬─┘                           │        │
-                 │  │  │                             │        │
-    ┌────────────┘  │  └────────────┐                │        │
-    │               │               │                │        │
-    ▼               ▼               ▼                │        │
-┌────────┐  ┌────────────────┐  ┌────────┐           │        │
-│FINISHED│  │AWAITING_USER   │  │ PAUSED │           │        │
-│        │  │_INPUT          │  │        │           │        │
-└────────┘  └───────┬────────┘  └───┬────┘           │        │
-                    │ user responds  │ resume         │        │
-                    └────────────────┴────────────────┘        │
-                                                               │
-              ┌──────────┐    ┌──────────┐                     │
-              │  ERROR   │    │ STOPPED  │◀── external cancel ─┘
-              └──────────┘    └──────────┘
-                  ▲               ▲
-                  │               │
-                  └───── from RUNNING (budget exceeded,
-                         unrecoverable error, iteration limit)
+```mermaid
+stateDiagram-v2
+    [*] --> LOADING
+    LOADING --> LOADING : (retry)
+    LOADING --> INIT : resources ready
+    INIT --> RUNNING : controller.start()
+    INIT --> STOPPED
+    RUNNING --> FINISHED
+    RUNNING --> AWAITING_USER_INPUT
+    RUNNING --> PAUSED
+    RUNNING --> ERROR : budget exceeded / unrecoverable error / iteration limit
+    RUNNING --> STOPPED : budget exceeded / iteration limit
+    AWAITING_USER_INPUT --> RUNNING : user responds
+    PAUSED --> RUNNING : resume
+    STOPPED --> LOADING : external cancel / restart
 ```
 
 ### Transition Rules
@@ -342,34 +312,23 @@ async def _step(self) -> None:
 
 ### The Step Lifecycle (Visual)
 
-```
-_step() call N
-│
-├─▶ [1] Pre-checks (budget? iteration limit? state == RUNNING?)
-│       │
-│       ├── FAIL → raise budget/iteration error → state = STOPPED
-│       └── PASS ↓
-│
-├─▶ [2] action = agent.step(state)
-│       │
-│       ├── LLM called (if pending_actions empty)
-│       └── Action returned from queue (if pending_actions has items)
-│
-├─▶ [3] Route action
-│       │
-│       ├── CondensationAction   → apply to history, return (no event)
-│       ├── AgentFinishAction    → state = FINISHED, publish, return
-│       ├── AgentDelegateAction  → spawn child controller, return
-│       ├── MessageAction(wait)  → state = AWAITING_USER_INPUT, return
-│       └── Other                → publish to EventStream
-│
-├─▶ [4] StuckDetector.check(action)
-│       │
-│       └── stuck? → raise AgentStuckInLoopError
-│
-└─▶ [5] Runtime executes action → publishes Observation
-        │
-        └── Controller sees Observation → calls _step() again
+```mermaid
+flowchart TD
+    S["_step() call N"] --> P1["[1] Pre-checks\n(budget? iteration limit? state == RUNNING?)"]
+    P1 -->|FAIL| STOP["raise error → state = STOPPED"]
+    P1 -->|PASS| P2["[2] action = agent.step(state)"]
+    P2 -->|"pending_actions empty"| LLM["LLM called"]
+    P2 -->|"pending_actions has items"| QUEUE["Action returned from queue"]
+    LLM & QUEUE --> P3["[3] Route action"]
+    P3 -->|CondensationAction| CA["apply to history, return"]
+    P3 -->|AgentFinishAction| FA["state = FINISHED, publish, return"]
+    P3 -->|AgentDelegateAction| DA["spawn child controller, return"]
+    P3 -->|"MessageAction(wait)"| MA["state = AWAITING_USER_INPUT, return"]
+    P3 -->|Other| PUB["publish to EventStream"]
+    PUB --> P4["[4] StuckDetector.check(action)"]
+    P4 -->|stuck| ERR["raise AgentStuckInLoopError"]
+    P4 -->|ok| P5["[5] Runtime executes action → publishes Observation"]
+    P5 --> NEXT["Controller sees Observation → calls _step() again"]
 ```
 
 ---
@@ -441,24 +400,14 @@ def step(self, state: State) -> Action:
 Modern LLMs support **parallel tool calling** — a single response can contain multiple
 tool calls. OpenHands handles this with a `deque`:
 
-```
-LLM response contains 3 tool calls:
-  tool_call_1: execute_bash("make build")
-  tool_call_2: execute_bash("make test")
-  tool_call_3: str_replace_editor(view, "README.md")
-
-Parser produces: [CmdRunAction, CmdRunAction, FileReadAction]
-
-pending_actions = deque([action_1, action_2, action_3])
-
-Timeline:
-  step() call 1 → pending_actions not empty → return action_1 (popleft)
-     ↓ controller publishes action_1, runtime executes, observation returned
-  step() call 2 → pending_actions not empty → return action_2 (no LLM call!)
-     ↓ controller publishes action_2, runtime executes, observation returned
-  step() call 3 → pending_actions not empty → return action_3 (no LLM call!)
-     ↓ controller publishes action_3, runtime executes, observation returned
-  step() call 4 → pending_actions empty → full LLM call → new actions
+```mermaid
+flowchart TD
+    A["LLM response\n(3 tool calls: execute_bash ×2, str_replace_editor)"]
+    A --> B["Parse → pending_actions = deque([action_1, action_2, action_3])"]
+    B --> C["step() 1: pop action_1 → execute\n(controller publishes, runtime runs, observation returned)"]
+    C --> D["step() 2: pop action_2 → execute\n(no LLM call)"]
+    D --> E["step() 3: pop action_3 → execute\n(no LLM call)"]
+    E --> F["step() 4: queue empty → full LLM call → new actions"]
 ```
 
 This is elegant: **N tool calls require only 1 LLM invocation** but still go through
@@ -532,20 +481,16 @@ Actions, executes them in an isolated sandbox, and publishes Observations back.
 
 ### Architecture
 
-```
-Host Machine                          Docker Container (Sandbox)
-┌─────────────────────┐              ┌──────────────────────────┐
-│                     │              │                          │
-│  ActionExecution    │  HTTP POST   │   ActionExecution        │
-│  Client             │ ───────────▶ │   Server                 │
-│                     │              │                          │
-│  - subscribes to    │              │   - bash shell           │
-│    EventStream      │  HTTP resp   │   - IPython kernel       │
-│  - sends actions    │ ◀─────────── │   - file system          │
-│    to sandbox       │              │   - browser (Playwright) │
-│  - publishes obs    │              │                          │
-│    to EventStream   │              │                          │
-└─────────────────────┘              └──────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph host["Host Machine"]
+        AEC["ActionExecution Client\n- subscribes to EventStream\n- sends actions to sandbox\n- publishes obs to EventStream"]
+    end
+    subgraph docker["Docker Container (Sandbox)"]
+        AES["ActionExecution Server\n- bash shell\n- IPython kernel\n- file system\n- browser (Playwright)"]
+    end
+    AEC -->|"HTTP POST"| AES
+    AES -->|"HTTP resp"| AEC
 ```
 
 ### Dispatch by Action Type
@@ -682,26 +627,20 @@ spawn a child agent to handle a sub-task, then resume when the child finishes.
 
 ### How It Works
 
-```
-Parent Controller                    Child Controller
-     │                                    │
-     │ AgentDelegateAction               │
-     │ (agent="BrowsingAgent",           │
-     │  inputs={"task": "..."})          │
-     │                                    │
-     ├──▶ _start_delegation() ───────────▶│ INIT
-     │                                    │
-     │    [parent PAUSED]                 │ RUNNING
-     │                                    │   ├── step()
-     │                                    │   ├── action → obs
-     │                                    │   ├── step()
-     │                                    │   └── AgentFinishAction
-     │                                    │
-     │    AgentDelegateObservation ◀──────│ FINISHED
-     │    (outputs={"result": "..."})     │
-     │                                    │
-     │ RUNNING (resumed)                  │ [destroyed]
-     │
+```mermaid
+sequenceDiagram
+    participant P as Parent Controller
+    participant C as Child Controller
+    P->>C: AgentDelegateAction(agent="BrowsingAgent", inputs={task: "..."})
+    Note over P: PAUSED
+    Note over C: INIT → RUNNING
+    loop inner loop
+        C->>C: step() → action → obs
+    end
+    Note over C: AgentFinishAction → FINISHED
+    C-->>P: AgentDelegateObservation(outputs={result: "..."})
+    Note over P: RUNNING (resumed)
+    Note over C: destroyed
 ```
 
 ### NestedEventStore
@@ -973,27 +912,27 @@ This means:
 
 ## Summary: The Event-Driven Loop in 30 Seconds
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   AgentController                    │
-│                                                     │
-│  while state == RUNNING:                            │
-│      action = agent.step(state)      # LLM call    │
-│      if action is CondensationAction:               │
-│          apply_condensation(action)                  │
-│          continue                                   │
-│      if action is AgentFinishAction:                │
-│          state = FINISHED                           │
-│          break                                      │
-│      if action is AgentDelegateAction:              │
-│          spawn_child(action)                        │
-│          continue                                   │
-│      event_stream.publish(action)    # → Runtime    │
-│      stuck_detector.check(action)                   │
-│      observation = await_observation()              │
-│      event_stream.publish(observation)              │
-│      # loop continues...                            │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Start(["while state == RUNNING"])
+    Step["action = agent.step(state)
+(LLM call)"]
+    Condense{"CondensationAction?"}
+    Finish{"AgentFinishAction?"}
+    Delegate{"AgentDelegateAction?"}
+    Publish["event_stream.publish(action)
+→ Runtime"]
+    Stuck["stuck_detector.check(action)"]
+    Await["observation = await_observation()"]
+    PubObs["event_stream.publish(observation)"]
+    Done(["state = FINISHED"])
+    Start --> Step --> Condense
+    Condense -- yes --> ApplyC["apply_condensation(action)"] --> Start
+    Condense -- no --> Finish
+    Finish -- yes --> Done
+    Finish -- no --> Delegate
+    Delegate -- yes --> Spawn["spawn_child(action)"] --> Start
+    Delegate -- no --> Publish --> Stuck --> Await --> PubObs --> Start
 ```
 
 The event-driven loop transforms an agent from an opaque black box into a

@@ -16,36 +16,33 @@ This chapter transformed your coding agent from a closed application into an ext
 
 Here is a summary of every extension mechanism you implemented and where it fits:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     User Input                          │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │ Chat Message │  │ /command     │  │ Config File   │  │
-│  └──────┬──────┘  └──────┬───────┘  └───────┬───────┘  │
-│         │                │                   │          │
-├─────────▼────────────────▼───────────────────▼──────────┤
-│                    Agent Core                           │
-│  ┌────────────────┐  ┌───────────────┐  ┌───────────┐  │
-│  │ Plugin Manager  │  │ Event Bus     │  │ Config    │  │
-│  │                │  │               │  │ Loader    │  │
-│  │ ┌────────────┐│  │ ┌───────────┐ │  │           │  │
-│  │ │ Plugin A   ││  │ │ Handlers  │ │  │           │  │
-│  │ │ Plugin B   ││  │ │           │ │  │           │  │
-│  │ └────────────┘│  │ └───────────┘ │  │           │  │
-│  └────────────────┘  └───────────────┘  └───────────┘  │
-│                                                         │
-│  ┌────────────────┐  ┌───────────────┐  ┌───────────┐  │
-│  │ Tool Registry  │  │ Hook Registry │  │ Command   │  │
-│  │ (dynamic)      │  │ (pre/post)    │  │ Registry  │  │
-│  └────────┬───────┘  └───────┬───────┘  └─────┬─────┘  │
-│           │                  │                │         │
-├───────────▼──────────────────▼────────────────▼─────────┤
-│                  External Connections                    │
-│  ┌────────────────┐  ┌───────────────┐  ┌───────────┐  │
-│  │ MCP Servers    │  │ Skill Loader  │  │ Hot       │  │
-│  │ (stdio/HTTP)   │  │               │  │ Reload    │  │
-│  └────────────────┘  └───────────────┘  └───────────┘  │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph INPUT["User Input"]
+        CHAT["Chat Message"]
+        CMD["/command"]
+        CONFIN["Config File"]
+    end
+
+    subgraph CORE["Agent Core"]
+        PM["Plugin Manager\nPlugin A, Plugin B"]
+        EB["Event Bus\nHandlers"]
+        CL["Config Loader"]
+        TR["Tool Registry\ndynamic"]
+        HR["Hook Registry\npre/post"]
+        CR["Command Registry"]
+    end
+
+    subgraph EXT["External Connections"]
+        MCP["MCP Servers\nstdio/HTTP"]
+        SKILL["Skill Loader"]
+        HOT["Hot Reload"]
+    end
+
+    CHAT & CMD & CONFIN --> CORE
+    TR --> EXT
+    HR --> EXT
+    CR --> EXT
 ```
 
 ## What You Built

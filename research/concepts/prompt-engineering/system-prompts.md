@@ -35,15 +35,12 @@ A critical distinction in coding agents is between the system prompt (controlled
 developer) and user-injected instructions (controlled by the end user). Most agents implement a
 layered architecture:
 
-```
-┌─────────────────────────────────────┐
-│  System Prompt (framework-defined)  │  ← Agent developer controls
-├─────────────────────────────────────┤
-│  Project Instructions (CLAUDE.md,   │  ← Repo maintainer controls
-│  AGENTS.md, .goosehints, GEMINI.md) │
-├─────────────────────────────────────┤
-│  User Message (task description)    │  ← End user controls
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SP["System Prompt (framework-defined)<br/>← Agent developer controls"]
+    PI["Project Instructions<br/>(CLAUDE.md, AGENTS.md, .goosehints, GEMINI.md)<br/>← Repo maintainer controls"]
+    UM["User Message (task description)<br/>← End user controls"]
+    SP --> PI --> UM
 ```
 
 Each layer has different trust levels, different update frequencies, and different scoping rules.
@@ -250,30 +247,20 @@ The full system prompt is estimated at **10,000–15,000+ tokens**, making it on
 known system prompts for any consumer-facing AI product. It is assembled dynamically from multiple
 components:
 
-```
-┌──────────────────────────────────────────────┐
-│  1. Role Definition & Identity               │  ~200 tokens
-├──────────────────────────────────────────────┤
-│  2. Environment Context                      │  ~300 tokens
-│     (OS, cwd, git state, directory snapshot)  │
-├──────────────────────────────────────────────┤
-│  3. Tool Definitions & Usage Instructions    │  ~4000-6000 tokens
-│     (30+ tools with detailed guidance)       │
-├──────────────────────────────────────────────┤
-│  4. Behavioral Directives                    │  ~1500 tokens
-│     (code change rules, style, verification) │
-├──────────────────────────────────────────────┤
-│  5. Safety & Security Constraints            │  ~800 tokens
-├──────────────────────────────────────────────┤
-│  6. Output Format Requirements               │  ~500 tokens
-├──────────────────────────────────────────────┤
-│  7. CLAUDE.md Content (project instructions) │  Variable
-├──────────────────────────────────────────────┤
-│  8. MEMORY.md Content (first 200 lines)      │  Variable
-├──────────────────────────────────────────────┤
-│  9. Skill Descriptions (name + description)  │  Variable
-│     (full content loaded on invocation)      │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CC["Claude Code System Prompt"]
+        C1["1. Role Definition & Identity (~200 tokens)"]
+        C2["2. Environment Context (~300 tokens)<br/>(OS, cwd, git state, directory snapshot)"]
+        C3["3. Tool Definitions & Usage Instructions (~4000–6000 tokens)<br/>(30+ tools with detailed guidance)"]
+        C4["4. Behavioral Directives (~1500 tokens)<br/>(code change rules, style, verification)"]
+        C5["5. Safety & Security Constraints (~800 tokens)"]
+        C6["6. Output Format Requirements (~500 tokens)"]
+        C7["7. CLAUDE.md Content — project instructions (Variable)"]
+        C8["8. MEMORY.md Content — first 200 lines (Variable)"]
+        C9["9. Skill Descriptions — name + description (Variable)"]
+    end
+    C1 --> C2 --> C3 --> C4 --> C5 --> C6 --> C7 --> C8 --> C9
 ```
 
 ### 3.2 The CLAUDE.md Hierarchy
@@ -281,12 +268,12 @@ components:
 Claude Code's most distinctive system prompt innovation is the hierarchical CLAUDE.md system.
 Instructions are loaded from multiple locations with different scopes:
 
-```
-~/.claude/CLAUDE.md              ← User-global instructions
-/project-root/CLAUDE.md          ← Project-wide instructions
-/project-root/.claude/CLAUDE.md  ← Alternative project location
-/project-root/src/CLAUDE.md      ← Directory-scoped instructions
-/project-root/.claude/rules/*.md ← Modular rule files (glob-scoped)
+```mermaid
+flowchart TD
+    A["~/.claude/CLAUDE.md<br/>(User-global)"] --> B["/project-root/CLAUDE.md<br/>(Project-wide)"]
+    B --> C["/project-root/.claude/CLAUDE.md<br/>(Alternative project location)"]
+    C --> D["/project-root/src/CLAUDE.md<br/>(Directory-scoped)"]
+    D --> E["/project-root/.claude/rules/*.md<br/>(Modular, glob-scoped)"]
 ```
 
 This hierarchy enables several powerful patterns:

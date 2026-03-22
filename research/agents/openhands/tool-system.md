@@ -10,12 +10,16 @@
 OpenHands uses a clean three-layer pipeline to translate LLM tool calls into
 sandboxed execution:
 
-```
-┌─────────┐   tool_call JSON    ┌──────────────────┐   Action dataclass   ┌─────────────┐
-│   LLM   │ ──────────────────► │ function_calling  │ ──────────────────► │   Runtime   │
-│ (GPT/   │                     │     .py           │                     │ (sandbox)   │
-│  Claude) │ ◄────────────────── │                   │ ◄────────────────── │             │
-└─────────┘   Observation text   └──────────────────┘   Observation obj    └─────────────┘
+```mermaid
+flowchart LR
+    LLM["LLM\n(GPT/Claude)"]
+    FC["function_calling.py"]
+    RT["Runtime\n(sandbox)"]
+
+    LLM -->|"tool_call JSON"| FC
+    FC -->|"Action dataclass"| RT
+    RT -->|"Observation object"| FC
+    FC -->|"Observation text"| LLM
 ```
 
 **Key insight:** "Tools" never exist as executable objects inside the agent.
@@ -379,13 +383,16 @@ microagents to bring their own tools.
 
 ### MCP action flow
 
-```
-LLM calls tool "mcp_tool_name"
-  → function_calling.py detects name is in mcp_tool_names set
-  → MCPAction(name="mcp_tool_name", arguments={...})
-  → Runtime routes to MCP client
-  → MCP server executes, returns result
-  → MCPObservation(content=result)
+```mermaid
+flowchart TD
+    A["LLM calls tool 'mcp_tool_name'"]
+    B["function_calling.py detects name is in mcp_tool_names set"]
+    C["MCPAction(name='mcp_tool_name', arguments={...})"]
+    D["Runtime routes to MCP client"]
+    E["MCP server executes, returns result"]
+    F["MCPObservation(content=result)"]
+
+    A --> B --> C --> D --> E --> F
 ```
 
 MCP tools are first-class citizens — they appear alongside built-in tools
@@ -585,14 +592,16 @@ working.
 
 ### Initialization sequence
 
-```
-Runtime container starts
-  → ActionExecutionServer initializes
-  → Plugins are loaded in order:
-      1. JupyterRequirement: starts Jupyter kernel, opens ZMQ channels
-      2. AgentSkillsRequirement: imports agent_skills module into kernel
-  → Runtime signals "ready" to the controller
-  → Agent loop begins
+```mermaid
+flowchart TD
+    A["Runtime container starts"]
+    B["ActionExecutionServer initializes"]
+    C["JupyterRequirement: starts Jupyter kernel, opens ZMQ channels"]
+    D["AgentSkillsRequirement: imports agent_skills module into kernel"]
+    E["Runtime signals 'ready' to the controller"]
+    F["Agent loop begins"]
+
+    A --> B --> C --> D --> E --> F
 ```
 
 ### AgentSkills

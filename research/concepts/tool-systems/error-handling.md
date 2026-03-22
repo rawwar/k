@@ -340,16 +340,13 @@ This is particularly elegant because it handles the common case where a tool nee
 
 ForgeCode's correction layer is arguably the highest-impact innovation in agent error handling. It operates as a middleware between the model's tool calls and actual execution:
 
-```
-┌─────────┐     ┌──────────────┐     ┌───────────┐
-│  Model   │────>│  Correction  │────>│   Tool    │
-│  Output  │     │    Layer     │     │ Execution │
-└─────────┘     └──────────────┘     └───────────┘
-                       │
-                 3 failure classes:
-                 1. Wrong tool → redirect
-                 2. Wrong args → repair
-                 3. Wrong order → resequence
+```mermaid
+flowchart LR
+    A["Model Output"] --> B["Correction Layer"]
+    B -->|"wrong tool"| D["redirect"]
+    B -->|"wrong args"| E["repair"]
+    B -->|"wrong order"| F["resequence"]
+    D & E & F --> C["Tool Execution"]
 ```
 
 The correction layer handles three classes of failures:

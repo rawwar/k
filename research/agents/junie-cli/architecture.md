@@ -13,51 +13,39 @@ to the multi-model routing system that is its key differentiator.
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                        │
-│                                                             │
-│   ┌─────────────────────┐    ┌─────────────────────┐       │
-│   │   IDE Tool Window    │    │   CLI Interface      │       │
-│   │   (Swing/Compose)    │    │   (Terminal I/O)     │       │
-│   └──────────┬──────────┘    └──────────┬──────────┘       │
-│              │                           │                   │
-│   ┌──────────▼───────────────────────────▼──────────┐       │
-│   │            Agent Orchestration Core               │       │
-│   │                                                   │       │
-│   │   ┌───────────┐  ┌──────────┐  ┌─────────────┐  │       │
-│   │   │  Planner   │  │ Executor │  │  Verifier   │  │       │
-│   │   └───────────┘  └──────────┘  └─────────────┘  │       │
-│   │                                                   │       │
-│   │   ┌───────────────────────────────────────────┐  │       │
-│   │   │        Multi-Model Router                  │  │       │
-│   │   │   ┌────────┐ ┌──────┐ ┌────────────┐     │  │       │
-│   │   │   │ Claude  │ │ GPT  │ │  Gemini    │     │  │       │
-│   │   │   └────────┘ └──────┘ └────────────┘     │  │       │
-│   │   └───────────────────────────────────────────┘  │       │
-│   └──────────────────────┬────────────────────────────┘       │
-│                          │                                   │
-│   ┌──────────────────────▼────────────────────────────┐       │
-│   │              Tool Execution Layer                   │       │
-│   │                                                     │       │
-│   │   IDE Mode:                CLI Mode:                │       │
-│   │   - PSI Tree Access        - File System I/O       │       │
-│   │   - Inspections            - Shell Execution       │       │
-│   │   - Refactoring Engine     - Process Management    │       │
-│   │   - Test Runners           - Test Execution        │       │
-│   │   - Debugger               - Build Commands        │       │
-│   │   - Build System API       - Git Operations        │       │
-│   └──────────────────────┬────────────────────────────┘       │
-│                          │                                   │
-│   ┌──────────────────────▼────────────────────────────┐       │
-│   │           JetBrains Backend Services                │       │
-│   │                                                     │       │
-│   │   - Authentication & License Validation             │       │
-│   │   - Model API Proxying                              │       │
-│   │   - Usage Tracking & Rate Limiting                  │       │
-│   │   - Telemetry & Analytics                           │       │
-│   └─────────────────────────────────────────────────────┘       │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Presentation["Presentation Layer"]
+        IDE["IDE Tool Window\n(Swing/Compose)"]
+        CLI["CLI Interface\n(Terminal I/O)"]
+    end
+
+    subgraph Orchestration["Agent Orchestration Core"]
+        PL[Planner]
+        EX[Executor]
+        VR[Verifier]
+        subgraph Router["Multi-Model Router"]
+            Claude[Claude]
+            GPT[GPT]
+            Gemini[Gemini]
+        end
+    end
+
+    subgraph Tools["Tool Execution Layer"]
+        IDETools["IDE Mode: PSI Tree, Inspections,\nRefactoring Engine, Test Runners,\nDebugger, Build System API"]
+        CLITools["CLI Mode: File System I/O,\nShell Execution, Process Management,\nTest Execution, Build Commands, Git"]
+    end
+
+    subgraph Backend["JetBrains Backend Services"]
+        Auth["Authentication & License Validation"]
+        Proxy["Model API Proxying"]
+        Usage["Usage Tracking & Rate Limiting"]
+        Telemetry["Telemetry & Analytics"]
+    end
+
+    IDE & CLI --> Orchestration
+    Orchestration --> Tools
+    Tools --> Backend
 ```
 
 ## IDE Plugin Architecture
@@ -173,35 +161,12 @@ The CLI mode is distributed through:
 
 In CLI mode, Junie operates as a standalone process:
 
-```
-┌─────────────────────────────────┐
-│         Junie CLI Process        │
-│                                 │
-│   ┌─────────────────────────┐   │
-│   │    Terminal I/O Layer    │   │
-│   │  (stdin/stdout/stderr)  │   │
-│   └────────────┬────────────┘   │
-│                │                │
-│   ┌────────────▼────────────┐   │
-│   │   Agent Core Logic       │   │
-│   │  (same as IDE mode)     │   │
-│   └────────────┬────────────┘   │
-│                │                │
-│   ┌────────────▼────────────┐   │
-│   │   Tool Implementations   │   │
-│   │                         │   │
-│   │  - File Read/Write      │   │
-│   │  - Shell Execution      │   │
-│   │  - Git Operations       │   │
-│   │  - Project Analysis     │   │
-│   │  - Code Search          │   │
-│   └────────────┬────────────┘   │
-│                │                │
-│   ┌────────────▼────────────┐   │
-│   │   JetBrains API Client   │   │
-│   │  (HTTPS to backend)     │   │
-│   └─────────────────────────┘   │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    TIO["Terminal I/O Layer\n(stdin/stdout/stderr)"]
+    TIO --> ACL["Agent Core Logic\n(same as IDE mode)"]
+    ACL --> TL["Tool Implementations\n(File Read/Write, Shell Execution,\nGit Operations, Project Analysis,\nCode Search)"]
+    TL --> API["JetBrains API Client\n(HTTPS to backend)"]
 ```
 
 ### IDE Knowledge Without the IDE
@@ -238,26 +203,14 @@ The multi-model routing system is Junie's most distinctive architectural feature
 Rather than using a single LLM for all tasks, Junie dynamically selects the best
 model for each sub-task:
 
-```
-┌─────────────────────────────────────────┐
-│         Task Classification              │
-│                                         │
-│   Input: Agent sub-task + context       │
-│   Output: Model selection + parameters  │
-│                                         │
-│   ┌─────────────────────────────────┐   │
-│   │        Routing Logic             │   │
-│   │                                 │   │
-│   │  IF complex_reasoning:          │   │
-│   │    → Claude Sonnet/Opus         │   │
-│   │  IF fast_edit:                  │   │
-│   │    → Gemini Flash               │   │
-│   │  IF code_generation:            │   │
-│   │    → Best for language/domain   │   │
-│   │  IF planning:                   │   │
-│   │    → Reasoning model            │   │
-│   └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    IN["Input: Agent sub-task + context"] --> CL{Classify task}
+    CL -->|complex reasoning| M1["Claude Sonnet/Opus"]
+    CL -->|fast edit| M2["Gemini Flash"]
+    CL -->|code generation| M3["Best model for language/domain"]
+    CL -->|planning| M4["Reasoning model"]
+    M1 & M2 & M3 & M4 --> OUT["Model selection + parameters"]
 ```
 
 ### Routing Dimensions
@@ -288,10 +241,12 @@ difference between success and failure.
 
 JetBrains acts as the intermediary between Junie and LLM providers:
 
-```
-Junie Agent → JetBrains Backend → Claude API
-                                → OpenAI API
-                                → Google AI API
+```mermaid
+flowchart LR
+    JA["Junie Agent"] --> JB["JetBrains Backend"]
+    JB --> CA["Claude API"]
+    JB --> OA["OpenAI API"]
+    JB --> GA["Google AI API"]
 ```
 
 This architecture provides:

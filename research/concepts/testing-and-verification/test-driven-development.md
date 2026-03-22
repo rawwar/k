@@ -17,23 +17,16 @@ Traditional test-driven development follows a disciplined cycle: **write a faili
 
 When an AI coding agent enters this picture, the dynamic changes fundamentally. The agent can generate both tests *and* implementation from the same prompt, the same model weights, the same context window. This creates what we call the **dual-authorship problem**: if the same system writes the test and the code, the test may simply validate the agent's misunderstanding rather than catch it.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              THE DUAL-AUTHORSHIP PROBLEM                            │
-│                                                                     │
-│   Human TDD                        Agent TDD                       │
-│   ─────────                        ─────────                       │
-│   Human writes test ──┐            Agent writes test ──┐           │
-│                       │ Different                      │ Same      │
-│                       │ perspectives                   │ model     │
-│   Human writes code ──┘            Agent writes code ──┘           │
-│                                                                     │
-│   Test catches bugs because        Test may validate the bug        │
-│   test and code encode             because both encode the          │
-│   different mental models          same statistical prediction      │
-│                                                                     │
-│   ✅ Strong verification           ⚠️  Weak verification           │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph HumanTDD["Human TDD — ✅ Strong Verification"]
+        HT["Human writes test"] -->|"Different perspectives"| HC["Human writes code"]
+        HC --> HV["Test catches bugs\n(different mental models)"]
+    end
+    subgraph AgentTDD["Agent TDD — ⚠️ Weak Verification"]
+        AT["Agent writes test"] -->|"Same model"| AC["Agent writes code"]
+        AC --> AV["Test may validate the bug\n(same statistical prediction)"]
+    end
 ```
 
 This doesn't make agent TDD useless — far from it. But it means the value of testing in the agent context comes from different sources than in human TDD:
@@ -106,27 +99,20 @@ Most agents follow a test-after pattern by default. The agent generates an imple
 
 **[Aider](../../agents/aider/)** is the clearest example with its `--auto-test` flag. When enabled, Aider runs the user-specified test suite after every edit:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              AIDER'S TEST-AFTER LOOP                                │
-│                                                                     │
-│  1. User provides task                                              │
-│  2. LLM generates code edits                                       │
-│  3. Apply edits to files                                            │
-│  4. Git commit                                                      │
-│  5. Run linter (if --auto-lint)                                     │
-│  6. Run test suite (if --auto-test via --test-cmd)                  │
-│  7. If tests PASS → done                                            │
-│  8. If tests FAIL:                                                  │
-│     a. Capture first 50 lines of error output                       │
-│     b. Send to LLM: "The tests are correct. Fix the code."         │
-│     c. LLM generates fix edits                                      │
-│     d. Apply edits → commit → re-test                               │
-│     e. Limited retry attempts to prevent infinite loops              │
-│                                                                     │
-│  This is the same approach used in benchmarks:                      │
-│  the LLM gets two attempts (initial + one fix based on test output) │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["1. User provides task"] --> B["2. LLM generates code edits"]
+    B --> C["3. Apply edits to files"]
+    C --> D["4. Git commit"]
+    D --> E["5. Run linter (if --auto-lint)"]
+    E --> F["6. Run test suite (if --auto-test via --test-cmd)"]
+    F --> G{Tests pass?}
+    G -->|PASS| H[Done]
+    G -->|FAIL| I["a. Capture first 50 lines of error output"]
+    I --> J["b. Send to LLM: 'The tests are correct. Fix the code.'"]
+    J --> K["c. LLM generates fix edits"]
+    K --> L["d. Apply edits → commit → re-test"]
+    L -->|"e. Limited retries to prevent infinite loops"| F
 ```
 
 Configuration is explicit — the user must provide `--test-cmd`:
@@ -146,12 +132,15 @@ The key insight from Aider's approach: **the agent is told the tests are correct
 
 OpenHands runs a full **FastAPI server inside a Docker container** — the `ActionExecutionServer`. Test execution goes through the same sandboxed channel as every other command:
 
-```
-┌──────────────────┐          HTTP/REST          ┌─────────────────────┐
-│   Host Machine   │  ◄──────────────────────►   │   Docker Container  │
-│  DockerRuntime   │     POST /execute_action     │  ActionExecution    │
-│  (client)        │     GET  /alive              │  Server (FastAPI)   │
-└──────────────────┘                               └─────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Host["Host Machine"]
+        DR["DockerRuntime (client)"]
+    end
+    subgraph Docker["Docker Container"]
+        AES["ActionExecution Server (FastAPI)"]
+    end
+    DR <-->|"HTTP/REST\nPOST /execute_action\nGET /alive"| AES
 ```
 
 The agent issues a `CmdRunAction` (e.g., `pytest`), the sandbox executes it, and a `CmdOutputObservation` with stdout/stderr comes back. Full environment fidelity means the agent can run tests, install dependencies, and inspect runtime behavior — all isolated from the host.
@@ -191,24 +180,12 @@ The "write code then add tests" pattern is an anti-pattern in human TDD — but 
 
 ### The Classical Cycle, Adapted
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              RED-GREEN-REFACTOR IN AGENT CONTEXT                    │
-│                                                                     │
-│   ┌───────────┐      ┌───────────┐      ┌───────────┐             │
-│   │           │      │           │      │           │             │
-│   │    RED    │─────►│   GREEN   │─────►│ REFACTOR  │             │
-│   │           │      │           │      │           │             │
-│   └───────────┘      └───────────┘      └───────────┘             │
-│                                                                     │
-│   Agent identifies    Agent writes       Agent cleans up            │
-│   or writes a         minimal code       the implementation         │
-│   failing test        to pass it                                    │
-│                                                                     │
-│   ✅ Strong           ✅ Strong          ⚠️  Weak                  │
-│   (especially with    (the core          (agents tend to            │
-│    existing tests)     strength)          skip this step)           │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    R["RED\nAgent identifies or writes\na failing test\n\n✅ Strong\n(especially with existing tests)"]
+    G["GREEN\nAgent writes minimal code\nto pass it\n\n✅ Strong\n(the core strength)"]
+    REF["REFACTOR\nAgent cleans up\nthe implementation\n\n⚠️ Weak\n(agents tend to skip this step)"]
+    R --> G --> REF
 ```
 
 ### Red: Identifying or Creating the Failing State
@@ -506,22 +483,27 @@ This truncation serves several purposes:
 
 The spectrum of test output handling across agents reveals a maturity gradient:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              TEST OUTPUT PARSING SPECTRUM                            │
-│                                                                     │
-│   Raw stdout/stderr        Truncated raw         Structured parse   │
-│   ◄────────────────────────────────────────────────────────────────► │
-│                                                                     │
-│   mini-SWE-agent           Aider (50 lines)      Junie CLI          │
-│   OpenCode                 Claude Code            ForgeCode          │
-│   Goose                    Codex CLI              Droid              │
-│   Sage Agent               Gemini CLI                                │
-│                            OpenHands                                 │
-│                                                                     │
-│   Low signal-to-noise      Balanced               High signal        │
-│   High token cost          Practical              Low token cost     │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph raw["Raw stdout/stderr — Low signal-to-noise, High token cost"]
+        r1[mini-SWE-agent]
+        r2[OpenCode]
+        r3[Goose]
+        r4[Sage Agent]
+    end
+    subgraph trunc["Truncated raw — Balanced, Practical"]
+        t1["Aider (50 lines)"]
+        t2[Claude Code]
+        t3[Codex CLI]
+        t4[Gemini CLI]
+        t5[OpenHands]
+    end
+    subgraph struct["Structured parse — High signal, Low token cost"]
+        s1[Junie CLI]
+        s2[ForgeCode]
+        s3[Droid]
+    end
+    raw --> trunc --> struct
 ```
 
 ### Extracting Actionable Information

@@ -24,20 +24,14 @@ layer:
 
 LiteLLM operates in two modes:
 
-```
-Mode 1: Python SDK (Direct Integration)
-┌─────────────┐     ┌──────────┐     ┌──────────────┐
-│   Agent     │────▶│ litellm  │────▶│ Provider API │
-│ (Python)    │     │ .completion()│  │              │
-└─────────────┘     └──────────┘     └──────────────┘
-
-Mode 2: Proxy Server (Any Language)
-┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Agent     │────▶│ LiteLLM      │────▶│ Provider API │
-│ (Any lang)  │     │ Proxy Server │     │              │
-│             │     │ :4000        │     │              │
-└─────────────┘     └──────────────┘     └──────────────┘
-   OpenAI SDK           Translates          100+ providers
+```mermaid
+flowchart LR
+    subgraph SDK["Mode 1: Python SDK (Direct Integration)"]
+        A1["Agent\n(Python)"] -->|"litellm.completion()"| L1["litellm"] --> P1["Provider API"]
+    end
+    subgraph PRX["Mode 2: Proxy Server (Any Language)"]
+        A2["Agent\n(Any lang)\nOpenAI SDK"] --> L2["LiteLLM\nProxy Server\n:4000"] -->|"Translates"| P2["Provider API\n(100+ providers)"]
+    end
 ```
 
 ### How It Works

@@ -67,26 +67,18 @@ introduced concepts that became foundational.
 
 ### Core Architecture
 
-```
-┌─────────────────────────────────────────┐
-│              Swarm Client               │
-│                                         │
-│  ┌──────────────────────────────────┐   │
-│  │          Execution Loop          │   │
-│  │                                  │   │
-│  │  1. Get completion from agent    │   │
-│  │  2. Execute tool calls           │   │
-│  │  3. Switch agent if handoff      │   │
-│  │  4. Update context variables     │   │
-│  │  5. If no new calls → return     │   │
-│  │                                  │   │
-│  └──────────────────────────────────┘   │
-│                                         │
-│  Agent A ──handoff──► Agent B           │
-│  Agent B ──handoff──► Agent C           │
-│  Agent C ──(no handoff)──► return       │
-│                                         │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SC["Swarm Client"]
+    EL["Execution Loop\n1. Get completion from agent\n2. Execute tool calls\n3. Switch agent if handoff\n4. Update context variables\n5. If no new calls → return"]
+    A["Agent A"]
+    B["Agent B"]
+    C["Agent C"]
+    R["return"]
+    SC --> EL
+    A -->|"handoff"| B
+    B -->|"handoff"| C
+    C -->|"no handoff"| R
 ```
 
 ### Key Design Decisions
@@ -326,24 +318,13 @@ is essential:
 
 ### How Handoffs Work
 
-```
-Time →
-
-Agent A is active
-  │
-  │  Agent A receives user message
-  │  Agent A reasons about the task
-  │  Agent A calls transfer_to_B()
-  │
-  ▼
-Agent B becomes active
-  │
-  │  Agent B's instructions replace Agent A's system prompt
-  │  Agent B sees the FULL conversation history
-  │  Agent B continues the conversation
-  │
-  ▼
-(Agent B may hand off to Agent C, or finish)
+```mermaid
+flowchart TD
+    A["Agent A is active\nReceives user message\nReasons about the task\nCalls transfer_to_B()"]
+    B["Agent B becomes active\nInstructions replace Agent A's system prompt\nSees the FULL conversation history\nContinues the conversation"]
+    C["Agent B may hand off to Agent C, or finish"]
+    A -->|"handoff"| B
+    B --> C
 ```
 
 ### Handoff with Context

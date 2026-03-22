@@ -269,9 +269,12 @@ def render(text):
 
 Terminal output goes through multiple buffering layers:
 
-```
-Application Buffer → libc/runtime Buffer → Kernel Buffer → Terminal
-                     (the one we control)
+```mermaid
+flowchart LR
+    A["Application Buffer"] --> B["libc/runtime Buffer
+(the one we control)"]
+    B --> C["Kernel Buffer"]
+    C --> D["Terminal"]
 ```
 
 **Buffering modes:**
@@ -322,17 +325,12 @@ ecosystem alongside Bubble Tea, Lip Gloss, and Glow.
 
 **Architecture:**
 
-```
-Markdown text
-    │
-    ▼
-goldmark parser (AST)
-    │
-    ▼
-Glamour renderer (walks AST, applies stylesheet)
-    │
-    ▼
-ANSI-styled terminal output
+```mermaid
+flowchart TD
+    A["Markdown text"] --> B["goldmark parser (AST)"]
+    B --> C["Glamour renderer
+(walks AST, applies stylesheet)"]
+    C --> D["ANSI-styled terminal output"]
 ```
 
 **Built-in themes:** dark, light, ascii, notty, Tokyo Night, Dracula
@@ -479,20 +477,14 @@ Supports 300+ languages, multiple output formatters:
 
 Incremental parsing enables real-time syntax highlighting as tokens stream in:
 
-```
-Initial parse: "def hello"
-    │
-    ▼
-  (module
-    (function_definition
-      name: (identifier) ← incomplete, but tree-sitter handles gracefully
-      parameters: (MISSING)
-      body: (MISSING)))
-
-Token arrives: "(world):\n"
-    │
-    ▼
-  Only re-parses the changed region, reusing the rest of the tree
+```mermaid
+flowchart TD
+    A["Input: \"def hello\""] --> B["Partial AST
+(function_definition with MISSING params/body)"]
+    C["New token: \"(world):\\n\""] --> D["Re-parse changed region only"]
+    B --> D
+    D --> E["Updated AST
+(unchanged nodes reused)"]
 ```
 
 This incremental nature makes tree-sitter ideal for streaming scenarios
@@ -760,20 +752,13 @@ let (cols, rows) = terminal_size::terminal_size()
 When the terminal window is resized, the OS sends `SIGWINCH` to the
 foreground process group. TUI frameworks install a handler to re-render:
 
-```
-User resizes window
-        │
-        ▼
-  OS sends SIGWINCH
-        │
-        ▼
-  Signal handler fires
-        │
-        ▼
-  Query new terminal size (ioctl TIOCGWINSZ)
-        │
-        ▼
-  Trigger re-layout and re-render
+```mermaid
+flowchart TD
+    A["User resizes window"] --> B["OS sends SIGWINCH"]
+    B --> C["Signal handler fires"]
+    C --> D["Query new terminal size
+(ioctl TIOCGWINSZ)"]
+    D --> E["Trigger re-layout and re-render"]
 ```
 
 ### Responsive Layout Patterns

@@ -45,33 +45,23 @@ spawning to Capy's 25+ concurrent git worktree tasks.
 The sectioning pattern splits work across multiple LLM instances, each responsible
 for an independent portion of the task. An aggregator combines the results.
 
-```
-                    +---------------------+
-                    |       Input         |
-                    |   (Complex Task)    |
-                    +----------+----------+
-                               |
-                    +----------v----------+
-                    |     Task Split      |
-                    |  (Decomposition)    |
-                    +--+------+------+----+
-                       |      |      |
-              +--------v+  +--v---+  +v--------+
-              |  LLM_1  |  | LLM_2|  |  LLM_3  |
-              | Subtask  |  |Subtsk|  | Subtask  |
-              |    A     |  |  B   |  |    C     |
-              +----+-----+  +--+---+  +----+-----+
-                   |           |           |
-                   +-----------+-----------+
-                               |
-                    +----------v----------+
-                    |    Aggregator       |
-                    | (Merge & Synthesize)|
-                    +----------+----------+
-                               |
-                    +----------v----------+
-                    |      Output         |
-                    +---------------------+
+```mermaid
+flowchart TD
+    IN["Input\n(Complex Task)"]
+    SPLIT["Task Split\n(Decomposition)"]
+    LLM1["LLM 1\nSubtask A"]
+    LLM2["LLM 2\nSubtask B"]
+    LLM3["LLM 3\nSubtask C"]
+    AGG["Aggregator\n(Merge & Synthesize)"]
+    OUT["Output"]
+    IN --> SPLIT
+    SPLIT --> LLM1
+    SPLIT --> LLM2
+    SPLIT --> LLM3
+    LLM1 --> AGG
+    LLM2 --> AGG
+    LLM3 --> AGG
+    AGG --> OUT
 ```
 
 **Key properties:**
@@ -83,30 +73,21 @@ for an independent portion of the task. An aggregator combines the results.
 
 The voting pattern runs the same task multiple times and selects the best output.
 
-```
-                    +---------------------+
-                    |       Input         |
-                    |    (Same Task)      |
-                    +--+------+------+----+
-                       |      |      |
-                       |  (identical prompt, different sampling)
-                       |      |      |
-              +--------v+  +--v---+  +v--------+
-              |   LLM   |  | LLM  |  |   LLM   |
-              | Attempt  |  |Attmpt|  | Attempt  |
-              |    1     |  |  2   |  |    3     |
-              +----+-----+  +--+---+  +----+-----+
-                   |           |           |
-                   +-----------+-----------+
-                               |
-                    +----------v----------+
-                    |  Evaluator / Voter  |
-                    |  (Select or Merge)  |
-                    +----------+----------+
-                               |
-                    +----------v----------+
-                    |    Best Output      |
-                    +---------------------+
+```mermaid
+flowchart TD
+    IN["Input\n(Same Task)"]
+    LLM1["LLM\nAttempt 1"]
+    LLM2["LLM\nAttempt 2"]
+    LLM3["LLM\nAttempt 3"]
+    EVAL["Evaluator / Voter\n(Select or Merge)"]
+    OUT["Best Output"]
+    IN -->|"identical prompt,\ndifferent sampling"| LLM1
+    IN -->|"identical prompt,\ndifferent sampling"| LLM2
+    IN -->|"identical prompt,\ndifferent sampling"| LLM3
+    LLM1 --> EVAL
+    LLM2 --> EVAL
+    LLM3 --> EVAL
+    EVAL --> OUT
 ```
 
 ### Hybrid: Parallel Tool Execution
@@ -114,23 +95,19 @@ The voting pattern runs the same task multiple times and selects the best output
 A third variation — common in coding agents — parallelizes tool calls rather than
 LLM reasoning:
 
-```
-                    +---------------------+
-                    |    Agent Loop       |
-                    |  (Single LLM)      |
-                    +--+------+------+----+
-                       |      |      |
-                 +-----v--+ +-v----+ +v-----+
-                 | Tool_1 | |Tool_2| |Tool_3|
-                 |read(a) | |read(b)| |grep()|
-                 +----+---+ +--+---+ +--+---+
-                      |        |        |
-                      +--------+--------+
-                               |
-                    +----------v----------+
-                    |    Agent Loop       |
-                    |  (Process Results)  |
-                    +---------------------+
+```mermaid
+flowchart TD
+    LOOP1["Agent Loop\n(Single LLM)"]
+    T1["Tool 1\nread(a)"]
+    T2["Tool 2\nread(b)"]
+    T3["Tool 3\ngrep()"]
+    LOOP2["Agent Loop\n(Process Results)"]
+    LOOP1 --> T1
+    LOOP1 --> T2
+    LOOP1 --> T3
+    T1 --> LOOP2
+    T2 --> LOOP2
+    T3 --> LOOP2
 ```
 
 This is the most common form in practice — the agent is sequential, but it
@@ -159,26 +136,16 @@ conflicts in the aggregation phase is often faster than running them sequentiall
 An often-overlooked application of sectioning: running safety guardrails in parallel
 with the main generation task.
 
-```
-                    +-----------------+
-                    |   User Prompt   |
-                    +--+----------+---+
-                       |          |
-              +--------v---+  +---v--------+
-              |  Content   |  |  Response   |
-              |  Safety    |  | Generation  |
-              |  Check     |  |             |
-              +----+-------+  +---+---------+
-                   |              |
-                   +------+-------+
-                          |
-                   +------v-------+
-                   |  Gate:       |
-                   |  Safe? ->    |
-                   |  Return resp |
-                   |  Unsafe? ->  |
-                   |  Block       |
-                   +--------------+
+```mermaid
+flowchart TD
+    PROMPT["User Prompt"]
+    SAFETY["Content Safety\nCheck"]
+    GEN["Response\nGeneration"]
+    GATE["Gate:\nSafe? → Return response\nUnsafe? → Block"]
+    PROMPT --> SAFETY
+    PROMPT --> GEN
+    SAFETY --> GATE
+    GEN --> GATE
 ```
 
 The safety check and the response generation are independent — neither needs the
@@ -204,14 +171,17 @@ Attempt 3: Manacher's algorithm (O(n) time, O(n) space)
 
 For tasks with discrete outputs, majority voting is a powerful confidence booster:
 
-```
-Task: "Is this code change a security risk? (yes/no)"
-
-  LLM Run 1: "yes" --+
-  LLM Run 2: "yes" --+--> Majority: "yes" (3/5 = 60%)
-  LLM Run 3: "no"  --|      Confidence: moderate
-  LLM Run 4: "yes" --|
-  LLM Run 5: "no"  --+
+```mermaid
+flowchart LR
+    TASK["Task: Is this code change\na security risk?"]
+    R1["LLM Run 1: yes"]
+    R2["LLM Run 2: yes"]
+    R3["LLM Run 3: no"]
+    R4["LLM Run 4: yes"]
+    R5["LLM Run 5: no"]
+    MAJ["Majority: yes\n(3/5 = 60%)\nConfidence: moderate"]
+    TASK --> R1 & R2 & R3 & R4 & R5
+    R1 & R2 & R3 & R4 & R5 --> MAJ
 ```
 
 When confidence is low (e.g., 3/5), the system can escalate to a human reviewer.
@@ -226,10 +196,21 @@ A variant of voting where N outputs are generated and ranked by:
 
 ### Code Review with Multiple Reviewers
 
-```
-  Code Diff --> Reviewer_1 (security focus)   --> findings_1  --+
-            --> Reviewer_2 (performance focus) --> findings_2  --+--> Merge & Dedupe
-            --> Reviewer_3 (correctness focus) --> findings_3  --+
+```mermaid
+flowchart LR
+    DIFF["Code Diff"]
+    REV1["Reviewer 1\n(security focus)"]
+    REV2["Reviewer 2\n(performance focus)"]
+    REV3["Reviewer 3\n(correctness focus)"]
+    F1["findings 1"]
+    F2["findings 2"]
+    F3["findings 3"]
+    MERGE["Merge & Dedupe"]
+    DIFF --> REV1 & REV2 & REV3
+    REV1 --> F1
+    REV2 --> F2
+    REV3 --> F3
+    F1 & F2 & F3 --> MERGE
 ```
 
 Each reviewer has the same diff but a different system prompt emphasizing their
@@ -261,19 +242,19 @@ result_a, result_b, result_c = await asyncio.gather(
 Claude Code can spawn multiple sub-agents — specifically "Explore" agents — that
 run in parallel to investigate different aspects of a codebase simultaneously.
 
-```
-Main Agent (Orchestrator)
-    |
-    +--> Explore Agent_1: "Find all API endpoints"
-    |     +- Uses: grep, glob, view
-    |
-    +--> Explore Agent_2: "Find auth middleware"      <-- All run in parallel
-    |     +- Uses: grep, glob, view
-    |
-    +--> Explore Agent_3: "Find database models"
-          +- Uses: grep, glob, view
-
-    All results --> Main Agent (synthesize & act)
+```mermaid
+flowchart TD
+    MAIN["Main Agent\n(Orchestrator)"]
+    EA1["Explore Agent 1\nFind all API endpoints\ngrep, glob, view"]
+    EA2["Explore Agent 2\nFind auth middleware\ngrep, glob, view"]
+    EA3["Explore Agent 3\nFind database models\ngrep, glob, view"]
+    SYNTH["Main Agent\n(synthesize & act)"]
+    MAIN -->|parallel| EA1
+    MAIN -->|parallel| EA2
+    MAIN -->|parallel| EA3
+    EA1 --> SYNTH
+    EA2 --> SYNTH
+    EA3 --> SYNTH
 ```
 
 Key design decisions:
@@ -299,14 +280,17 @@ Capy represents the most aggressive parallelization strategy among the 17 agents
 - **Concurrency model**: 25+ concurrent tasks, each in its own git worktree
 - **Branch isolation**: Each task operates on a separate git branch
 
-```
-Captain (Orchestrator)
-    |
-    +--> Build Worker_1  [worktree: feature/auth]      --- git branch 1
-    +--> Build Worker_2  [worktree: feature/api]       --- git branch 2
-    +--> Build Worker_3  [worktree: feature/tests]     --- git branch 3
-    |        ...
-    +--> Build Worker_25 [worktree: fix/logging]       --- git branch 25
+```mermaid
+flowchart TD
+    CAP["Captain\n(Orchestrator)"]
+    W1["Build Worker 1\nworktree: feature/auth\ngit branch 1"]
+    W2["Build Worker 2\nworktree: feature/api\ngit branch 2"]
+    W3["Build Worker 3\nworktree: feature/tests\ngit branch 3"]
+    WN["Build Worker 25\nworktree: fix/logging\ngit branch 25"]
+    CAP --> W1
+    CAP --> W2
+    CAP --> W3
+    CAP -. "..." .-> WN
 ```
 
 The git worktree strategy solves the fundamental tension in parallel code
@@ -346,42 +330,58 @@ parallel processing through separation of submission and event queues.
 
 ### Map Phase: Analyze Each File Independently
 
-```
-Files to modify: [auth.py, models.py, routes.py, utils.py]
-
-  Map (parallel):
-    auth.py   --> LLM --> "Add logging: lines 45, 89, 123"
-    models.py --> LLM --> "Add logging: lines 12, 67"
-    routes.py --> LLM --> "Add logging: lines 34, 56, 78, 91"
-    utils.py  --> LLM --> "Add logging: lines 5, 22"
+```mermaid
+flowchart LR
+    AUTH["auth.py"]
+    MODELS["models.py"]
+    ROUTES["routes.py"]
+    UTILS["utils.py"]
+    LLM1["LLM"]
+    LLM2["LLM"]
+    LLM3["LLM"]
+    LLM4["LLM"]
+    R1["Add logging:\nlines 45, 89, 123"]
+    R2["Add logging:\nlines 12, 67"]
+    R3["Add logging:\nlines 34, 56, 78, 91"]
+    R4["Add logging:\nlines 5, 22"]
+    AUTH --> LLM1 --> R1
+    MODELS --> LLM2 --> R2
+    ROUTES --> LLM3 --> R3
+    UTILS --> LLM4 --> R4
 ```
 
 ### Reduce Phase: Merge Changes, Resolve Conflicts
 
-```
-  Reduce (sequential):
-    Individual diffs --> Merge into unified changeset
-                     --> Check for cross-file consistency
-                     --> Validate import statements
-                     --> Run tests against combined changes
+```mermaid
+flowchart LR
+    DIFFS["Individual diffs"]
+    MERGE["Merge into\nunified changeset"]
+    CROSS["Check cross-file\nconsistency"]
+    IMPORTS["Validate\nimport statements"]
+    TESTS["Run tests against\ncombined changes"]
+    DIFFS --> MERGE --> CROSS --> IMPORTS --> TESTS
 ```
 
 ### Real-World Example: Multi-File Refactoring
 
 Consider renaming a function used across 15 files:
 
-```
-Phase 1 -- Map (parallel):
-  +- Analyze file_1:  find_user() on lines 23, 45       --+
-  +- Analyze file_2:  find_user() on line 12             --+
-  +- Analyze file_3:  find_user() on lines 8, 34, 56    --+  All parallel
-  +- ...                                                 --+
-  +- Analyze file_15: find_user() on line 99             --+
-
-Phase 2 -- Reduce (sequential):
-  Merge all changes --> Validate no references missed
-                    --> Check for string literals containing "find_user"
-                    --> Run full test suite
+```mermaid
+flowchart TD
+    subgraph MAP["Phase 1 — Map (parallel)"]
+        F1["file 1: find_user() on lines 23, 45"]
+        F2["file 2: find_user() on line 12"]
+        F3["file 3: find_user() on lines 8, 34, 56"]
+        FN["file 15: find_user() on line 99"]
+    end
+    subgraph REDUCE["Phase 2 — Reduce (sequential)"]
+        MERGE["Merge all changes"]
+        VALIDATE["Validate no references missed"]
+        STRLITS["Check string literals\ncontaining find_user"]
+        TESTS["Run full test suite"]
+        MERGE --> VALIDATE --> STRLITS --> TESTS
+    end
+    F1 & F2 & F3 & FN --> MERGE
 ```
 
 ## Implementation Patterns

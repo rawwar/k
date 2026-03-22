@@ -17,30 +17,21 @@ implementations to emerging standards.
 
 ## The Communication Protocol Landscape
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│                 AGENT COMMUNICATION PROTOCOLS                 │
-├───────────────────────────────────────────────────────────────┤
-│                                                               │
-│  Agent-to-Agent Standards                                     │
-│  ┌──────────────────┐  ┌──────────────────┐                  │
-│  │ Google A2A       │  │ Anthropic MCP    │                  │
-│  │ (agent ↔ agent)  │  │ (agent ↔ tool)   │                  │
-│  └──────────────────┘  └──────────────────┘                  │
-│                                                               │
-│  Framework Protocols                                          │
-│  ┌──────────────────┐  ┌──────────────────┐                  │
-│  │ OpenAI Agents SDK│  │ AutoGen Core     │                  │
-│  │ (handoffs/tools) │  │ (message passing)│                  │
-│  └──────────────────┘  └──────────────────┘                  │
-│                                                               │
-│  Implementation-Specific                                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ Claude Code  │  │ Codex CLI    │  │ OpenHands    │       │
-│  │ tool_result  │  │ SQ/EQ msgs   │  │ EventStream  │       │
-│  └──────────────┘  └──────────────┘  └──────────────┘       │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Standards["Agent-to-Agent Standards"]
+        A2A["Google A2A\n(agent ↔ agent)"]
+        MCP_STD["Anthropic MCP\n(agent ↔ tool)"]
+    end
+    subgraph Frameworks["Framework Protocols"]
+        OAI["OpenAI Agents SDK\n(handoffs/tools)"]
+        AG["AutoGen Core\n(message passing)"]
+    end
+    subgraph Impl["Implementation-Specific"]
+        CC["Claude Code\ntool_result"]
+        CX["Codex CLI\nSQ/EQ msgs"]
+        OH["OpenHands\nEventStream"]
+    end
 ```
 
 ---
@@ -54,17 +45,14 @@ collaborate — without exposing internal state.
 
 ### Core Concepts
 
-```
-┌──────────────┐     Agent Card      ┌──────────────┐
-│  Agent A      │◄──(discovery)──────►│  Agent B      │
-│  (Client)     │                     │  (Server)     │
-│               │     JSON-RPC 2.0    │               │
-│  Sends task   │────────────────────►│  Processes    │
-│  requests     │                     │  requests     │
-│               │     Task updates    │               │
-│  Receives     │◄────────────────────│  Returns      │
-│  results      │     (SSE/push)      │  results      │
-└──────────────┘                     └──────────────┘
+```mermaid
+sequenceDiagram
+    participant A as Agent A (Client)
+    participant B as Agent B (Server)
+    A->>B: Agent Card (discovery)
+    B->>A: Agent Card (discovery)
+    A->>B: tasks/send (JSON-RPC 2.0)
+    B-->>A: Task updates (SSE/push)
 ```
 
 ### Agent Cards
@@ -109,29 +97,15 @@ capabilities, similar to how APIs expose OpenAPI specifications:
 
 A2A uses a task-based model with defined lifecycle states:
 
-```
-                 ┌─────────┐
-                 │ created  │
-                 └────┬─────┘
-                      │
-                 ┌────▼─────┐
-            ┌───►│ working   │◄──┐
-            │    └────┬─────┘   │
-            │         │         │
-            │    ┌────▼─────┐   │
-            │    │input_     │   │
-            │    │needed     │───┘
-            │    └────┬─────┘
-            │         │
-            │    ┌────▼──────┐
-            └────│ working    │
-                 └────┬──────┘
-                      │
-              ┌───────┼───────┐
-              │       │       │
-         ┌────▼──┐ ┌──▼───┐ ┌▼────────┐
-         │completed│ │failed│ │cancelled│
-         └────────┘ └──────┘ └─────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> created
+    created --> working
+    working --> input_needed
+    input_needed --> working
+    working --> completed
+    working --> failed
+    working --> cancelled
 ```
 
 ### A2A for Coding Agents
@@ -222,21 +196,15 @@ MCP becomes relevant to multi-agent systems in several ways:
 
 **1. Shared tool access:** Multiple agents connect to the same MCP server:
 
-```
-┌──────────┐     ┌──────────┐     ┌──────────┐
-│ Agent A   │     │ Agent B   │     │ Agent C   │
-│ (Planner) │     │ (Coder)   │     │ (Tester)  │
-└─────┬─────┘     └─────┬─────┘     └─────┬─────┘
-      │                 │                 │
-      └────────┬────────┘────────┬────────┘
-               │                 │
-         ┌─────▼─────────────────▼─────┐
-         │      MCP Server (Git)       │
-         │  - read_file                │
-         │  - write_file               │
-         │  - run_command              │
-         │  - search_code              │
-         └─────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Agent A (Planner)"]
+    B["Agent B (Coder)"]
+    C["Agent C (Tester)"]
+    MCP["MCP Server (Git)\n─ read_file\n─ write_file\n─ run_command\n─ search_code"]
+    A --> MCP
+    B --> MCP
+    C --> MCP
 ```
 
 **2. Agent-as-MCP-server:** An agent exposes itself as an MCP tool for other agents:
@@ -502,29 +470,14 @@ async def find_agent_for_task(task_type, registry):
 
 Goose discovers agent capabilities through its extension system:
 
-```
-┌──────────────────────────────┐
-│  Goose Extension Discovery   │
-├──────────────────────────────┤
-│                              │
-│  Platform extensions (7)     │
-│    → developer, analyze,     │
-│      summon, etc.            │
-│                              │
-│  Builtin extensions          │
-│    → computercontroller,     │
-│      memory, etc.            │
-│                              │
-│  Stdio extensions            │
-│    → npm/uvx packages        │
-│                              │
-│  HTTP extensions             │
-│    → remote services         │
-│                              │
-│  ACP providers               │
-│    → other agents as LLMs    │
-│                              │
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+    G["Goose Extension Discovery"]
+    G --> P["Platform extensions (7)\ndeveloper, analyze, summon, etc."]
+    G --> B["Builtin extensions\ncomputercontroller, memory, etc."]
+    G --> S["Stdio extensions\nnpm/uvx packages"]
+    G --> H["HTTP extensions\nremote services"]
+    G --> AC["ACP providers\nother agents as LLMs"]
 ```
 
 ### OpenHands: Microagent Discovery

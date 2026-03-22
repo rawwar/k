@@ -18,37 +18,27 @@ This subchapter is a map. By the end, you will be able to trace a single user re
 
 A production coding agent is built from roughly a dozen interconnected subsystems. Let's enumerate them and then draw the connections.
 
-```
-┌─────────────────────────────────────────────────────┐
-│                     CLI Entry Point                  │
-│              (argument parsing, REPL setup)           │
-└─────────────────┬───────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────┐
-│                  Configuration System                │
-│         (layered config, env vars, CLI flags)         │
-└───────┬─────────┬──────────┬───────────┬────────────┘
-        │         │          │           │
-        ▼         ▼          ▼           ▼
-┌──────────┐ ┌─────────┐ ┌────────┐ ┌──────────┐
-│ Provider │ │  Tool   │ │ Safety │ │ Context  │
-│ Registry │ │Registry │ │ Layer  │ │ Manager  │
-└────┬─────┘ └────┬────┘ └───┬────┘ └────┬─────┘
-     │            │          │            │
-     └────────────┼──────────┼────────────┘
-                  │          │
-                  ▼          ▼
-        ┌─────────────────────────┐
-        │      Agentic Loop       │
-        │  (the central runtime)  │
-        └────────┬────────────────┘
-                 │
-                 ▼
-        ┌─────────────────────────┐
-        │   Streaming / Render    │
-        │   (TUI or plain text)   │
-        └─────────────────────────┘
+```mermaid
+flowchart TD
+    CLI["CLI Entry Point\nargument parsing, REPL setup"]
+    CONFIG["Configuration System\nlayered config, env vars, CLI flags"]
+    PROV["Provider Registry"]
+    TOOL["Tool Registry"]
+    SAFE["Safety Layer"]
+    CTX["Context Manager"]
+    LOOP["Agentic Loop\nthe central runtime"]
+    STREAM["Streaming / Render\nTUI or plain text"]
+
+    CLI --> CONFIG
+    CONFIG --> PROV
+    CONFIG --> TOOL
+    CONFIG --> SAFE
+    CONFIG --> CTX
+    PROV --> LOOP
+    TOOL --> LOOP
+    SAFE --> LOOP
+    CTX --> LOOP
+    LOOP --> STREAM
 ```
 
 Each box in this diagram is a distinct subsystem with its own module, its own types, and its own error variants. Let's walk through them from top to bottom.

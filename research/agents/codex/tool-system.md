@@ -67,17 +67,31 @@ When acting as an **MCP server** (`codex mcp-server`), Codex exposes two tools:
 
 ### Tool Call Flow (MCP Server Mode)
 
-```
-MCP client sends tools/call
-  → message_processor.rs dispatches to codex_tool_runner.rs
-    → run_codex_tool_session() creates CodexThread via ThreadManager
-      → Prompt submitted as Op::UserInput
-      → Events streamed via next_event() loop:
-          ExecApprovalRequest → exec_approval.rs (auto-approve)
-          ApplyPatchApprovalRequest → patch_approval.rs
-          TurnComplete → send CallToolResult { threadId, content }
-          Error → send error response
-          Other events → forwarded as MCP notifications
+```mermaid
+flowchart TD
+    A["MCP client sends tools/call"]
+    B["message_processor.rs dispatches
+to codex_tool_runner.rs"]
+    C["run_codex_tool_session() creates
+CodexThread via ThreadManager"]
+    D["Prompt submitted as Op::UserInput"]
+    E["Events streamed via next_event() loop"]
+    F["ExecApprovalRequest
+→ exec_approval.rs (auto-approve)"]
+    G["ApplyPatchApprovalRequest
+→ patch_approval.rs"]
+    H["TurnComplete
+→ send CallToolResult { threadId, content }"]
+    I["Error → send error response"]
+    J["Other events
+→ forwarded as MCP notifications"]
+
+    A --> B --> C --> D --> E
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
 ```
 
 ## Tool Router
@@ -508,17 +522,26 @@ approval_policy = { granular = {
 
 ### Approval Workflow
 
-```
-Model generates tool call
-  → ExecPolicy checks command
-    ├── Allow → auto-execute
-    ├── Forbidden → reject
-    └── Prompt → emit ExecApprovalRequestEvent to UI
-         │
-         ├── User approves → execute
-         ├── User approves + amends policy → execute + update rules
-         ├── User denies → reject
-         └── User aborts → abort turn
+```mermaid
+flowchart TD
+    A["Model generates tool call"]
+    B["ExecPolicy checks command"]
+    C["Auto-execute"]
+    D["Reject"]
+    E["Emit ExecApprovalRequestEvent to UI"]
+    F["Execute"]
+    G["Execute + update rules"]
+    H["Reject"]
+    I["Abort turn"]
+
+    A --> B
+    B -->|"Allow"| C
+    B -->|"Forbidden"| D
+    B -->|"Prompt"| E
+    E -->|"User approves"| F
+    E -->|"User approves + amends policy"| G
+    E -->|"User denies"| H
+    E -->|"User aborts"| I
 ```
 
 ### Sandbox + Approval Combinations
@@ -579,33 +602,24 @@ enum HookEvent {
 
 ## End-to-End: Tool Call → Sandboxed Execution
 
-```
-1. LLM generates LocalShellCall { command: ["npm", "test"] }
+```mermaid
+flowchart TD
+    A["LLM generates LocalShellCall
+command: npm test"]
+    B["ToolRouter.build_tool_call()
+→ ToolCall { tool: local_shell }"]
+    C["ToolOrchestrator.run()
+a. ExecPolicy.check() → Decision::Prompt
+b. Emit ExecApprovalRequest to UI
+c. Wait for Op::ExecApproval { Approved }"]
+    D["SandboxManager.select_initial(WorkspaceWrite)
+→ LinuxSandbox"]
+    E["Spawn sandboxed process (bubblewrap)<br/>• mount namespace: / read-only, $PWD writable<br/>• user / PID / network namespace isolation<br/>• seccomp filter (block ptrace, io_uring, network)<br/>• PR_SET_NO_NEW_PRIVS<br/>• exec(npm, test)"]
+    F["Capture stdout/stderr"]
+    G["Build FunctionCallOutput { call_id, output }"]
+    H["Inject into ContextManager"]
+    I["Call model again with result
+→ next iteration"]
 
-2. ToolRouter.build_tool_call() → ToolCall { tool: "local_shell", .. }
-
-3. ToolOrchestrator.run():
-   a. ExecPolicy.check(["npm", "test"]) → Decision::Prompt
-   b. Emit ExecApprovalRequest to UI
-   c. Wait for Op::ExecApproval { decision: Approved }
-
-4. SandboxManager.select_initial(WorkspaceWrite) → LinuxSandbox
-
-5. Spawn sandboxed process:
-   Linux: bubblewrap
-     → mount namespace (/ read-only, $PWD writable)
-     → user namespace isolation
-     → PID namespace isolation
-     → network namespace isolation
-     → seccomp filter (block ptrace, io_uring, network syscalls)
-     → PR_SET_NO_NEW_PRIVS
-     → exec("npm", ["test"])
-
-6. Capture stdout/stderr
-
-7. Build FunctionCallOutput { call_id, output: "..." }
-
-8. Inject into ContextManager
-
-9. Call model again with result → next iteration
+    A --> B --> C --> D --> E --> F --> G --> H --> I
 ```

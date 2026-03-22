@@ -113,14 +113,9 @@ elements of multiple patterns — but each agent has a dominant approach.
 
 A single large prompt string, often hardcoded or loaded from one file.
 
-```
-┌─────────────────────────────────────────────┐
-│            SINGLE PROMPT STRING              │
-│                                             │
-│  Role + Rules + Tools + Examples + Safety   │
-│  All in one block, static at runtime        │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["SINGLE PROMPT STRING<br/><br/>Role + Rules + Tools + Examples + Safety<br/>All in one block, static at runtime"]
 ```
 
 **Agents**: Mini-SWE-Agent, early Aider versions, Sage-Agent
@@ -133,14 +128,12 @@ of relevance.
 
 System prompt + project-level instructions + user message, each with distinct trust and scope.
 
-```
-┌─────────────────────────────────────────────┐
-│  Layer 1: System Prompt (framework-defined) │
-├─────────────────────────────────────────────┤
-│  Layer 2: Project Config (CLAUDE.md, etc.)  │
-├─────────────────────────────────────────────┤
-│  Layer 3: User Message (task description)   │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: System Prompt (framework-defined)"]
+    L2["Layer 2: Project Config (CLAUDE.md, etc.)"]
+    L3["Layer 3: User Message (task description)"]
+    L1 --> L2 --> L3
 ```
 
 **Agents**: Claude Code (CLAUDE.md), Gemini CLI (GEMINI.md), Junie CLI
@@ -153,18 +146,9 @@ instructions can override framework defaults if not carefully scoped.
 
 Prompt assembled from discrete modules at runtime based on context, available tools, and task.
 
-```
-┌──────────┐  ┌──────────┐  ┌──────────┐
-│  Role    │  │  Tools   │  │  Safety  │
-│  Module  │  │  Module  │  │  Module  │
-└────┬─────┘  └────┬─────┘  └────┬─────┘
-     │             │             │
-     └─────────┬───┘─────────────┘
-               ▼
-┌─────────────────────────────────────────────┐
-│         COMPOSED SYSTEM PROMPT              │
-│  (assembled at runtime per-request)         │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    RM["Role Module"] & TM["Tools Module"] & SM["Safety Module"] --> CP["COMPOSED SYSTEM PROMPT<br/>(assembled at runtime per-request)"]
 ```
 
 **Agents**: ForgeCode, OpenHands, Goose, Ante, Claude Code (dynamic tool injection)
@@ -177,16 +161,9 @@ prompts. Harder to reason about the "full prompt" during debugging.
 
 String templates with variable substitution, often using language-native formatting.
 
-```
-┌─────────────────────────────────────────────┐
-│  TEMPLATE STRING                            │
-│                                             │
-│  "You are {role}. Use {edit_format} to..."  │
-│  "Available tools: {tool_list}"             │
-│  "Follow these rules: {rules}"             │
-│                                             │
-│  Variables filled at runtime                │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    T["TEMPLATE STRING<br/><br/>Variables: role, edit_format, tool_list, rules<br/>Filled at runtime via string substitution"]
 ```
 
 **Agents**: Aider (extensive Jinja-like templates), OpenCode, Pi-Coding-Agent, Capy
@@ -199,18 +176,9 @@ structure assumptions. Can become unwieldy with deeply nested conditionals.
 
 Different prompts for different agent roles, with inter-agent communication protocols.
 
-```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  Planner     │  │  Coder       │  │  Reviewer    │
-│  Agent       │  │  Agent       │  │  Agent       │
-│  (own prompt)│  │  (own prompt)│  │  (own prompt)│
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-       │                 │                 │
-       └────────┬────────┘────────┬────────┘
-                ▼                 ▼
-       ┌────────────────────────────────┐
-       │  Orchestrator / Message Bus    │
-       └────────────────────────────────┘
+```mermaid
+flowchart TD
+    PA["Planner Agent<br/>(own prompt)"] & CA["Coder Agent<br/>(own prompt)"] & RA["Reviewer Agent<br/>(own prompt)"] --> OB["Orchestrator / Message Bus"]
 ```
 
 **Agents**: TongAgents (role-specialized agents), OpenHands (micro-agents), Aider (architect
@@ -228,26 +196,12 @@ System prompt size varies enormously across agents, from under 500 tokens to ove
 The following chart shows approximate token counts for each agent's base system prompt (excluding
 dynamically injected tool schemas and project-level instructions).
 
-```
-Agent              Tokens (approx.)
-─────────────────────────────────────────────────────────────────
-Claude Code        ████████████████████████████████████████  ~12,000
-OpenHands          ██████████████████████████████████        ~10,000
-Aider              ████████████████████████████              ~8,500
-Goose              ██████████████████████████                ~8,000
-Ante               ████████████████████████                  ~7,500
-Warp               ██████████████████████                    ~6,500
-ForgeCode          ████████████████████                      ~6,000
-Gemini CLI         ███████████████████                       ~5,500
-Codex              ██████████████████                        ~5,000
-Junie CLI          █████████████████                         ~4,800
-Pi-Coding-Agent    ████████████████                          ~4,500
-Capy               ███████████████                           ~4,000
-OpenCode           ██████████████                            ~3,800
-Droid              █████████████                             ~3,500
-Sage-Agent         ███████████                               ~3,000
-TongAgents         █████████                                 ~2,500
-Mini-SWE-Agent     ████                                      ~1,000
+```mermaid
+xychart-beta
+    title "System Prompt Size by Agent (approximate tokens)"
+    x-axis ["Claude Code", "OpenHands", "Aider", "Goose", "Ante", "Warp", "ForgeCode", "Gemini CLI", "Codex", "Junie CLI", "Pi-Coding-Agent", "Capy", "OpenCode", "Droid", "Sage-Agent", "TongAgents", "Mini-SWE-Agent"]
+    y-axis "Tokens" 0 --> 13000
+    bar [12000, 10000, 8500, 8000, 7500, 6500, 6000, 5500, 5000, 4800, 4500, 4000, 3800, 3500, 3000, 2500, 1000]
 ```
 
 ### 4.1 What Drives Prompt Size
@@ -335,13 +289,9 @@ approaches, each with distinct tradeoffs.
 
 ### 6.1 The Spectrum
 
-```
-MINIMAL                                                    MAXIMAL
-  │                                                          │
-  ▼                                                          ▼
-  Mini-SWE    OpenCode    ForgeCode    Aider    Claude Code
-  (~20 words   (~50 words   (~80 words   (~100     (~200 words
-   per tool)    per tool)    per tool)    words)    per tool)
+```mermaid
+flowchart LR
+    A["Mini-SWE (~20 words/tool)"] --> B["OpenCode (~50 words/tool)"] --> C["ForgeCode (~80 words/tool)"] --> D["Aider (~100 words/tool)"] --> E["Claude Code (~200 words/tool)"]
 ```
 
 ### 6.2 Strategy Comparison
@@ -428,20 +378,29 @@ decision that shapes prompt engineering strategy at every level.
 
 ### 8.1 The Spectrum
 
-```
-SINGLE-MODEL              MULTI-MODEL                   MODEL-AGNOSTIC
-     │                        │                               │
-     ▼                        ▼                               ▼
- Claude Code             ForgeCode                         Aider
- Codex                   OpenCode                       (50+ models,
- Gemini CLI              Goose                           per-model
- (optimized for          OpenHands                       prompt configs,
-  one provider,          Warp                             edit format
-  deepest                Ante                             benchmarks)
-  integration)           Pi-Coding-Agent
-                         Capy
-                         Sage-Agent
-                         TongAgents
+```mermaid
+flowchart LR
+    subgraph single["Single-Model"]
+        CC["Claude Code"]
+        Codex["Codex"]
+        GC["Gemini CLI"]
+    end
+    subgraph multi["Multi-Model"]
+        FC["ForgeCode"]
+        OC["OpenCode"]
+        Goose["Goose"]
+        OH["OpenHands"]
+        Warp["Warp"]
+        Ante["Ante"]
+        PCA["Pi-Coding-Agent"]
+        Capy["Capy"]
+        SA["Sage-Agent"]
+        TA["TongAgents"]
+    end
+    subgraph agnostic["Model-Agnostic"]
+        Aider["Aider (50+ models)"]
+    end
+    single -->|"more flexibility"| multi -->|"maximum choice"| agnostic
 ```
 
 ### 8.2 What Each Approach Trades Off
@@ -600,65 +559,23 @@ challenges the assumption that larger prompts are always better. Several factors
 The following framework helps practitioners select a prompt engineering approach based on their
 constraints and requirements.
 
-```
-                    ┌─────────────────────────────┐
-                    │  How many models must you    │
-                    │  support?                    │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────┼──────────────┐
-                    ▼              ▼              ▼
-              ┌──────────┐  ┌──────────┐  ┌──────────────┐
-              │  One     │  │  2–5     │  │  Many (10+)  │
-              │  model   │  │  models  │  │  models      │
-              └────┬─────┘  └────┬─────┘  └──────┬───────┘
-                   │             │               │
-                   ▼             ▼               ▼
-          Use provider-    Use provider-    Use model-agnostic
-          specific APIs    abstracted       design (Aider
-          (Claude Code,    tools with       pattern): per-model
-          Codex, Gemini    adapter layer    configs, edit format
-          CLI pattern)     (ForgeCode,      benchmarks, template
-                           OpenCode,        prompts
-                           Goose pattern)
-                   │             │               │
-                   ▼             ▼               ▼
-              ┌──────────────────────────────────────┐
-              │  What is your task complexity?        │
-              └───────────────┬──────────────────────┘
-                              │
-               ┌──────────────┼──────────────┐
-               ▼              ▼              ▼
-         ┌──────────┐  ┌──────────┐  ┌──────────────┐
-         │  Simple  │  │  Medium  │  │  Complex     │
-         │  edits   │  │  multi-  │  │  multi-file  │
-         │          │  │  step    │  │  refactors   │
-         └────┬─────┘  └────┬─────┘  └──────┬───────┘
-              │             │               │
-              ▼             ▼               ▼
-         Minimal prompt  Layered prompt   Modular prompt
-         + search/       + plan step +    + architect mode
-         replace edit    search/replace   + rich tool
-         format          + basic CoT      descriptions +
-                                          verification
-              │             │               │
-              ▼             ▼               ▼
-              ┌──────────────────────────────────────┐
-              │  What is your cost sensitivity?       │
-              └───────────────┬──────────────────────┘
-                              │
-               ┌──────────────┼──────────────┐
-               ▼              ▼              ▼
-         ┌──────────┐  ┌──────────┐  ┌──────────────┐
-         │  High    │  │  Medium  │  │  Low         │
-         └────┬─────┘  └────┬─────┘  └──────┬───────┘
-              │             │               │
-              ▼             ▼               ▼
-         Cache-aware     Standard        Extended thinking
-         prefix order,   caching,        + whole-file for
-         minimal prompt, search/replace  small files +
-         search/replace  format          comprehensive
-         or udiff                        tool descriptions
+```mermaid
+flowchart TD
+    Q1["How many models must you support?"]
+    Q1 --> One["One model"] & Few["2–5 models"] & Many["Many (10+) models"]
+    One --> A1["Use provider-specific APIs<br/>(Claude Code, Codex, Gemini CLI pattern)"]
+    Few --> A2["Use provider-abstracted tools<br/>with adapter layer<br/>(ForgeCode, OpenCode, Goose pattern)"]
+    Many --> A3["Use model-agnostic design (Aider pattern):<br/>per-model configs, edit format benchmarks,<br/>template prompts"]
+    A1 & A2 & A3 --> Q2["What is your task complexity?"]
+    Q2 --> Simple["Simple edits"] & Medium["Medium multi-step"] & Complex["Complex multi-file refactors"]
+    Simple --> B1["Minimal prompt +<br/>search/replace edit format"]
+    Medium --> B2["Layered prompt + plan step +<br/>search/replace + basic CoT"]
+    Complex --> B3["Modular prompt + architect mode +<br/>rich tool descriptions + verification"]
+    B1 & B2 & B3 --> Q3["What is your cost sensitivity?"]
+    Q3 --> High["High"] & Mid["Medium"] & Low["Low"]
+    High --> C1["Cache-aware prefix order,<br/>minimal prompt,<br/>search/replace or udiff"]
+    Mid --> C2["Standard caching,<br/>search/replace format"]
+    Low --> C3["Extended thinking + whole-file for small files +<br/>comprehensive tool descriptions"]
 ```
 
 ### 11.1 Recommended Starting Points

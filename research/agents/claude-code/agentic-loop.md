@@ -10,62 +10,18 @@ The loop repeats until the task is complete. The user can interrupt at any point
 
 ## The Loop in Detail
 
-```
-┌─────────────────────────────────────────────┐
-│                 USER PROMPT                  │
-│  "Fix the failing tests in src/auth/"       │
-└─────────────┬───────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────┐
-│          1. GATHER CONTEXT                   │
-│                                              │
-│  • Read CLAUDE.md + auto-memory              │
-│  • Search/grep for relevant files            │
-│  • Read source files to understand code      │
-│  • Run tests to see what's failing           │
-│  • Examine error output                      │
-│                                              │
-│  Tools: Read, Grep, Glob, Bash, WebFetch     │
-└─────────────┬───────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────┐
-│          2. TAKE ACTION                      │
-│                                              │
-│  • Edit source files to fix issues           │
-│  • Write new files if needed                 │
-│  • Run commands (build, install deps)        │
-│  • Create/modify configs                     │
-│                                              │
-│  Tools: Edit, Write, Bash, NotebookEdit      │
-└─────────────┬───────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────┐
-│          3. VERIFY RESULTS                   │
-│                                              │
-│  • Run test suite again                      │
-│  • Check for type errors (via LSP)           │
-│  • Run linters                               │
-│  • Compare before/after                      │
-│  • Search for related issues                 │
-│                                              │
-│  Tools: Bash, Read, Grep, LSP               │
-└─────────────┬───────────────────────────────┘
-              │
-              ▼
-        ┌─────────────┐
-        │  Task done?  │──── No ───▶ Loop back to
-        └──────┬──────┘              appropriate phase
-               │
-              Yes
-               │
-               ▼
-┌─────────────────────────────────────────────┐
-│          RESPOND TO USER                     │
-│  Summary of what was done, results           │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["USER PROMPT<br/>'Fix the failing tests in src/auth/'"]
+    B["1. GATHER CONTEXT<br/>• Read CLAUDE.md + auto-memory<br/>• Search/grep for relevant files<br/>• Read source files to understand code<br/>• Run tests to see what's failing<br/>• Examine error output<br/><br/>Tools: Read, Grep, Glob, Bash, WebFetch"]
+    C["2. TAKE ACTION<br/>• Edit source files to fix issues<br/>• Write new files if needed<br/>• Run commands (build, install deps)<br/>• Create/modify configs<br/><br/>Tools: Edit, Write, Bash, NotebookEdit"]
+    D["3. VERIFY RESULTS<br/>• Run test suite again<br/>• Check for type errors via LSP<br/>• Run linters<br/>• Compare before/after<br/>• Search for related issues<br/><br/>Tools: Bash, Read, Grep, LSP"]
+    E{Task done?}
+    F["RESPOND TO USER<br/>Summary of what was done, results"]
+
+    A --> B --> C --> D --> E
+    E -- No --> B
+    E -- Yes --> F
 ```
 
 ## Phase Behavior
@@ -151,16 +107,13 @@ Claude can delegate work to sub-agents that run in separate context windows:
 
 ### Delegation Flow
 
-```
-Main Loop ──▶ Spawns sub-agent with task description
-                    │
-                    ▼
-              Sub-agent runs in its own context window
-              (separate conversation, own tool calls)
-                    │
-                    ▼
-              Returns summary to main loop
-              (exploration results don't clutter main context)
+```mermaid
+flowchart TD
+    A["Main Loop"]
+    B["Sub-agent<br/>(separate context window, own tool calls)"]
+
+    A -->|"Spawns sub-agent with task description"| B
+    B -->|"Returns summary<br/>(exploration results don't clutter main context)"| A
 ```
 
 Key constraint: **Sub-agents cannot spawn other sub-agents** — this prevents infinite nesting.

@@ -107,12 +107,12 @@ Tree-sitter has become the de facto standard for code parsing in coding agents. 
 
 ### Tree-sitter Architecture
 
-```
-Source Code (text)  →  Grammar (rules)  →  Parser  →  Concrete Syntax Tree (CST)
-                                                            │
-                                                            ▼
-                                                    Node queries via
-                                                    S-expression patterns
+```mermaid
+flowchart LR
+    A["Source Code<br/>(text)"] --> B["Grammar<br/>(rules)"]
+    B --> C["Parser"]
+    C --> D["Concrete Syntax Tree<br/>(CST)"]
+    D --> E["Node queries via<br/>S-expression patterns"]
 ```
 
 Tree-sitter grammars are defined in JavaScript and compiled to C. Each grammar describes the syntax of a language using rules:
@@ -463,49 +463,17 @@ Aider's repo map implicitly performs a form of dead code detection: symbols with
 
 A comprehensive static analysis pipeline for a coding agent would include:
 
-```
-Source Files
-    │
-    ▼
-┌──────────────────┐
-│ Language Detection│  Identify language per file (extension + heuristics)
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Tree-sitter Parse│  Parse each file into CST
-│                  │  Handle errors gracefully
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Tag Extraction   │  Extract definitions and references
-│                  │  Function names, class names, imports
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Symbol Resolution│  Match references to definitions
-│                  │  Build cross-file symbol table
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Graph Building   │  Construct dependency graph
-│                  │  File → File, Symbol → Symbol
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Ranking          │  PageRank or similar for importance
-│                  │  Identify entry points, hot paths
-└──────┬───────────┘
-       │
-       ▼
-┌──────────────────┐
-│ Summary Gen      │  Produce condensed representations
-│                  │  Repo map, file summaries, symbol index
-└──────────────────┘
+```mermaid
+flowchart TD
+    SF["Source Files"]
+    LD["Language Detection<br/>Identify language per file"]
+    TP["Tree-sitter Parse<br/>Parse each file into CST"]
+    TE["Tag Extraction<br/>Extract definitions and references"]
+    SR["Symbol Resolution<br/>Match references to definitions"]
+    GB["Graph Building<br/>Construct dependency graph"]
+    RK["Ranking<br/>PageRank for importance"]
+    SG["Summary Generation<br/>Repo map, file summaries, symbol index"]
+    SF --> LD --> TP --> TE --> SR --> GB --> RK --> SG
 ```
 
 ### Implementation Example: Minimal Tag Extractor

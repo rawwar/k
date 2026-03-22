@@ -28,37 +28,21 @@ Your agentic loop has four core components. Each one has a single, clear job:
 
 The agentic loop moves through a predictable sequence of states. Think of it as a state machine with four states and clear transition rules:
 
-```text
-                    +-----------+
-                    |   START   |
-                    +-----+-----+
-                          |
-                          v
-                 +--------+--------+
-          +----->| CALL LLM        |
-          |      | (send messages) |
-          |      +--------+--------+
-          |               |
-          |               v
-          |      +--------+--------+
-          |      | INSPECT RESPONSE|
-          |      | (check stop     |
-          |      |  reason)        |
-          |      +---+--------+----+
-          |          |        |
-          |   tool_use    end_turn
-          |          |        |
-          |          v        v
-          |  +-------+----+ +------+
-          |  | EXECUTE    | | DONE |
-          |  | TOOLS      | +------+
-          |  +-------+----+
-          |          |
-          |          v
-          |  +-------+------+
-          |  | FEED         |
-          +--+ OBSERVATIONS |
-             +--------------+
+```mermaid
+flowchart TD
+    START(["START"])
+    CALL["CALL LLM\nsend messages"]
+    INSPECT["INSPECT RESPONSE\ncheck stop reason"]
+    EXEC["EXECUTE TOOLS"]
+    DONE(["DONE"])
+    FEED["FEED OBSERVATIONS"]
+
+    START --> CALL
+    CALL --> INSPECT
+    INSPECT -->|tool_use| EXEC
+    INSPECT -->|end_turn| DONE
+    EXEC --> FEED
+    FEED --> CALL
 ```
 
 Let's walk through each transition:

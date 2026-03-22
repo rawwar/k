@@ -40,33 +40,14 @@ container snapshots, sandbox isolation, or transaction-like semantics.
 Undo mechanisms exist at multiple granularities. Finer-grained undo is faster and more
 precise; coarser-grained undo is more comprehensive but more disruptive.
 
-```
-                         Undo Hierarchy
-                    (fine-grained → coarse)
-
-  ┌─────────────────────────────────────────────────────────┐
-  │  Level 1: Character-Level Undo                          │
-  │  ├── IDE undo stack (Ctrl+Z)                            │
-  │  └── Managed by editor, not the agent                   │
-  ├─────────────────────────────────────────────────────────┤
-  │  Level 2: File-Level Undo                               │
-  │  ├── Restore a single file to its previous state        │
-  │  └── git checkout -- <file> / .bak restoration          │
-  ├─────────────────────────────────────────────────────────┤
-  │  Level 3: Change-Set Undo                               │
-  │  ├── Revert a group of related changes atomically       │
-  │  └── git revert <commit> / patch-based reversal         │
-  ├─────────────────────────────────────────────────────────┤
-  │  Level 4: Session Undo                                  │
-  │  ├── Roll back everything the agent did this session    │
-  │  └── git reset --hard <pre-session> / checkpoint restore│
-  ├─────────────────────────────────────────────────────────┤
-  │  Level 5: Environment Undo                              │
-  │  ├── Restore entire container/VM to prior state         │
-  │  └── Reverses packages, env vars, and processes         │
-  └─────────────────────────────────────────────────────────┘
-
-  Precision ████████████░░░░░░░░░░░░░░░░░░░░ Comprehensiveness
+```mermaid
+flowchart TD
+    L1["Level 1: Character-Level Undo<br/>IDE undo stack (Ctrl+Z)<br/>Managed by editor, not the agent"]
+    L2["Level 2: File-Level Undo<br/>Restore a single file to its previous state<br/>git checkout -- file / .bak restoration"]
+    L3["Level 3: Change-Set Undo<br/>Revert a group of related changes atomically<br/>git revert commit / patch-based reversal"]
+    L4["Level 4: Session Undo<br/>Roll back everything the agent did this session<br/>git reset --hard to pre-session / checkpoint restore"]
+    L5["Level 5: Environment Undo<br/>Restore entire container/VM to prior state<br/>Reverses packages, env vars, and processes"]
+    L1 -->|"fine-grained"| L2 --> L3 --> L4 -->|"coarse"| L5
 ```
 
 Most agents operate at **Levels 2–4**. Level 1 is delegated to the IDE. Level 5 is only
@@ -139,14 +120,11 @@ among the agents studied: automatic git checkpoints with a dedicated `/undo` com
 Before making any file modification, Claude Code creates a checkpoint commit that captures
 the exact state of the working tree:
 
-```
-  User's last commit     Checkpoint #1      Agent edits       Checkpoint #2
-       │                      │                 │                   │
-       ▼                      ▼                 ▼                   ▼
-  ─────●──────────────────────●─────────────────●───────────────────●─────
-       │                      │                                     │
-       │              (auto-created before       (auto-created before
-       │               first edit)                second batch)
+```mermaid
+flowchart LR
+    C0["User's last commit"] --> CP1["Checkpoint #1<br/>(auto-created before first edit)"]
+    CP1 --> AE["Agent edits"]
+    AE --> CP2["Checkpoint #2<br/>(auto-created before second batch)"]
 ```
 
 Checkpoints are stash-like commits on the current branch, created automatically. They
@@ -167,20 +145,15 @@ ensure every change can be reversed—making auto-approval safe.
 changes and reversing them, it prevents changes from reaching the real environment until
 explicitly approved.
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Host Filesystem                   │
-│  (unchanged until user approves)                    │
-├─────────────────────────────────────────────────────┤
-│            Sandbox Overlay (copy-on-write)           │
-│  ┌───────────────────────────────────────────────┐  │
-│  │  Agent reads from host, writes to overlay     │  │
-│  │  User sees diff: overlay vs host              │  │
-│  │                                               │  │
-│  │  On APPROVE → overlay applied to host         │  │
-│  │  On DENY    → overlay discarded               │  │
-│  └───────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Host["Host Filesystem (unchanged until user approves)"]
+        subgraph Sandbox["Sandbox Overlay (copy-on-write)"]
+            SandboxOps["Agent reads from host, writes to overlay<br/>User sees diff: overlay vs host"]
+        end
+    end
+    Sandbox -->|"APPROVE"| Apply["Overlay applied to host"]
+    Sandbox -->|"DENY"| Discard["Overlay discarded"]
 ```
 
 In this model, rollback is the **default state**. The user doesn't "undo" anything; they

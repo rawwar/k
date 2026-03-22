@@ -150,28 +150,12 @@ Junie's multi-model approach is its most technically innovative pattern. Rather
 than treating the LLM as a monolithic capability, Junie decomposes it into
 specialized roles:
 
-```
-┌─────────────────────────────────────────────────┐
-│            Multi-Model Orchestrator               │
-│                                                  │
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │  Task         │  │  Model       │             │
-│  │  Classifier   │──│  Selector    │             │
-│  └──────────────┘  └──────┬───────┘             │
-│                           │                      │
-│         ┌─────────────────┼─────────────────┐    │
-│         │                 │                 │    │
-│         ▼                 ▼                 ▼    │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────┐│
-│  │   Reasoning  │  │   Coding    │  │  Speed   ││
-│  │   Model      │  │   Model    │  │  Model   ││
-│  │             │  │             │  │          ││
-│  │  • Planning  │  │  • Edits   │  │  • Quick ││
-│  │  • Analysis  │  │  • Tests   │  │    reads ││
-│  │  • Debug     │  │  • New code│  │  • Simple││
-│  │  • Complex   │  │  • Refactor│  │    tasks ││
-│  └─────────────┘  └─────────────┘  └──────────┘│
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    TC[Task Classifier] --> MS[Model Selector]
+    MS --> RM["Reasoning Model\n(Planning, Analysis,\nDebugging, Complex tasks)"]
+    MS --> CM["Coding Model\n(Edits, Tests,\nNew code, Refactoring)"]
+    MS --> SM["Speed Model\n(Quick reads,\nSimple tasks)"]
 ```
 
 ### Model Selection Heuristics
@@ -284,33 +268,19 @@ Junie's Workflow:
 
 ### The Test-Driven Loop
 
-```
-┌────────────────────────────────────────────┐
-│          Test-Driven Verification           │
-│                                            │
-│  Before changes:                           │
-│    Run existing tests → Establish baseline │
-│    Record: 47 passed, 0 failed, 2 skipped │
-│                                            │
-│  After changes:                            │
-│    Run tests again → Check for regression  │
-│                                            │
-│    Scenario A: All pass (47 + 3 new)       │
-│      → Success! Present results            │
-│                                            │
-│    Scenario B: New tests fail              │
-│      → Fix implementation, re-run          │
-│                                            │
-│    Scenario C: Existing tests fail         │
-│      → Regression! Analyze and fix         │
-│      → May need to revert approach         │
-│                                            │
-│    Scenario D: Build fails                 │
-│      → Compilation error in changes        │
-│      → Fix syntax/type issues, re-run      │
-│                                            │
-│  Maximum iterations: 3-5 before escalating │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    BC[Before changes: run baseline tests] --> AC[Apply code changes]
+    AC --> RT[Run tests again]
+    RT --> SA{Scenario}
+    SA -->|A: all pass| PS["Success — present results"]
+    SA -->|B: new tests fail| FI[Fix implementation and re-run]
+    FI --> RT
+    SA -->|C: existing tests fail| RG["Regression — analyze and fix\n(may need to revert approach)"]
+    RG --> RT
+    SA -->|D: build fails| CF["Fix syntax/type errors and re-run"]
+    CF --> RT
+    RT -->|max iterations 3-5 reached| ES[Escalate to user]
 ```
 
 ### Test Framework Intelligence
@@ -345,28 +315,13 @@ Jest:
 
 Junie is designed to fit seamlessly into the JetBrains ecosystem:
 
-```
-JetBrains Ecosystem Integration:
-
-  ┌──────────────────────────────────┐
-  │       JetBrains Account          │
-  │  (Single Sign-On, Licensing)     │
-  └──────────────┬───────────────────┘
-                 │
-     ┌───────────┼───────────────┐
-     │           │               │
-     ▼           ▼               ▼
-  ┌──────┐  ┌────────┐  ┌──────────┐
-  │ IDEs  │  │ Junie  │  │  Space   │
-  │       │  │ CLI    │  │ (CI/CD)  │
-  └──────┘  └────────┘  └──────────┘
-     │           │               │
-     └───────────┼───────────────┘
-                 │
-     ┌───────────▼───────────────┐
-     │    JetBrains AI Service    │
-     │  (Model Proxy, Routing)   │
-     └───────────────────────────┘
+```mermaid
+flowchart TD
+    JBA["JetBrains Account\n(Single Sign-On, Licensing)"]
+    JBA --> IDEs[IDEs]
+    JBA --> JCLI["Junie CLI"]
+    JBA --> Space["Space (CI/CD)"]
+    IDEs & JCLI & Space --> JAIS["JetBrains AI Service\n(Model Proxy, Routing)"]
 ```
 
 ### Enterprise Value Proposition
@@ -409,19 +364,20 @@ JetBrains' Value Chain:
 Unlike open-source CLI agents that run entirely locally, Junie leverages
 JetBrains' server-side infrastructure:
 
-```
-Local-Only Agent:          Junie with Backend:
-                           
-User → Agent → LLM API    User → Agent → JetBrains → LLM APIs
-                                    │         │
-                                    │         ├── Model Selection
-                                    │         ├── Prompt Optimization  
-                                    │         ├── Response Caching
-                                    │         ├── Usage Analytics
-                                    │         └── A/B Testing
-                                    │
-                                    └── Improved over time via
-                                        server-side optimization
+```mermaid
+flowchart LR
+    subgraph Local["Local-Only Agent"]
+        U1[User] --> A1[Agent] --> L1["LLM API"]
+    end
+    subgraph Junie["Junie with Backend"]
+        U2[User] --> A2[Agent] --> JB["JetBrains Backend"]
+        JB --> L2["LLM APIs"]
+        JB --> MS["Model Selection"]
+        JB --> PO["Prompt Optimization"]
+        JB --> RC["Response Caching"]
+        JB --> UA["Usage Analytics"]
+        JB --> AB["A/B Testing"]
+    end
 ```
 
 ### Continuous Improvement Loop
@@ -444,31 +400,11 @@ which require code releases for routing improvements.
 
 Junie's dual IDE/CLI operation is architecturally unique:
 
-```
-┌─────────────────────────────────────────┐
-│           Shared Agent Core              │
-│                                         │
-│  - Task understanding                   │
-│  - Planning logic                       │
-│  - Multi-model routing                  │
-│  - Verification strategy                │
-│  - AGENTS.md processing                 │
-│  - Conversation management              │
-└──────────────┬──────────────────────────┘
-               │
-       ┌───────┴────────┐
-       │                │
-       ▼                ▼
-┌──────────────┐  ┌──────────────┐
-│   IDE Mode    │  │   CLI Mode    │
-│              │  │              │
-│  Tool Window │  │  Terminal UI  │
-│  PSI Access  │  │  File I/O    │
-│  Inspections │  │  Shell Exec  │
-│  Refactoring │  │  Git CLI     │
-│  Test Runner │  │  Test Output │
-│  Debugger    │  │  Build Cmds  │
-└──────────────┘  └──────────────┘
+```mermaid
+flowchart TD
+    SAC["Shared Agent Core\n(Task understanding, Planning logic,\nMulti-model routing, Verification strategy,\nAGENTS.md processing, Conversation management)"]
+    SAC --> IDE["IDE Mode\n(Tool Window, PSI Access, Inspections,\nRefactoring, Test Runner, Debugger)"]
+    SAC --> CLI["CLI Mode\n(Terminal UI, File I/O, Shell Exec,\nGit CLI, Test Output, Build Cmds)"]
 ```
 
 ### Capability Negotiation

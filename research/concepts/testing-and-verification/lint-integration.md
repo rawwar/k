@@ -86,24 +86,15 @@ The core pattern is simple: **run the linter on modified files after every
 edit, and feed any errors back to the LLM for auto-repair**. This creates
 a tight sub-loop within the broader edit-apply-verify cycle:
 
-```
-LLM produces code edit
-        │
-        ▼
-  Apply edit to file(s)
-        │
-        ▼
-  Run linter on modified files only
-        │
-        ├── errors found ──► format errors as context ──► send to LLM
-        │                                                      │
-        │                                              LLM produces fix
-        │                                                      │
-        │                              ◄───────────────────────┘
-        │                     (retry, max 2–3 attempts)
-        │
-        ▼ (lint passes)
-  Proceed to tests / next step
+```mermaid
+flowchart TD
+    A["LLM produces code edit"] --> B["Apply edit to file(s)"]
+    B --> C["Run linter on modified files only"]
+    C -->|errors found| D["Format errors as context"]
+    D --> E["Send to LLM"]
+    E --> F["LLM produces fix"]
+    F -->|"retry, max 2–3 attempts"| C
+    C -->|lint passes| G["Proceed to tests / next step"]
 ```
 
 In pseudocode, the pattern looks like this:
@@ -482,34 +473,13 @@ project uses** and how they are configured. There is no universal standard
 
 Agents discover lint configuration through several channels:
 
-```
-┌──────────────────────────────────────────┐
-│         Configuration Detection          │
-├──────────────────────────────────────────┤
-│                                          │
-│  1. Agent config files (highest priority)│
-│     CLAUDE.md, GEMINI.md, .aider.conf.yml│
-│                                          │
-│  2. Package manager config               │
-│     package.json scripts.lint            │
-│     pyproject.toml [tool.ruff]           │
-│     Cargo.toml                           │
-│                                          │
-│  3. Linter config files                  │
-│     .eslintrc.*, eslint.config.*         │
-│     ruff.toml, .flake8, .pylintrc        │
-│     .golangci.yml, clippy.toml           │
-│                                          │
-│  4. Build system targets                 │
-│     Makefile: lint target                │
-│     justfile: lint recipe                │
-│     Taskfile.yml: lint task              │
-│                                          │
-│  5. CI configuration                     │
-│     .github/workflows/*.yml: lint steps  │
-│     .gitlab-ci.yml: lint stage           │
-│                                          │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Configuration Detection"] --> B["1. Agent config files (highest priority)\n(CLAUDE.md, GEMINI.md, .aider.conf.yml)"]
+    A --> C["2. Package manager config\n(package.json, pyproject.toml, Cargo.toml)"]
+    A --> D["3. Linter config files\n(.eslintrc.*, ruff.toml, .golangci.yml, clippy.toml)"]
+    A --> E["4. Build system targets\n(Makefile, justfile, Taskfile.yml)"]
+    A --> F["5. CI configuration\n(.github/workflows/*.yml, .gitlab-ci.yml)"]
 ```
 
 ### Agent-Specific Configuration

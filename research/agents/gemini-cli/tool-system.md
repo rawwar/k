@@ -158,25 +158,13 @@ Gemini CLI ships with 18+ built-in tools organized into functional categories.
 
 ### Confirmation Categories
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                 Tool Confirmation Model                   │
-│                                                           │
-│  NO CONFIRMATION (read-only):                            │
-│  ├── glob              ├── grep_search                   │
-│  ├── list_directory    ├── read_file                     │
-│  ├── read_many_files   ├── ask_user                      │
-│  ├── get_internal_docs ├── activate_skill                │
-│  ├── enter_plan_mode   ├── google_web_search             │
-│  ├── web_fetch         ├── write_todos                   │
-│  └── complete_task                                       │
-│                                                           │
-│  CONFIRMATION REQUIRED (mutating):                       │
-│  ├── run_shell_command  ├── write_file                   │
-│  ├── replace            ├── save_memory                  │
-│  └── exit_plan_mode (plan approval)                      │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    TC["Tool Call"] --> RO{Read-only?}
+    RO -- yes --> AUTO["Execute automatically<br/><br/>glob · grep_search · list_directory<br/>read_file · read_many_files · ask_user<br/>get_internal_docs · activate_skill<br/>enter_plan_mode · google_web_search<br/>web_fetch · write_todos · complete_task"]
+    RO -- no --> CONF["Requires user confirmation<br/><br/>run_shell_command · write_file<br/>replace · save_memory<br/>exit_plan_mode (plan approval)"]
+    AUTO --> EXEC["Execute"]
+    CONF --> EXEC
 ```
 
 ### Confirmation Interface
@@ -234,20 +222,16 @@ Tools that execute external code run inside the configured sandbox:
 
 ### Sandbox + Confirmation Interaction
 
-```
-Tool Call
-    │
-    v
-Confirmation Required? ── yes ──> User Prompt
-    │ no                              │
-    v                                 v
-Sandbox Configured? ── yes ──> Execute in Sandbox
-    │ no                              │
-    v                                 v
-Execute Directly              Return Result
-    │                                 │
-    v                                 v
-Return Result              Return Result
+```mermaid
+flowchart TD
+    TC["Tool Call"] --> CR{Confirmation required?}
+    CR -- yes --> UP["User Prompt"]
+    UP --> SC
+    CR -- no --> SC{Sandbox configured?}
+    SC -- yes --> ES["Execute in Sandbox"]
+    SC -- no --> ED["Execute Directly"]
+    ES --> RR["Return Result"]
+    ED --> RR
 ```
 
 ## MCP Extension
@@ -334,24 +318,12 @@ Executes the command and shows output (still requires confirmation).
 
 ## Tool Discovery and Registration Flow
 
-```
-Agent Startup
-    │
-    ├── Register built-in tools (18+)
-    │   └── Static registration in ToolRegistry
-    │
-    ├── Load MCP server configurations
-    │   ├── Start MCP servers
-    │   ├── Discover MCP tools via protocol
-    │   └── Register MCP tools in ToolRegistry
-    │
-    ├── Run custom discovery command (if configured)
-    │   ├── Execute discoveryCommand
-    │   ├── Parse tool definitions from output
-    │   └── Register custom tools in ToolRegistry
-    │
-    └── ToolRegistry ready
-        └── All tools available for model's tool declarations
+```mermaid
+flowchart TD
+    AS["Agent Startup"] --> BT["Register built-in tools (18+)<br/>Static registration in ToolRegistry"]
+    AS --> MCP["Load MCP server configurations<br/>Start MCP servers → discover tools<br/>Register MCP tools in ToolRegistry"]
+    AS --> CD["Run custom discovery command<br/>Parse tool definitions from output<br/>Register custom tools in ToolRegistry"]
+    BT & MCP & CD --> TR["ToolRegistry ready<br/>All tools available for model's tool declarations"]
 ```
 
 ## Tool Usage Patterns

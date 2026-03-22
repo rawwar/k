@@ -73,13 +73,15 @@ Linux system without additional package installation.
 Most agents use direct function calls between UI and core logic. Codex uses
 a formal **Submission Queue / Event Queue** message-passing pattern:
 
-```
-┌──────────┐       SQ (Op variants)        ┌──────────┐
-│   UI     │ ────────────────────────────► │   Core   │
-│ (TUI,    │                               │ (Session,│
-│  exec,   │ ◄──────────────────────────── │  Agent)  │
-│  app-srv)│       EQ (EventMsg variants)  │          │
-└──────────┘                               └──────────┘
+```mermaid
+flowchart LR
+    A["UI
+(TUI, exec, app-srv)"]
+    B["Core
+(Session, Agent)"]
+
+    A -->|"SQ (Op variants)"| B
+    B -->|"EQ (EventMsg variants)"| A
 ```
 
 ### Why This Matters
@@ -226,8 +228,9 @@ ExecApprovalRequestEvent {
 
 ### Layered Config with MDM Support
 
-```
-MDM (lowest) → System → User → Project → SessionFlags (highest)
+```mermaid
+flowchart LR
+    A["MDM (lowest)"] --> B["System"] --> C["User"] --> D["Project"] --> E["SessionFlags (highest)"]
 ```
 
 Enterprise administrators can enforce constraints via MDM (Mobile Device

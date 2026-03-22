@@ -46,36 +46,17 @@ The meta-agent loop proceeds roughly as follows:
    sub-task results, and assembling a unified response.
 7. **Present** the final result to the user.
 
-```
-User Request
-     │
-     ▼
-┌──────────────┐
-│  Meta-Agent  │
-│  Decompose   │──── Break into sub-tasks
-│  & Delegate  │
-└──────┬───────┘
-       │
-  ┌────▼────┐
-  │ Fan-Out │──── Dispatch to sub-agents (concurrent)
-  └────┬────┘
-       │
-  ┌────▼────────┐
-  │ Sub-Agents   │──── Each runs inner loop
-  │ Execute      │
-  └────┬────────┘
-       │
-  ┌────▼────┐
-  │ Fan-In  │──── Collect results
-  └────┬────┘
-       │
-  ┌────▼──────────┐
-  │  Meta-Agent    │
-  │  Synthesize    │──── Combine, verify, present
-  └────┬──────────┘
-       │
-       ▼
-  User Response
+```mermaid
+flowchart TD
+    U["User Request"]
+    M1["Meta-Agent\nDecompose & Delegate"]
+    FO["Fan-Out\n(dispatch to sub-agents concurrently)"]
+    SA["Sub-Agents Execute\n(each runs inner loop)"]
+    FI["Fan-In\n(collect results)"]
+    M2["Meta-Agent Synthesize\n(combine, verify, present)"]
+    R["User Response"]
+
+    U --> M1 --> FO --> SA --> FI --> M2 --> R
 ```
 
 The meta-agent itself likely relies on an LLM call to perform decomposition and synthesis —
@@ -98,32 +79,18 @@ that mirrors the classic plan-act-observe pattern:
    back to the Plan step with updated context. If done, it reports its results back to the
    meta-agent.
 
-```
-Receive Task from Meta-Agent
-     │
-     ▼
-┌──────────┐
-│  Plan    │──── LLM reasons about approach
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│  Act     │──── Execute tool calls (file I/O, shell, etc.)
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│  Observe │──── Collect tool output, check results
-└────┬─────┘
-     │
-     ▼
-┌──────────┐     ┌────────────────┐
-│  Decide  │────►│ Report to      │
-│  (done?) │ yes │ Meta-Agent     │
-└────┬─────┘     └────────────────┘
-     │ no
-     ▼
-  (loop back to Plan)
+```mermaid
+flowchart TD
+    RT["Receive Task from Meta-Agent"]
+    P["Plan\n(LLM reasons about approach)"]
+    A["Act\n(execute tool calls: file I/O, shell, etc.)"]
+    O["Observe\n(collect tool output, check results)"]
+    D{"Decide\n(done?)"}
+    RPT["Report to Meta-Agent"]
+
+    RT --> P --> A --> O --> D
+    D -->|yes| RPT
+    D -->|no| P
 ```
 
 Sub-agents are expected to be narrowly scoped. A sub-agent assigned to "update the database

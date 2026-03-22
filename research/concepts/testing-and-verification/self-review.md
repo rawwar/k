@@ -37,15 +37,14 @@ enforced. The spectrum is wide, and the impact on code quality is measurable.
 Not all agents treat self-review equally. The approaches fall along a spectrum of
 increasing formality and enforcement:
 
-```
- No Review          Implicit          Prompted          Enforced          Dedicated
- ─────────────────────────────────────────────────────────────────────────────────►
- Generate &         Model reflects    System prompt     Runtime blocks    Separate agent
- submit             naturally         says "review"     without review    reviews output
-
- Mini SWE Agent     Most LLMs do      Claude Code       ForgeCode         TongAgents
- Ante               some of this      Gemini CLI        Junie CLI         Capy (Captain)
- Pi Coding Agent    by default        Goose             Droid (auto)      Aider (Architect)
+```mermaid
+flowchart LR
+    A["**No Review**<br/>Generate &amp; submit<br/><br/>Mini SWE Agent<br/>Ante<br/>Pi Coding Agent"]
+    B["**Implicit**<br/>Model reflects naturally<br/><br/>Most LLMs do<br/>some of this by default"]
+    C["**Prompted**<br/>System prompt says 'review'<br/><br/>Claude Code<br/>Gemini CLI<br/>Goose"]
+    D["**Enforced**<br/>Runtime blocks without review<br/><br/>ForgeCode<br/>Junie CLI<br/>Droid (auto)"]
+    E["**Dedicated**<br/>Separate agent reviews output<br/><br/>TongAgents<br/>Capy (Captain)<br/>Aider (Architect)"]
+    A --> B --> C --> D --> E
 ```
 
 | Level | Description | Agents | Failure Mode |
@@ -70,21 +69,13 @@ and verify correctness.
 
 ### The Pattern
 
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│ Edit file    │────►│ Read file    │────►│ Evaluate     │────►│ Fix if wrong │
-│              │     │ (fresh load) │     │ correctness  │     │              │
-└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
-                            │                    │
-                            │            ┌───────┴────────┐
-                            │            │ "Does this     │
-                            │            │  match what I  │
-                            │            │  intended?"    │
-                            │            └────────────────┘
-                            ▼
-                    File contents are
-                    re-tokenized fresh —
-                    not from memory
+```mermaid
+flowchart LR
+    A["Edit file"] --> B["Read file<br/>(fresh load)"]
+    B --> C["Evaluate<br/>correctness"]
+    C --> D["Fix if wrong"]
+    B --> E["File contents are<br/>re-tokenized fresh —<br/>not from memory"]
+    C --> F["'Does this<br/>match what I<br/>intended?'"]
 ```
 
 ### Claude Code: Verify Phase as Architecture
@@ -195,17 +186,12 @@ its own work autonomously.
 Droid has the most mature **automated** diff-review pattern among the 17 agents.
 Its auto-review loop runs on every PR:
 
-```
-┌──────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────────┐
-│ PR opened│────►│ Filter check │────►│ Read diff +   │────►│ Generate     │
-│          │     │ (skip draft, │     │ apply path-   │     │ review with  │
-│          │     │  bot, WIP)   │     │ specific rules│     │ comments     │
-└──────────┘     └──────────────┘     └───────────────┘     └──────────────┘
-                                             │
-                                      ┌──────┴──────┐
-                                      │ .droid.yaml │
-                                      │ guidelines  │
-                                      └─────────────┘
+```mermaid
+flowchart LR
+    A["PR opened"] --> B["Filter check<br/>(skip draft,<br/>bot, WIP)"]
+    B --> C["Read diff +<br/>apply path-<br/>specific rules"]
+    C --> D["Generate<br/>review with<br/>comments"]
+    E[".droid.yaml<br/>guidelines"] --> C
 ```
 
 The `.droid.yaml` configuration makes review criteria explicit and path-specific:
@@ -271,16 +257,12 @@ multiple passes — each with a different focus.
 
 ### The General Pattern
 
-```
-Pass 1: GENERATE                Pass 2: REVIEW                 Pass 3: VERIFY
-┌────────────────┐              ┌────────────────┐              ┌────────────────┐
-│ Produce the    │─────────────►│ Review against │─────────────►│ Run tests,     │
-│ initial        │              │ requirements.  │              │ linters, types.│
-│ solution.      │              │ Fix logic      │              │ Fix any        │
-│                │              │ errors.        │              │ failures.      │
-└────────────────┘              └────────────────┘              └────────────────┘
-    Optimized for                   Optimized for                  Optimized for
-    speed/coverage                  correctness                    mechanical proof
+```mermaid
+flowchart LR
+    A["**Pass 1: GENERATE**<br/>Produce the initial solution.<br/><br/>Optimized for<br/>speed/coverage"]
+    B["**Pass 2: REVIEW**<br/>Review against requirements.<br/>Fix logic errors.<br/><br/>Optimized for<br/>correctness"]
+    C["**Pass 3: VERIFY**<br/>Run tests, linters, types.<br/>Fix any failures.<br/><br/>Optimized for<br/>mechanical proof"]
+    A --> B --> C
 ```
 
 ### Aider's Architect Mode: Reasoning + Editing as Separate Passes
@@ -322,19 +304,13 @@ representation that the editing model can verify against.
 ForgeCode controls the depth of reasoning per phase through a **progressive
 thinking policy**:
 
-```
-Messages  1–10:  VERY HIGH thinking budget  ← Planning phase (deep reasoning)
-Messages 11+:    LOW thinking budget         ← Execution phase (fast iteration)
-Verification:    HIGH thinking budget         ← Review phase (deep analysis)
-                     │
-                     ▼
-        ┌────────────────────────┐
-        │ The thinking budget    │
-        │ switches BACK to high  │
-        │ during verification —  │
-        │ forcing deep review    │
-        │ after fast execution.  │
-        └────────────────────────┘
+```mermaid
+flowchart TD
+    A["Messages 1–10: VERY HIGH thinking budget<br/>← Planning phase (deep reasoning)"]
+    B["Messages 11+: LOW thinking budget<br/>← Execution phase (fast iteration)"]
+    C["Verification: HIGH thinking budget<br/>← Review phase (deep analysis)"]
+    D["The thinking budget switches BACK to high<br/>during verification —<br/>forcing deep review after fast execution."]
+    A --> B --> C --> D
 ```
 
 This is multi-pass by resource allocation: the agent is cheap and fast during
@@ -362,20 +338,15 @@ is to evaluate the primary agent's output.
 
 ### The Evaluator-Optimizer Pattern
 
-```
-┌────────────┐         ┌────────────┐
-│ Generator  │────────►│ Evaluator  │
-│ (Agent A)  │         │ (Agent B)  │
-│            │◄────────│            │
-│ Produces   │ feedback│ Reviews    │
-│ code       │         │ output     │
-└────────────┘         └────────────┘
-     │                      │
-     │    Different model,  │
-     │    different system   │
-     │    prompt, different  │
-     │    temperature        │
-     │                      │
+```mermaid
+flowchart LR
+    A["**Generator**<br/>(Agent A)<br/><br/>Produces code"]
+    B["**Evaluator**<br/>(Agent B)<br/><br/>Reviews output"]
+    C["Different model,<br/>different system prompt,<br/>different temperature"]
+    A -->|output| B
+    B -->|feedback| A
+    A -.-> C
+    B -.-> C
 ```
 
 Using a different model for evaluation mitigates the "fresh eyes" problem.
@@ -402,20 +373,14 @@ The Verifier agent checks **each step's output** before the pipeline advances.
 This is finer-grained than reviewing the final result — errors are caught at
 the earliest possible point.
 
-```
-┌─────────────────────────────────────────┐
-│            Orchestrator Agent            │
-├─────────────┬───────────┬───────────────┤
-│  Planning   │ Execution │  Verification │
-│   Agent     │   Agent   │    Agent      │
-│             │           │               │
-│ - Analyze   │ - Run     │ - Check each  │
-│   task      │   commands│   step output │
-│ - Generate  │ - Handle  │ - Validate    │
-│   plan      │   errors  │   final state │
-│ - Revise on │ - Report  │ - Approve or  │
-│   failure   │   results │   reject      │
-└─────────────┴───────────┴───────────────┘
+```mermaid
+flowchart TD
+    subgraph ORC["Orchestrator Agent"]
+        P["**Planning Agent**<br/>- Analyze task<br/>- Generate plan<br/>- Revise on failure"]
+        E["**Execution Agent**<br/>- Run commands<br/>- Handle errors<br/>- Report results"]
+        V["**Verification Agent**<br/>- Check each step output<br/>- Validate final state<br/>- Approve or reject"]
+    end
+    P --> E --> V
 ```
 
 ### ForgeCode: Three-Agent Architecture
@@ -559,18 +524,17 @@ and correcting errors at the tool-call level.
 OpenHands converts malformed tool calls into structured error observations that
 the agent can act on:
 
-```
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────┐
-│ LLM generates        │     │ Runtime converts to  │     │ Agent sees error │
-│ malformed tool call  │────►│ ErrorObservation      │────►│ in event stream, │
-│ (wrong args, bad     │     │ with structured       │     │ fixes the call   │
-│  format)             │     │ error message         │     │ on next step     │
-└──────────────────────┘     └──────────────────────┘     └──────────────────┘
+```mermaid
+flowchart LR
+    A["LLM generates<br/>malformed tool call<br/>(wrong args, bad format)"]
+    B["Runtime converts to<br/>ErrorObservation<br/>with structured error message"]
+    C["Agent sees error<br/>in event stream,<br/>fixes the call on next step"]
+    A --> B --> C
 
-FunctionCallValidationError  → Convert to ErrorObservation → Agent self-corrects
-ContextWindowExceededError   → Trigger condensation        → Retry with shorter context
-RateLimitError               → Exponential backoff         → Retry after delay
-Sandbox timeout / crash      → ErrorObservation            → Agent can retry
+    D["FunctionCallValidationError"] --> E["Convert to ErrorObservation"] --> F["Agent self-corrects"]
+    G["ContextWindowExceededError"] --> H["Trigger condensation"] --> I["Retry with shorter context"]
+    J["RateLimitError"] --> K["Exponential backoff"] --> L["Retry after delay"]
+    M["Sandbox timeout / crash"] --> N["ErrorObservation"] --> O["Agent can retry"]
 ```
 
 The key design choice: errors are **not fatal**. They become observations in the
@@ -606,18 +570,14 @@ self-correction is actually making progress.
 ForgeCode's tool-call correction layer intercepts **every** tool call before
 dispatch and attempts automatic repair:
 
-```
-┌─────────────┐     ┌───────────────────┐     ┌──────────────┐
-│ LLM emits   │────►│ ToolCallCorrector │────►│ Dispatch to  │
-│ tool call   │     │                   │     │ actual tool  │
-│             │     │ 1. Validate args  │     │              │
-│             │     │ 2. Pattern match  │     │              │
-│             │     │ 3. Auto-correct   │     │              │
-│             │     │ 4. Gate dispatch  │     │              │
-└─────────────┘     └───────────────────┘     └──────────────┘
-                           │
-                    Costs ~0 tokens vs
-                    1000+ for re-generation
+```mermaid
+flowchart LR
+    A["LLM emits<br/>tool call"]
+    B["**ToolCallCorrector**<br/><br/>1. Validate args<br/>2. Pattern match<br/>3. Auto-correct<br/>4. Gate dispatch"]
+    C["Dispatch to<br/>actual tool"]
+    D["Costs ~0 tokens vs<br/>1000+ for re-generation"]
+    A --> B --> C
+    B --> D
 ```
 
 Correction strategies:
@@ -712,17 +672,14 @@ over-optimistic.
 
 ### Diminishing Returns of Multiple Passes
 
-```
-Pass 1 (generation):     catches ~0% of own errors (it's creating them)
-Pass 2 (self-review):    catches ~40-60% of semantic errors
-Pass 3 (second review):  catches ~10-15% more
-Pass 4 (third review):   catches ~2-5% more
-                              │
-                              ▼
-                    Sharply diminishing returns
-                    after 2 passes. Better to
-                    spend tokens on a DIFFERENT
-                    model or approach.
+```mermaid
+flowchart TD
+    A["Pass 1 (generation):<br/>catches ~0% of own errors<br/>(it's creating them)"]
+    B["Pass 2 (self-review):<br/>catches ~40-60% of semantic errors"]
+    C["Pass 3 (second review):<br/>catches ~10-15% more"]
+    D["Pass 4 (third review):<br/>catches ~2-5% more"]
+    E["Sharply diminishing returns after 2 passes.<br/>Better to spend tokens on a DIFFERENT<br/>model or approach."]
+    A --> B --> C --> D --> E
 ```
 
 The empirical evidence from Aider's Architect mode confirms this: splitting
