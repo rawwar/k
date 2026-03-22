@@ -18,29 +18,28 @@ or aider), build the terminal itself with agent capabilities as a first-class fe
 
 ### Why It Matters
 
-```
-Wrapper Agent Architecture:
-┌─────────────────────────────────┐
-│        Host Terminal             │  ← Terminal the user already has
-│  ┌───────────────────────────┐  │
-│  │      Agent Process         │  │  ← Runs as a subprocess
-│  │  - Spawns child shells     │  │     Limited to subprocess I/O
-│  │  - Captures stdout/stderr  │  │     No access to terminal UI
-│  │  - Cannot see terminal UI  │  │     No block structure
-│  │  - No GPU rendering        │  │     Text-only output
-│  └───────────────────────────┘  │
-└─────────────────────────────────┘
-
-Terminal-Native Architecture (Warp):
-┌─────────────────────────────────┐
-│        Warp Terminal + Agent     │  ← Terminal IS the agent platform
-│                                  │
-│  - Controls PTY directly        │     Full terminal buffer access
-│  - GPU-rendered UI              │     Rich agent conversation UI
-│  - Block-structured data model  │     Structured command history
-│  - Agent reads/writes terminal  │     Interactive process control
-│  - Unified context model        │     Seamless UX transitions
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph WA["Wrapper Agent Architecture"]
+        HT["Host Terminal
+(Terminal the user already has)"]
+        AP["Agent Process (subprocess)
+- Spawns child shells
+- Captures stdout/stderr
+- Cannot see terminal UI
+- No GPU rendering
+Limited to subprocess I/O, text-only output"]
+        HT --> AP
+    end
+    subgraph TN["Terminal-Native Architecture (Warp)"]
+        WT["Warp Terminal + Agent
+(Terminal IS the agent platform)
+- Controls PTY directly → full terminal buffer access
+- GPU-rendered UI → rich agent conversation UI
+- Block-structured data model → structured command history
+- Agent reads/writes terminal → interactive process control
+- Unified context model → seamless UX transitions"]
+    end
 ```
 
 ### Capabilities Unlocked
@@ -78,20 +77,14 @@ Replace the traditional terminal's single scrollback buffer with discrete, struc
 
 ### Implementation
 
-```
-Traditional Terminal:
-  Characters → Rows → Single Grid → Single Scrollback
-  
-  No concept of "commands" — just a stream of characters.
-  To find command boundaries, you'd need to parse prompt patterns.
-
-Warp Block Model:
-  Characters → Rows → Grid → Block → Block List
-  
-  Each Block = {
-    command_text, exit_code, duration, CWD,
-    start_time, end_time, grid, is_interactive
-  }
+```mermaid
+flowchart LR
+    subgraph Traditional["Traditional Terminal"]
+        T1["Characters"] --> T2["Rows"] --> T3["Single Grid"] --> T4["Single Scrollback<br/>(no command boundaries,<br/>just a stream of characters)"]
+    end
+    subgraph WarpBlock["Warp Block Model"]
+        W1["Characters"] --> W2["Rows"] --> W3["Grid"] --> W4["Block"] --> W5["Block List<br/>Each Block: command_text, exit_code,<br/>duration, CWD, start_time, end_time,<br/>grid, is_interactive"]
+    end
 ```
 
 ### Benefits for Agents
@@ -105,25 +98,15 @@ Warp Block Model:
 
 ### How Shell Hooks Enable Blocks
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Shell Integration Layer                                 │
-│                                                          │
-│  zsh:  precmd()  { warp_mark_prompt; }                  │
-│        preexec() { warp_mark_command "$1"; }            │
-│                                                          │
-│  bash: PROMPT_COMMAND='warp_mark_prompt'                 │
-│        trap 'warp_mark_command "$BASH_COMMAND"' DEBUG    │
-│                                                          │
-│  fish: function fish_prompt; warp_mark_prompt; end       │
-│        function fish_preexec; warp_mark_command; end     │
-│                                                          │
-│  These hooks send escape sequences to the terminal:      │
-│  \e]133;A\a  ← prompt start                            │
-│  \e]133;B\a  ← prompt end / command start               │
-│  \e]133;C\a  ← command output start                     │
-│  \e]133;D\a  ← command end (with exit code)             │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SIL["Shell Integration Layer"]
+        ZSH["zsh:<br/>precmd() { warp_mark_prompt; }<br/>preexec() { warp_mark_command &quot;$1&quot;; }"]
+        BASH["bash:<br/>PROMPT_COMMAND='warp_mark_prompt'<br/>trap 'warp_mark_command &quot;$BASH_COMMAND&quot;' DEBUG"]
+        FISH["fish:<br/>function fish_prompt; warp_mark_prompt; end<br/>function fish_preexec; warp_mark_command; end"]
+        ESC["OSC 133 escape sequences sent to terminal:<br/>\e]133;A\a ← prompt start<br/>\e]133;B\a ← prompt end / command start<br/>\e]133;C\a ← command output start<br/>\e]133;D\a ← command end (with exit code)"]
+        ZSH & BASH & FISH --> ESC
+    end
 ```
 
 The escape sequences (OSC 133) are a standard used by several modern terminals (iTerm2,
@@ -209,32 +192,14 @@ traditional text-grid terminal can display.
 
 ### What GPU Enables
 
-```
-Traditional Terminal (Text Grid):
-┌──────────────────────────────────┐
-│ $ git diff                       │
-│ diff --git a/src/auth.ts         │
-│ --- a/src/auth.ts                │  ← Monospace text grid
-│ +++ b/src/auth.ts                │     Limited to cell attributes
-│ @@ -10,3 +10,5 @@               │     (color, bold, underline)
-│ -const token = jwt.sign()        │
-│ +const session = createSession() │
-└──────────────────────────────────┘
-
-Warp GPU-Rendered Agent UI:
-┌──────────────────────────────────┐
-│ Agent: Here's my proposed fix:   │
-│ ┌────────────────────────────┐   │
-│ │ src/auth.ts          [✓][✗]│   │  ← Rich UI elements
-│ │ ━━━━━━━━━━━━━━━━━━━━━━━━━ │   │     File headers
-│ │ 10│-const token = jwt...   │   │     Line numbers
-│ │ 10│+const session = cre... │   │     Accept/reject buttons
-│ │ 11│+res.cookie('session'..│   │     Inline comments
-│ │   │ 💬 "Add SameSite?"    │   │     Syntax highlighting
-│ │ ━━━━━━━━━━━━━━━━━━━━━━━━━ │   │     Non-monospace text
-│ └────────────────────────────┘   │     Progress indicators
-│ [Accept All] [Reject All]        │     Action buttons
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Traditional["Traditional Terminal (Text Grid)"]
+        TC["$ git diff<br/>diff --git a/src/auth.ts ...<br/>-const token = jwt.sign()<br/>+const session = createSession()<br/>Monospace text grid, limited to cell attributes<br/>(color, bold, underline)"]
+    end
+    subgraph GPU["Warp GPU-Rendered Agent UI"]
+        WC["Agent: Here's my proposed fix:<br/>src/auth.ts [✓][✗]<br/>10│- const token = jwt...<br/>10│+ const session = cre...<br/>11│+ res.cookie('session'...<br/>💬 Add SameSite?<br/>[Accept All] [Reject All]<br/>Rich UI: file headers, line numbers,<br/>accept/reject buttons, inline comments,<br/>syntax highlighting, progress indicators"]
+    end
 ```
 
 ### Specific GPU-Enabled Features
@@ -267,37 +232,19 @@ and in the cloud (on managed infrastructure), with shared context, skills, and t
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Oz Platform                       │
-│                                                      │
-│  ┌────────────┐         ┌─────────────────────────┐ │
-│  │Local Agent  │         │  Cloud Agent             │ │
-│  │             │         │                          │ │
-│  │ Triggers:   │         │  Triggers:               │ │
-│  │ - User input│         │  - Slack message         │ │
-│  │ - Tag-in    │         │  - GitHub event          │ │
-│  │ - Active AI │         │  - Linear ticket         │ │
-│  │             │         │  - Webhook               │ │
-│  │ Execution:  │         │  - Schedule (cron)       │ │
-│  │ - Warp app  │         │  - API call              │ │
-│  │ - User PTY  │         │                          │ │
-│  │ - Real-time │         │  Execution:              │ │
-│  │             │         │  - Docker container      │ │
-│  │ Output:     │         │  - Parallel instances    │ │
-│  │ - Terminal  │         │  - Cross-repo            │ │
-│  │   blocks    │         │                          │ │
-│  │ - Agent     │         │  Output:                 │ │
-│  │   conv view │         │  - Slack responses       │ │
-│  └────────────┘         │  - PRs, issues           │ │
-│                          │  - Web app sessions      │ │
-│  Shared:                 │  - API responses         │ │
-│  - Skills, Rules         └─────────────────────────┘ │
-│  - Warp Drive                                        │
-│  - Model routing                                     │
-│  - MCP tools                                         │
-│  - Permission policies                               │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph OZ["Oz Platform"]
+        subgraph LA["Local Agent"]
+            LT["Triggers: User input, Tag-in, Active AI<br/>Execution: Warp app, User PTY, Real-time<br/>Output: Terminal blocks, Agent conv view"]
+        end
+        subgraph CA["Cloud Agent"]
+            CT["Triggers: Slack, GitHub, Linear,<br/>Webhook, Schedule (cron), API<br/>Execution: Docker container,<br/>Parallel instances, Cross-repo<br/>Output: Slack responses, PRs,<br/>Web app sessions, API responses"]
+        end
+        SH["Shared: Skills, Rules, Warp Drive,<br/>Model routing, MCP tools,<br/>Permission policies"]
+    end
+    LA --> SH
+    CA --> SH
 ```
 
 ### What Unification Enables
@@ -386,47 +333,12 @@ offer assistance when errors or opportunities are detected.
 
 ### Implementation
 
-```
-Every command execution
-        │
-        ▼
-┌──────────────────────────┐
-│  Output Monitor           │
-│                           │
-│  Check:                   │
-│  - Exit code ≠ 0?        │
-│  - Error patterns?        │
-│  - Warning patterns?      │
-│  - Known fixable issues?  │
-└──────────┬───────────────┘
-           │
-     Error detected
-           │
-           ▼
-┌──────────────────────────┐
-│  Context Assembly         │
-│                           │
-│  - Error output text      │
-│  - Command that failed    │
-│  - Recent command history  │
-│  - Project context        │
-└──────────┬───────────────┘
-           │
-           ▼
-┌──────────────────────────┐
-│  Fix Generation           │
-│                           │
-│  Generate specific fix    │
-│  with explanation         │
-└──────────┬───────────────┘
-           │
-           ▼
-┌──────────────────────────┐
-│  Non-Intrusive Display    │
-│                           │
-│  Subtle suggestion UI     │
-│  [Apply] [Dismiss]        │
-└──────────────────────────┘
+```mermaid
+flowchart TD
+    E["Every command execution"] --> OM["Output Monitor<br/>Check: Exit code ≠ 0?<br/>Error patterns? / Warning patterns?<br/>Known fixable issues?"]
+    OM -- "Error detected" --> CA["Context Assembly<br/>- Error output text<br/>- Command that failed<br/>- Recent command history<br/>- Project context"]
+    CA --> FG["Fix Generation<br/>Generate specific fix with explanation"]
+    FG --> ND["Non-Intrusive Display<br/>Subtle suggestion UI<br/>[Apply] [Dismiss]"]
 ```
 
 ### Key Design Decisions

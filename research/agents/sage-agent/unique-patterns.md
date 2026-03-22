@@ -19,10 +19,11 @@ needs a full multi-agent pipeline.
 Unlike graph-based agent orchestration (e.g., LangGraph) or tree-based approaches,
 SageAgent uses a **simple linear pipeline** with exactly one feedback edge:
 
-```
-Analysis → Planning → Execution → Observation ──(loop)──► Planning
-                                       │
-                                       └──(done)──► Summary
+```mermaid
+flowchart LR
+    A["Analysis"] --> P["Planning"] --> E["Execution"] --> O["Observation"]
+    O -- "loop" --> P
+    O -- "done" --> S["Summary"]
 ```
 
 **Why it matters**: This is intentionally simple. The single feedback point (Observation

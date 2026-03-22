@@ -39,35 +39,21 @@ SYSTEM.md allows per-project customization of Pi's system prompt itself. This is
 
 Skills (SKILL.md files) are Pi's primary mechanism for progressive context disclosure:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Context Loading Timeline                    │
-│                                                               │
-│  ┌─ Startup ──────────────────────────────────────────────┐  │
-│  │  System prompt (minimal)                                │  │
-│  │  + SYSTEM.md (append or replace)                        │  │
-│  │  + AGENTS.md (project instructions)                     │  │
-│  └─────────────────────────────────────────────────────────┘  │
-│                                                               │
-│  ┌─ On Demand ────────────────────────────────────────────┐  │
-│  │  Skills loaded via /skill:name or auto-detection        │  │
-│  │  • Database migration skill                             │  │
-│  │  • Docker deployment skill                              │  │
-│  │  • Testing framework skill                              │  │
-│  └─────────────────────────────────────────────────────────┘  │
-│                                                               │
-│  ┌─ Extension-Injected ───────────────────────────────────┐  │
-│  │  Dynamic messages from extensions                       │  │
-│  │  • RAG results from code search                         │  │
-│  │  • Git context (recent commits, blame info)             │  │
-│  │  • External knowledge base queries                      │  │
-│  └─────────────────────────────────────────────────────────┘  │
-│                                                               │
-│  ┌─ Compaction ───────────────────────────────────────────┐  │
-│  │  Older messages summarized to free space                │  │
-│  │  Recent messages preserved in full                      │  │
-│  └─────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Startup["Startup"]
+        S1["System prompt (minimal)<br/>+ SYSTEM.md (append or replace)<br/>+ AGENTS.md (project instructions)"]
+    end
+    subgraph OnDemand["On Demand"]
+        O1["Skills loaded via /skill:name or auto-detection<br/>• Database migration skill<br/>• Docker deployment skill<br/>• Testing framework skill"]
+    end
+    subgraph ExtInjected["Extension-Injected"]
+        E1["Dynamic messages from extensions<br/>• RAG results from code search<br/>• Git context (recent commits, blame info)<br/>• External knowledge base queries"]
+    end
+    subgraph Compaction["Compaction"]
+        C1["Older messages summarized to free space<br/>Recent messages preserved in full"]
+    end
+    Startup --> OnDemand --> ExtInjected --> Compaction
 ```
 
 **Why progressive disclosure matters for prompt cache**: If all skills were loaded at startup, the system prompt would vary based on which skills exist in the project. This would invalidate the prompt cache for every project. By loading skills on-demand, the system prompt stays stable and cacheable.

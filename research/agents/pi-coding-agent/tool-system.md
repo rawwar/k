@@ -189,26 +189,13 @@ Packages are discoverable via:
 
 ## Tool System Architecture Summary
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     Tool Resolution                           │
-│                                                               │
-│  User/LLM requests tool "X"                                  │
-│         │                                                     │
-│         ▼                                                     │
-│  ┌─ Extension tools ──────────────────────────────────────┐  │
-│  │  Check if extension registered a handler for "X"       │  │
-│  │  (includes replacements for built-in tools)            │  │
-│  └────────────┬───────────────────────────────────────────┘  │
-│               │ not found                                     │
-│               ▼                                               │
-│  ┌─ Default tools ────────────────────────────────────────┐  │
-│  │  read │ write │ edit │ bash                             │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                               │
-│  Skills inject instructions ──► Agent uses existing tools    │
-│  Packages bundle extensions + skills for distribution        │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["User/LLM requests tool X"] --> B{"Extension tool<br/>registered for X?"}
+    B -- "yes" --> C["Extension Handler<br/>(includes replacements for built-in tools)"]
+    B -- "not found" --> D["Default Tools<br/>read | write | edit | bash"]
+    E["Skills inject instructions"] --> F["Agent uses existing tools"]
+    G["Packages bundle extensions + skills<br/>for distribution"]
 ```
 
 The tool system's elegance is in its layering: four primitive tools provide the foundation, extensions add arbitrary capabilities, skills describe how to use them, and packages distribute them. The core never needs to grow.

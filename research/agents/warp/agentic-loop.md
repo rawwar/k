@@ -19,91 +19,22 @@ running processes, and can be "tagged in" by the user mid-session.
 
 ## Request Processing Flow
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     User Request                                  │
-│  (natural language, @references, images, URLs, block selections) │
-└───────────────────────┬──────────────────────────────────────────┘
-                        │
-                        ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                   Input Classification                            │
-│                                                                   │
-│  Simple command?  ──► Terminal View (inline execution)            │
-│  Complex task?    ──► Conversation View (multi-turn agent)       │
-│  Ambiguous?       ──► Agent decides based on context              │
-└───────────────────────┬──────────────────────────────────────────┘
-                        │
-                        ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                   Context Assembly                                │
-│                                                                   │
-│  1. Gather codebase context (semantic index / embeddings)        │
-│  2. Include referenced blocks, files, folders, symbols           │
-│  3. Apply Rules (global rules + project AGENTS.md, hierarchical) │
-│  4. Load relevant Skills (SKILL.md files)                        │
-│  5. Include conversation history (or compacted summary)          │
-│  6. Add system prompt with permission level                      │
-└───────────────────────┬──────────────────────────────────────────┘
-                        │
-                        ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                   Planning Phase                                  │
-│                                                                   │
-│  /plan command creates structured plan:                           │
-│  - Rich text editor with version history                         │
-│  - Step-by-step breakdown                                        │
-│  - Selective execution (run specific steps)                      │
-│  - Iterative refinement before execution                         │
-│                                                                   │
-│  Auto-planning for complex tasks:                                │
-│  - Agent proposes plan → user approves/modifies → execute        │
-└───────────────────────┬──────────────────────────────────────────┘
-                        │
-                        ▼
-          ┌─────────────────────────────┐
-          │      Execution Loop          │
-          │                              │
-          │  ┌────────────────────────┐  │
-          │  │  Select Action          │  │
-          │  │  (command, file edit,   │  │
-          │  │   web search, MCP, etc.)│  │
-          │  └───────────┬────────────┘  │
-          │              │               │
-          │              ▼               │
-          │  ┌────────────────────────┐  │
-          │  │  Permission Check      │  │
-          │  │                        │  │
-          │  │  "Ask on first write"  │  │
-          │  │  "Always ask"          │  │
-          │  │  "Always allow"        │  │
-          │  └───────────┬────────────┘  │
-          │              │               │
-          │              ▼               │
-          │  ┌────────────────────────┐  │
-          │  │  Execute Action        │  │
-          │  │  (PTY write, file op,  │  │
-          │  │   tool invocation)     │  │
-          │  └───────────┬────────────┘  │
-          │              │               │
-          │              ▼               │
-          │  ┌────────────────────────┐  │
-          │  │  Observe Result        │  │
-          │  │  (read terminal buffer,│  │
-          │  │   check exit code,     │  │
-          │  │   parse output)        │  │
-          │  └───────────┬────────────┘  │
-          │              │               │
-          │              ▼               │
-          │  ┌────────────────────────┐  │
-          │  │  Evaluate & Decide     │  │
-          │  │                        │  │
-          │  │  Done?  ──► Report     │  │
-          │  │  Error? ──► Retry/Fix  │  │
-          │  │  More?  ──► Next Step  │◄─┘
-          │  └────────────────────────┘
-          │
-          └──────────────────────────────
+```mermaid
+flowchart TD
+    A["User Request<br/>(natural language, @references, images, URLs, block selections)"] --> B{"Input Classification"}
+    B -- "Simple command" --> T["Terminal View<br/>(inline execution)"]
+    B -- "Complex task" --> CV["Conversation View<br/>(multi-turn agent)"]
+    B -- "Ambiguous" --> AD["Agent decides based on context"]
+    CV --> C["Context Assembly<br/>1. Codebase context (semantic index / embeddings)<br/>2. Referenced blocks, files, folders, symbols<br/>3. Rules (global + project AGENTS.md, hierarchical)<br/>4. Skills (SKILL.md files)<br/>5. Conversation history (or compacted summary)<br/>6. System prompt with permission level"]
+    C --> P["Planning Phase<br/>/plan: rich editor, version history,<br/>step-by-step breakdown, selective execution<br/>Auto-planning: agent proposes → user approves → execute"]
+    P --> SA["Select Action<br/>(command, file edit, web search, MCP, etc.)"]
+    SA --> PC{"Permission Check<br/>'Ask on first write' / 'Always ask' / 'Always allow'"}
+    PC --> EX["Execute Action<br/>(PTY write, file op, tool invocation)"]
+    EX --> OB["Observe Result<br/>(read terminal buffer, check exit code, parse output)"]
+    OB --> ED{"Evaluate & Decide"}
+    ED -- "Done" --> R["Report to User"]
+    ED -- "Error" --> SA
+    ED -- "More steps" --> SA
 ```
 
 ## Full Terminal Use
@@ -114,19 +45,11 @@ wrapper-based agent can do.
 
 ### How FTU Works
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Interactive Process                        │
-│                  (psql, vim, python, gdb,                    │
-│                   npm run dev, docker exec)                   │
-│                                                              │
-│  ┌──────────┐    ┌──────────┐    ┌──────────────────┐       │
-│  │ PTY      │◄──►│ Terminal  │◄──►│ Agent / Human    │       │
-│  │ (pseudo  │    │ Buffer    │    │ (read buffer,    │       │
-│  │ terminal)│    │ (live     │    │  write input,    │       │
-│  │          │    │  output)  │    │  observe state)  │       │
-│  └──────────┘    └──────────┘    └──────────────────┘       │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph IP["Interactive Process (psql, vim, python, gdb, npm run dev, docker exec)"]
+        PTY["PTY<br/>(pseudo terminal)"] <--> TB["Terminal Buffer<br/>(live output)"] <--> AH["Agent / Human<br/>(read buffer,<br/>write input,<br/>observe state)"]
+    end
 ```
 
 ### FTU Scenarios
@@ -180,21 +103,10 @@ Warp implements a structured control transfer mechanism between human and agent:
 
 ### Control Flow
 
-```
-     Human Control                    Agent Control
-    ┌────────────┐                  ┌────────────┐
-    │ User types  │  ── tag in ──► │ Agent reads │
-    │ commands,   │   (explicit     │ buffer,     │
-    │ interacts   │    request or   │ writes PTY, │
-    │ with tools  │    error        │ executes    │
-    │             │    detection)   │ plan        │
-    │             │                 │             │
-    │             │ ◄── handback ── │ Agent       │
-    │             │   (task done,   │ signals     │
-    │ Resumes     │    needs input, │ completion  │
-    │ control     │    permission   │             │
-    │             │    denied)      │             │
-    └────────────┘                  └────────────┘
+```mermaid
+flowchart LR
+    HC["Human Control<br/>User types commands,<br/>interacts with tools"] -- "tag in<br/>(explicit request<br/>or error detection)" --> AC["Agent Control<br/>Agent reads buffer,<br/>writes PTY,<br/>executes plan"]
+    AC -- "handback<br/>(task done,<br/>needs input,<br/>permission denied)" --> HC
 ```
 
 ### Takeover Triggers
@@ -333,36 +245,11 @@ losing previous context.
 
 Cloud agents follow a similar loop but with additional orchestration:
 
-```
-Trigger (Slack, GitHub, Linear, Webhook, Schedule, API)
-        │
-        ▼
-┌──────────────────────────┐
-│  Environment Setup        │
-│  - Clone repository       │
-│  - Start Docker image     │
-│  - Run startup commands   │
-└───────────┬──────────────┘
-            │
-            ▼
-┌──────────────────────────┐
-│  Agent Execution Loop     │
-│  (same as local agent     │
-│   but without FTU/PTY)    │
-│                           │
-│  Commands, file edits,    │
-│  web search, MCP tools    │
-└───────────┬──────────────┘
-            │
-            ▼
-┌──────────────────────────┐
-│  Result Reporting         │
-│  - Post to Slack/Linear   │
-│  - Create PR on GitHub    │
-│  - Update webhook caller  │
-│  - Session available in   │
-│    web app for review     │
-└──────────────────────────┘
+```mermaid
+flowchart TD
+    T["Trigger<br/>(Slack, GitHub, Linear, Webhook, Schedule, API)"] --> ES["Environment Setup<br/>- Clone repository<br/>- Start Docker image<br/>- Run startup commands"]
+    ES --> EL["Agent Execution Loop<br/>(same as local agent but without FTU/PTY)<br/>Commands, file edits, web search, MCP tools"]
+    EL --> RR["Result Reporting<br/>- Post to Slack/Linear<br/>- Create PR on GitHub<br/>- Update webhook caller<br/>- Session available in web app for review"]
 ```
 
 ### Key Differences from Local Loop

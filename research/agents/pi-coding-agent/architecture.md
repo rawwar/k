@@ -20,16 +20,18 @@ pi-mono/
 
 The dependency flow is strictly layered:
 
-```
-pi-ai (no internal deps)
-  ↓
-pi-agent-core (depends on pi-ai)
-  ↓
-pi-tui (no internal deps — standalone UI framework)
-  ↓
-pi-coding-agent (depends on pi-agent-core + pi-tui + pi-ai)
-  ↓
-pi-mom, pi-web-ui, pi-pods (independent utilities)
+```mermaid
+flowchart TD
+    AI["pi-ai<br/>(no internal deps)"]
+    AC["pi-agent-core<br/>(depends on pi-ai)"]
+    TUI["pi-tui<br/>(no internal deps — standalone UI framework)"]
+    CA["pi-coding-agent<br/>(depends on pi-agent-core + pi-tui + pi-ai)"]
+    UTILS["pi-mom, pi-web-ui, pi-pods<br/>(independent utilities)"]
+    AI --> AC
+    AC --> CA
+    TUI --> CA
+    AI --> CA
+    CA --> UTILS
 ```
 
 ## Package Deep Dives
@@ -104,28 +106,18 @@ Pi acts as a JSON-RPC server over stdin/stdout. Other programs can drive pi prog
 ### 4. SDK Mode
 Direct programmatic access via the TypeScript API. Import pi-coding-agent as a library in your own application. Full access to the agent loop, tool system, and extension API without the CLI wrapper.
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    pi-coding-agent                         │
-│                                                            │
-│  ┌────────────┐  ┌────────────┐  ┌───────┐  ┌─────┐     │
-│  │ Interactive │  │ Print/JSON │  │  RPC  │  │ SDK │     │
-│  │   (TUI)    │  │  (stdout)  │  │(stdio)│  │(API)│     │
-│  └─────┬──────┘  └─────┬──────┘  └───┬───┘  └──┬──┘     │
-│        │               │             │          │         │
-│        ▼               ▼             ▼          ▼         │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │              Agent Core + Extensions                │   │
-│  │         ┌──────────────────────────┐               │   │
-│  │         │    4 Tools + Ext Tools   │               │   │
-│  │         └──────────────────────────┘               │   │
-│  └────────────────────────────────────────────────────┘   │
-│                          │                                 │
-│                          ▼                                 │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │           pi-ai (15+ LLM Providers)                │   │
-│  └────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph PCA["pi-coding-agent"]
+        I["Interactive<br/>(TUI)"]
+        P["Print/JSON<br/>(stdout)"]
+        R["RPC<br/>(stdio)"]
+        S["SDK<br/>(API)"]
+        Core["Agent Core + Extensions<br/>4 Tools + Ext Tools"]
+        LLM["pi-ai<br/>(15+ LLM Providers)"]
+        I & P & R & S --> Core
+        Core --> LLM
+    end
 ```
 
 ## Extension / Skills / Packages Architecture

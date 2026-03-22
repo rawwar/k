@@ -5,17 +5,11 @@
 SageAgent's tool system is centered around `ToolManager`, which provides a unified interface
 for the ExecutorAgent to invoke both local Python tools and remote MCP-connected tools.
 
-```
-ExecutorAgent
-    │
-    ▼
-┌──────────────┐
-│  ToolManager  │
-├──────────────┤
-│  Local Tools  │──► CalculationTool, WebSearchTool, etc.
-├──────────────┤
-│  MCP Servers  │──► External tools via stdio / SSE
-└──────────────┘
+```mermaid
+flowchart TD
+    E["ExecutorAgent"] --> TM["ToolManager"]
+    TM --> L["Local Tools<br/>CalculationTool, WebSearchTool, etc."]
+    TM --> M["MCP Servers<br/>External tools via stdio / SSE"]
 ```
 
 ## ToolBase

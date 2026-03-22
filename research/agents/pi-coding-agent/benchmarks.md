@@ -105,22 +105,16 @@ This is deliberately a niche audience. Mario Zechner has joked that the project 
 
 Pi occupies a unique position in the terminal coding agent landscape:
 
-```
-           More Built-in Features
-                    ▲
-                    │
-    Claude Code  ●  │
-                    │
-         Goose  ●  │
-                    │
-         Aider  ●  │
-                    │
-                    │                ● Pi (with extensions)
-                    │
-             Pi  ●  │
-                    │
-                    └──────────────────────────────────▶
-              Less Extensible              More Extensible
+```mermaid
+quadrantChart
+    title "Agent Positioning: Built-in Features vs Extensibility"
+    x-axis "Less Extensible" --> "More Extensible"
+    y-axis "Fewer Built-in Features" --> "More Built-in Features"
+    "Claude Code": [0.2, 0.9]
+    "Goose": [0.25, 0.7]
+    "Aider": [0.2, 0.6]
+    "Pi (stock)": [0.85, 0.2]
+    "Pi (with extensions)": [0.85, 0.65]
 ```
 
 Pi with extensions can reach feature parity with more built-in agents, but requires user effort to configure. The trade-off is: **predictability and control vs. out-of-the-box capability**.

@@ -46,15 +46,14 @@ which provides:
 
 ### Shell Command Execution
 
-```
-Agent Action                      Terminal Result
-     │                                │
-     │  ── Write command to PTY ───►  │  New Block created
-     │                                │  Command executes
-     │  ◄── Read block output ──────  │  Output captured
-     │                                │  Exit code recorded
-     │  ── Evaluate result ─────────  │
-     │                                │
+```mermaid
+sequenceDiagram
+    participant Agent as Agent Action
+    participant Term as Terminal
+    Agent->>Term: Write command to PTY
+    Note over Term: New Block created, command executes
+    Term-->>Agent: Read block output (output captured, exit code recorded)
+    Note over Agent: Evaluate result
 ```
 
 Shell execution in Warp differs from wrapper agents:
@@ -140,24 +139,15 @@ text pattern matching. It can:
 
 When the agent makes code changes, they go through an interactive review process:
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  Interactive Code Review                                  │
-│                                                           │
-│  File: src/auth/login.ts                                 │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  - const token = jwt.sign(payload, secret);        │  │
-│  │  + const session = await createSession(user.id);   │  │
-│  │  + res.cookie('session_id', session.id, {          │  │
-│  │  +   httpOnly: true,                               │  │
-│  │  +   secure: true,                                 │  │
-│  │  + });                                             │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                           │
-│  💬 Comment: "Should we also set SameSite attribute?"    │
-│                                                           │
-│  [Accept] [Reject] [Edit] [Comment]                      │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ICR["Interactive Code Review"]
+        F["File: src/auth/login.ts"]
+        D["- const token = jwt.sign(payload, secret);<br/>+ const session = await createSession(user.id);<br/>+ res.cookie('session_id', session.id, {<br/>+   httpOnly: true, secure: true,<br/>+ });"]
+        CM["💬 Comment: Should we also set SameSite attribute?"]
+        AC["[Accept] [Reject] [Edit] [Comment]"]
+        F --> D --> CM --> AC
+    end
 ```
 
 Features of interactive code review:
@@ -174,20 +164,12 @@ Warp supports the **Model Context Protocol** for extensible tool integration:
 
 ### What MCP Enables
 
-```
-┌─────────────────────────────────────────────┐
-│                 Warp Agent                    │
-│                                              │
-│  Built-in Tools    MCP-Connected Tools       │
-│  ┌───────────┐    ┌──────────────────────┐  │
-│  │ Files     │    │ Databases            │  │
-│  │ Shell     │    │ APIs (Jira, Linear)  │  │
-│  │ Web       │    │ Cloud services       │  │
-│  │ Editor    │    │ Custom tools         │  │
-│  │ ...       │    │ Knowledge bases      │  │
-│  └───────────┘    │ Monitoring systems   │  │
-│                   └──────────────────────┘  │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph WA["Warp Agent"]
+        BT["Built-in Tools<br/>Files / Shell / Web / Editor / ..."]
+        MT["MCP-Connected Tools<br/>Databases / APIs (Jira, Linear)<br/>Cloud services / Custom tools<br/>Knowledge bases / Monitoring systems"]
+    end
 ```
 
 ### MCP Configuration
@@ -212,20 +194,18 @@ Warp's agent can interact with the desktop environment beyond the terminal:
 
 ### How Computer Use Works
 
-```
-Agent Action                    Desktop
-     │                           │
-     │  ── Take screenshot ───►  │  Capture screen content
-     │  ◄── Image data ─────    │
-     │                           │
-     │  ── Analyze image ─────  │  LLM vision processing
-     │                           │
-     │  ── Click at (x,y) ───►  │  Mouse click
-     │  ── Type text ──────────► │  Keyboard input
-     │  ── Move mouse ─────────► │  Mouse movement
-     │                           │
-     │  ── Take screenshot ───►  │  Verify result
-     │  ◄── Image data ─────    │
+```mermaid
+sequenceDiagram
+    participant Agent as Agent Action
+    participant Desktop as Desktop
+    Agent->>Desktop: Take screenshot
+    Desktop-->>Agent: Image data (capture screen content)
+    Note over Agent: Analyze image (LLM vision processing)
+    Agent->>Desktop: Click at (x,y) — mouse click
+    Agent->>Desktop: Type text — keyboard input
+    Agent->>Desktop: Move mouse — mouse movement
+    Agent->>Desktop: Take screenshot
+    Desktop-->>Agent: Image data (verify result)
 ```
 
 ### Computer Use Capabilities
@@ -256,21 +236,19 @@ Warp provides structured task tracking for complex multi-step workflows:
 
 ### Task List Features
 
-```
-┌──────────────────────────────────────┐
-│  Task List: "Deploy v2.0"            │
-│                                      │
-│  ☑ Update version in package.json    │
-│  ☑ Run full test suite               │
-│  ☐ Build production bundle           │
-│  ☐ Deploy to staging                 │
-│  ☐ Run smoke tests                   │
-│  ☐ Deploy to production              │
-│  ☐ Verify health checks             │
-│                                      │
-│  Progress: 2/7 (28%)                │
-│  [Continue] [Edit] [Share]           │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph TL["Task List: Deploy v2.0"]
+        T1["✅ Update version in package.json"]
+        T2["✅ Run full test suite"]
+        T3["☐ Build production bundle"]
+        T4["☐ Deploy to staging"]
+        T5["☐ Run smoke tests"]
+        T6["☐ Deploy to production"]
+        T7["☐ Verify health checks"]
+        P["Progress: 2/7 (28%) — [Continue] [Edit] [Share]"]
+        T1 --> T2 --> T3 --> T4 --> T5 --> T6 --> T7 --> P
+    end
 ```
 
 - **Agent-generated**: Agent creates task lists from complex requests
@@ -294,31 +272,10 @@ Active AI is Warp's proactive assistance system:
 
 ### How It Works
 
-```
-Command fails (non-zero exit code)
-        │
-        ▼
-┌──────────────────────────────────┐
-│  Active AI Detection              │
-│                                   │
-│  Analyze:                         │
-│  - Error output text              │
-│  - Exit code                      │
-│  - Command context                │
-│  - Previous related commands      │
-│  - Known error patterns           │
-└───────────────┬──────────────────┘
-                │
-                ▼
-┌──────────────────────────────────┐
-│  Fix Recommendation               │
-│                                   │
-│  "npm test failed because         │
-│   module 'lodash' not found.      │
-│   Run: npm install lodash"        │
-│                                   │
-│  [Apply Fix] [Dismiss] [Explain]  │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    F["Command fails (non-zero exit code)"] --> AD["Active AI Detection<br/>Analyze:<br/>- Error output text<br/>- Exit code<br/>- Command context<br/>- Previous related commands<br/>- Known error patterns"]
+    AD --> FR["Fix Recommendation<br/>e.g. 'npm test failed because module lodash not found.<br/>Run: npm install lodash'<br/>[Apply Fix] [Dismiss] [Explain]"]
 ```
 
 ### Active AI Features

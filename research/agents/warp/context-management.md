@@ -13,27 +13,15 @@ status: complete
 
 Context management in Warp operates at multiple levels:
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                    Context Assembly                              │
-│                                                                  │
-│  ┌──────────────┐ ┌─────────────┐ ┌──────────────────────────┐ │
-│  │  Codebase     │ │ Multi-Modal │ │  Rules & Skills          │ │
-│  │  Context      │ │ Context     │ │                          │ │
-│  │               │ │             │ │  Global Rules            │ │
-│  │  Semantic     │ │ Blocks      │ │  Project AGENTS.md       │ │
-│  │  Index        │ │ Images      │ │  Directory AGENTS.md     │ │
-│  │  (Embeddings) │ │ URLs        │ │  SKILL.md files          │ │
-│  │               │ │ Selections  │ │                          │ │
-│  │  Git-tracked  │ │ @ references│ │  Warp Drive objects      │ │
-│  │  files        │ │ Clipboard   │ │                          │ │
-│  └──────────────┘ └─────────────┘ └──────────────────────────┘ │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │  Conversation State                                          ││
-│  │  History • Compacted summaries • Forked branches             ││
-│  └─────────────────────────────────────────────────────────────┘│
-└────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CA["Context Assembly"]
+        CB["Codebase Context<br/>Semantic Index (Embeddings)<br/>Git-tracked files"]
+        MM["Multi-Modal Context<br/>Blocks / Images / URLs<br/>Selections / @references / Clipboard"]
+        RS["Rules & Skills<br/>Global Rules<br/>Project AGENTS.md<br/>Directory AGENTS.md<br/>SKILL.md files<br/>Warp Drive objects"]
+        CS["Conversation State<br/>History • Compacted summaries • Forked branches"]
+    end
+    CB & MM & RS --> CS
 ```
 
 ## Codebase Context: Semantic Indexing
@@ -50,17 +38,17 @@ Warp builds a **semantic index** of the codebase using embeddings:
 
 ### Indexing Lifecycle
 
-```
-Repository State                   Semantic Index
-     │                                  │
-     │  ── New conversation ──────────► │  Re-index (if stale)
-     │                                  │
-     │  ── Periodic check ────────────► │  Re-index (if changed)
-     │                                  │
-     │  ── Agent query ───────────────► │  Vector similarity search
-     │                                  │    │
-     │  ◄── Relevant chunks ──────────  │    ▼
-     │                                  │  Return top-K matches
+```mermaid
+sequenceDiagram
+    participant Repo as Repository State
+    participant Idx as Semantic Index
+    Repo->>Idx: New conversation
+    Note over Idx: Re-index (if stale)
+    Repo->>Idx: Periodic check
+    Note over Idx: Re-index (if changed)
+    Repo->>Idx: Agent query
+    Note over Idx: Vector similarity search → top-K matches
+    Idx-->>Repo: Relevant chunks
 ```
 
 ### Indexing Details
@@ -170,17 +158,15 @@ When context exceeds the budget:
 
 Warp's rules system applies configuration hierarchically:
 
-```
-┌─────────────────────────────────────────┐
-│  Global Rules (Warp app settings)        │  ← Applies to all projects
-├─────────────────────────────────────────┤
-│  Project Rules (root AGENTS.md)          │  ← Applies to entire project
-├─────────────────────────────────────────┤
-│  Directory Rules (nested AGENTS.md)      │  ← Applies to directory subtree
-├─────────────────────────────────────────┤
-│  Conversation Rules (per-session)        │  ← Applies to current conversation
-└─────────────────────────────────────────┘
-     ↑ Higher priority overrides lower
+```mermaid
+flowchart TD
+    G["Global Rules (Warp app settings)<br/>Applies to all projects"]
+    PR["Project Rules (root AGENTS.md)<br/>Applies to entire project"]
+    DR["Directory Rules (nested AGENTS.md)<br/>Applies to directory subtree"]
+    CR["Conversation Rules (per-session)<br/>Applies to current conversation"]
+    G --> PR --> DR --> CR
+    note["↑ Higher priority overrides lower"]
+    style note fill:none,stroke:none
 ```
 
 ### AGENTS.md Format
@@ -310,16 +296,10 @@ Warp Drive is persistent, shared storage for agent-related artifacts:
 
 ### Sharing and Collaboration
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Developer A │     │  Warp Drive  │     │  Developer B │
-│              │────►│              │◄────│              │
-│  Creates     │     │  Shared      │     │  Uses shared │
-│  skill       │     │  storage     │     │  skill       │
-│              │     │              │     │              │
-│  Saves plan  │────►│  Versioned   │◄────│  Reviews     │
-│              │     │  persistent  │     │  plan        │
-└─────────────┘     └─────────────┘     └─────────────┘
+```mermaid
+flowchart LR
+    DA["Developer A<br/>Creates skill<br/>Saves plan"] --> WD["Warp Drive<br/>Shared, versioned,<br/>persistent storage"]
+    DB["Developer B<br/>Uses shared skill<br/>Reviews plan"] --> WD
 ```
 
 ### Warp Drive Features

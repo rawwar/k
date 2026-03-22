@@ -8,48 +8,15 @@ This simplicity is a conscious design choice. Mario Zechner's philosophy is that
 
 ## The Core Loop
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Pi Agent Loop                           │
-│                                                              │
-│  ┌──────────────┐                                           │
-│  │  User Input   │ ◄── Interactive / RPC / SDK / Print      │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────┐                                           │
-│  │   Message     │ Check message queue for steering          │
-│  │   Assembly    │ messages, append to conversation           │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────┐                                           │
-│  │   LLM Call    │ Send conversation to provider via pi-ai   │
-│  │  (streaming)  │ Stream tokens to TUI as they arrive       │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         ├──── No tool calls ──── ▶ Done (wait for input)    │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────┐                                           │
-│  │  Tool Calls   │ Execute read/write/edit/bash              │
-│  │  (sequential) │ (or extension-registered tools)           │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────┐                                           │
-│  │  Tool Results │ Append results to conversation            │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────┐                                           │
-│  │  Context      │ Check token count; trigger compaction     │
-│  │  Check        │ if approaching limit                      │
-│  └──────┬───────┘                                           │
-│         │                                                    │
-│         └──────── Loop back to LLM Call ─────────────────►  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["User Input<br/>(Interactive / RPC / SDK / Print)"] --> B["Message Assembly<br/>Check message queue for steering messages,<br/>append to conversation"]
+    B --> C["LLM Call (streaming)<br/>Send conversation to provider via pi-ai<br/>Stream tokens to TUI as they arrive"]
+    C -- "No tool calls" --> D["Done<br/>(wait for input)"]
+    C -- "Tool calls" --> E["Tool Calls (sequential)<br/>Execute read/write/edit/bash<br/>or extension-registered tools"]
+    E --> F["Tool Results<br/>Append results to conversation"]
+    F --> G["Context Check<br/>Check token count; trigger compaction<br/>if approaching limit"]
+    G --> C
 ```
 
 ### Phase 1: Message Assembly

@@ -41,27 +41,13 @@ The benchmark results reveal architectural clues:
 
 ## Speculative Architecture Diagram
 
-```
-┌─────────────────────────────────────────┐
-│            Orchestrator Agent            │
-│  (task decomposition, plan management)  │
-├─────────────┬───────────┬───────────────┤
-│  Planning   │ Execution │  Verification │
-│   Agent     │   Agent   │    Agent      │
-│             │           │               │
-│ - Analyze   │ - Run     │ - Check       │
-│   task      │   commands│   output      │
-│ - Generate  │ - Handle  │ - Validate    │
-│   plan      │   errors  │   state       │
-└─────────────┴───────────┴───────────────┘
-         │           │            │
-         └───────────┼────────────┘
-                     ▼
-          ┌─────────────────────┐
-          │   Tool Interface    │
-          │  (shell, files,     │
-          │   model-agnostic)   │
-          └─────────────────────┘
+```mermaid
+flowchart TD
+    OA["Orchestrator Agent<br/>(task decomposition, plan management)"]
+    OA --> PA["Planning Agent<br/>- Analyze task<br/>- Generate plan"]
+    OA --> EA["Execution Agent<br/>- Run commands<br/>- Handle errors"]
+    OA --> VA["Verification Agent<br/>- Check output<br/>- Validate state"]
+    PA & EA & VA --> TI["Tool Interface<br/>(shell, files, model-agnostic)"]
 ```
 
 *This diagram is entirely speculative and based on common multi-agent patterns combined with BIGAI's research focus.*

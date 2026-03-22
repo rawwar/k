@@ -6,40 +6,15 @@ SageAgent implements a linear multi-agent pipeline with a single feedback loop. 
 tree-based or graph-based agent orchestration, this is a straightforward sequential flow
 with one controlled iteration point.
 
-```
-┌──────────────┐
-│ User Input   │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│TaskAnalysis  │  Step 1: Understand what the user wants
-│   Agent      │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│  Planning    │◄──────────┐  Step 2: Decompose into subtasks
-│   Agent      │           │
-└──────┬───────┘           │
-       ▼                   │
-┌──────────────┐           │
-│  Executor    │           │  Step 3: Execute subtasks with tools
-│   Agent      │           │
-└──────┬───────┘           │
-       ▼                   │
-┌──────────────┐           │
-│ Observation  │───(no)────┘  Step 4: Is the task complete?
-│   Agent      │
-└──────┬───────┘
-       │ (yes)
-       ▼
-┌──────────────┐
-│ TaskSummary  │              Step 5: Generate final output
-│   Agent      │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ Final Output │
-└──────────────┘
+```mermaid
+flowchart TD
+    A["User Input"] --> B["TaskAnalysis Agent<br/>Step 1: Understand what the user wants"]
+    B --> C["Planning Agent<br/>Step 2: Decompose into subtasks"]
+    C --> D["Executor Agent<br/>Step 3: Execute subtasks with tools"]
+    D --> E{"Observation Agent<br/>Step 4: Is the task complete?"}
+    E -- "no" --> C
+    E -- "yes" --> F["TaskSummary Agent<br/>Step 5: Generate final output"]
+    F --> G["Final Output"]
 ```
 
 ## Step-by-Step Flow
@@ -76,14 +51,9 @@ with one controlled iteration point.
 The feedback loop is the key architectural feature that distinguishes SageAgent from a
 simple chain-of-agents:
 
-```
-ObservationAgent ──(incomplete)──► PlanningAgent
-       │                               │
-       │  Feedback includes:            │  Re-plans with:
-       │  - What was accomplished       │  - Original requirements
-       │  - What remains                │  - Previous execution results
-       │  - Suggested next steps        │  - Observation feedback
-       │                               │
+```mermaid
+flowchart LR
+    OA["ObservationAgent<br/>Feedback includes:<br/>- What was accomplished<br/>- What remains<br/>- Suggested next steps"] -- "incomplete" --> PA["PlanningAgent<br/>Re-plans with:<br/>- Original requirements<br/>- Previous execution results<br/>- Observation feedback"]
 ```
 
 ### Completion Determination

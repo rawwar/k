@@ -17,31 +17,12 @@ acceleration. Warp built a custom rendering pipeline from scratch:
 
 ### Pipeline Stages
 
-```
-Rust Application Logic
-        │
-        ▼
-┌─────────────────────┐
-│    Element Tree      │  ← UI framework (Flutter-inspired)
-│   (layout, styling)  │     Co-developed with Nathan Sobo (Atom co-founder)
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   GPU Primitives     │  ← Three types only:
-│  rect, image, glyph  │     1. Rectangles (backgrounds, borders, cursors)
-└─────────┬───────────┘     2. Images (icons, avatars)
-          │                  3. Glyphs (text characters)
-          ▼
-┌─────────────────────┐
-│   Metal Shaders      │  ← ~250 lines of shader code
-│   (macOS GPU)        │     Batched draw calls
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   Screen Output      │  ← 400+ fps, ~1.9ms avg redraw
-└─────────────────────┘
+```mermaid
+flowchart TD
+    A["Rust Application Logic"] --> B["Element Tree<br/>(layout, styling)<br/>UI framework (Flutter-inspired)<br/>Co-developed with Nathan Sobo (Atom co-founder)"]
+    B --> C["GPU Primitives<br/>rect, image, glyph<br/>1. Rectangles (backgrounds, borders, cursors)<br/>2. Images (icons, avatars)<br/>3. Glyphs (text characters)"]
+    C --> D["Metal Shaders (macOS GPU)<br/>~250 lines of shader code<br/>Batched draw calls"]
+    D --> E["Screen Output<br/>400+ fps, ~1.9ms avg redraw"]
 ```
 
 ### Performance Characteristics
@@ -90,34 +71,21 @@ content.
 
 ### Traditional Terminal Model
 
-```
-┌──────────────────────────────────┐
-│        Single Scrollback         │
-│                                  │
-│  $ command1                      │
-│  output1                         │
-│  $ command2                      │
-│  output2                         │  ← One continuous grid
-│  $ command3                      │     No command boundaries
-│  output3                         │     No structure
-│  ...                             │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Traditional["Traditional Terminal"]
+        SS["Single Scrollback<br/>$ command1 → output1<br/>$ command2 → output2<br/>$ command3 → output3 ...<br/>One continuous grid — no command boundaries, no structure"]
+    end
 ```
 
 ### Warp's Block Model
 
-```
-┌──────────────────────────────────┐
-│  Block 1: $ command1             │  ← Own grid instance
-│  output1 output1 output1         │     Selectable, shareable
-│  output1                         │     Agent-referenceable
-├──────────────────────────────────┤
-│  Block 2: $ command2             │  ← Own grid instance
-│  output2                         │     Independent scroll
-├──────────────────────────────────┤
-│  Block 3: $ command3             │  ← Own grid instance
-│  output3 output3                 │     Structured metadata
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    B1["Block 1: $ command1<br/>output1 output1 output1<br/>(Own grid — selectable, shareable, agent-referenceable)"]
+    B2["Block 2: $ command2<br/>output2<br/>(Own grid — independent scroll)"]
+    B3["Block 3: $ command3<br/>output3 output3<br/>(Own grid — structured metadata)"]
+    B1 --- B2 --- B3
 ```
 
 ### How Blocks Work
@@ -131,19 +99,19 @@ available in zsh, bash, and fish:
 3. **precmd** fires when the command completes → Warp finalizes the block, records exit
    code and duration
 
-```
-Shell Process                    Warp Terminal
-     │                                │
-     │  ── preexec("git status") ──►  │  Create Block N
-     │                                │  Start new grid
-     │  ── stdout/stderr data ─────►  │  Write to Block N grid
-     │  ── stdout/stderr data ─────►  │  Write to Block N grid
-     │                                │
-     │  ── precmd(exit_code=0) ────►  │  Finalize Block N
-     │                                │  Record metadata
-     │                                │
-     │  ── preexec("npm test") ────►  │  Create Block N+1
-     │        ...                     │       ...
+```mermaid
+sequenceDiagram
+    participant Shell as Shell Process
+    participant Warp as Warp Terminal
+    Shell->>Warp: preexec("git status")
+    Note over Warp: Create Block N, start new grid
+    Shell->>Warp: stdout/stderr data
+    Shell->>Warp: stdout/stderr data
+    Note over Warp: Write to Block N grid
+    Shell->>Warp: precmd(exit_code=0)
+    Note over Warp: Finalize Block N, record metadata
+    Shell->>Warp: preexec("npm test")
+    Note over Warp: Create Block N+1 ...
 ```
 
 ### Data Model: Forked Alacritty Grid
@@ -195,22 +163,13 @@ Warp provides two distinct modes for agent interaction:
 
 ### Terminal View (Command Mode)
 
-```
-┌──────────────────────────────────────┐
-│  Block: $ npm install                │
-│  added 1247 packages in 23s          │
-├──────────────────────────────────────┤
-│  Block: $ npm test                   │
-│  FAIL src/auth.test.ts               │
-│  ● Login should validate email       │
-├──────────────────────────────────────┤
-│  Agent: I see the test failure.      │
-│  The email validation regex is...    │
-│  [Executes fix command]              │
-├──────────────────────────────────────┤
-│  Block: $ npm test                   │
-│  PASS src/auth.test.ts               │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    B1["Block: $ npm install<br/>added 1247 packages in 23s"]
+    B2["Block: $ npm test<br/>FAIL src/auth.test.ts<br/>● Login should validate email"]
+    A1["Agent: I see the test failure.<br/>The email validation regex is...<br/>[Executes fix command]"]
+    B3["Block: $ npm test<br/>PASS src/auth.test.ts"]
+    B1 --> B2 --> A1 --> B3
 ```
 
 In terminal view, the agent's actions appear **inline** with command blocks. The agent
@@ -218,24 +177,13 @@ can read block output, execute commands, and its responses are interleaved natur
 
 ### Agent Conversation View
 
-```
-┌──────────────────────────────────────┐
-│  Conversation: "Fix auth tests"      │
-│                                      │
-│  You: The login tests are failing    │
-│                                      │
-│  Agent: I'll investigate. Let me     │
-│  look at the test file and the       │
-│  auth module...                      │
-│                                      │
-│  [Plan: 3 steps]                     │
-│  1. ☑ Read test file                 │
-│  2. ☐ Fix email regex               │
-│  3. ☐ Run tests                     │
-│                                      │
-│  Agent: The regex pattern needs...   │
-│  [Diff view of changes]             │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    U["You: The login tests are failing"]
+    A1["Agent: I'll investigate. Let me look at<br/>the test file and the auth module..."]
+    P["Plan: 3 steps<br/>1. ✅ Read test file<br/>2. ☐ Fix email regex<br/>3. ☐ Run tests"]
+    A2["Agent: The regex pattern needs...<br/>[Diff view of changes]"]
+    U --> A1 --> P --> A2
 ```
 
 In conversation view, the agent operates in a dedicated space with multi-turn context,
@@ -254,37 +202,23 @@ The two modes are not isolated — they share state:
 
 **Oz** is Warp's orchestration platform that unifies local and cloud agent execution:
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Oz Platform                       │
-│                                                      │
-│  ┌──────────────────┐   ┌────────────────────────┐  │
-│  │   Local Agents    │   │    Cloud Agents         │  │
-│  │                   │   │                         │  │
-│  │  Run in Warp app  │   │  Run on Warp infra     │  │
-│  │  Real-time UI     │   │  or self-hosted        │  │
-│  │  Interactive       │   │                         │  │
-│  │  PTY access       │   │  ┌───────────────────┐ │  │
-│  │                   │   │  │ Triggers:          │ │  │
-│  │  Human-in-loop    │   │  │  Slack, Linear,    │ │  │
-│  │  Takeover/        │   │  │  GitHub, Webhooks, │ │  │
-│  │  handback         │   │  │  Schedules, API    │ │  │
-│  └──────────────────┘   │  └───────────────────┘ │  │
-│                          │                         │  │
-│                          │  Parallel execution     │  │
-│                          │  Cross-repo tasks       │  │
-│                          │  Session sharing        │  │
-│                          └────────────────────────┘  │
-│                                                      │
-│  ┌──────────────────────────────────────────────┐   │
-│  │            Shared Components                   │   │
-│  │  - Model routing (multi-provider)              │   │
-│  │  - Context management (embeddings, rules)      │   │
-│  │  - Permission system                           │   │
-│  │  - Warp Drive (persistent storage)             │   │
-│  │  - MCP tool integrations                       │   │
-│  └──────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph OZ["Oz Platform"]
+        subgraph LA["Local Agents"]
+            L1["Run in Warp app<br/>Real-time UI / Interactive / PTY access<br/>Human-in-loop: Takeover / Handback"]
+        end
+        subgraph CA["Cloud Agents"]
+            T1["Triggers: Slack, Linear, GitHub,<br/>Webhooks, Schedules, API"]
+            C1["Parallel execution<br/>Cross-repo tasks<br/>Session sharing"]
+            T1 --> C1
+        end
+        subgraph SC["Shared Components"]
+            S1["Model routing (multi-provider)<br/>Context management (embeddings, rules)<br/>Permission system<br/>Warp Drive (persistent storage)<br/>MCP tool integrations"]
+        end
+    end
+    LA --> SC
+    CA --> SC
 ```
 
 ### Local Agents
