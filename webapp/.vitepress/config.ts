@@ -4,6 +4,9 @@ import type Token from 'markdown-it/lib/token.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 
+// webapp/ is one level up from .vitepress/; learn/ and research/ are symlinked inside webapp/
+const WEBAPP_ROOT = path.resolve(__dirname, '..')
+
 function titleFromSlug(slug: string): string {
   return slug
     .replace(/^\d+-/, '')
@@ -19,7 +22,7 @@ function readTitle(filePath: string, fallback: string): string {
 }
 
 function getSubchapters(trackDir: string, chapterDir: string): { text: string; link: string }[] {
-  const fullPath = path.resolve(__dirname, '..', trackDir, chapterDir)
+  const fullPath = path.join(WEBAPP_ROOT, trackDir, chapterDir)
   if (!fs.existsSync(fullPath)) return []
 
   return fs.readdirSync(fullPath)
@@ -33,7 +36,7 @@ function getSubchapters(trackDir: string, chapterDir: string): { text: string; l
 }
 
 function buildSidebar(trackDir: string) {
-  const fullPath = path.resolve(__dirname, '..', trackDir)
+  const fullPath = path.join(WEBAPP_ROOT, trackDir)
   if (!fs.existsSync(fullPath)) return []
 
   return fs.readdirSync(fullPath)
@@ -54,7 +57,63 @@ function buildSidebar(trackDir: string) {
     })
 }
 
+function buildFlatSidebar(sectionDir: string): { text: string; link: string }[] {
+  const fullPath = path.join(WEBAPP_ROOT, sectionDir)
+  if (!fs.existsSync(fullPath)) return []
+
+  return fs.readdirSync(fullPath)
+    .filter(f => f.endsWith('.md'))
+    .sort()
+    .map(f => {
+      const slug = f.replace('.md', '')
+      const title = readTitle(path.join(fullPath, f), titleFromSlug(slug))
+      return { text: title, link: `/${sectionDir}/${slug}` }
+    })
+}
+
+function buildNestedSidebar(parentDir: string) {
+  const fullPath = path.join(WEBAPP_ROOT, parentDir)
+  if (!fs.existsSync(fullPath)) return []
+
+  return fs.readdirSync(fullPath)
+    .filter(d => fs.statSync(path.join(fullPath, d)).isDirectory())
+    .sort()
+    .map(subDir => {
+      const subPath = path.join(fullPath, subDir)
+      const indexPath = path.join(subPath, 'index.md')
+      const title = readTitle(indexPath, titleFromSlug(subDir))
+      const items = fs.readdirSync(subPath)
+        .filter(f => f.endsWith('.md') && f !== 'index.md')
+        .sort()
+        .map(f => {
+          const slug = f.replace('.md', '')
+          const fileTitle = readTitle(path.join(subPath, f), titleFromSlug(slug))
+          return { text: fileTitle, link: `/${parentDir}/${subDir}/${slug}` }
+        })
+      return { text: title, collapsed: true, items }
+    })
+}
+
 export default defineConfig({
+  srcExclude: [
+    '**/README.md',
+    '**/AUTHORING-GUIDE.md',
+    'learn/code/**',
+    'learn/scripts/**',
+    'learn/research/**',
+    'research/notes/**',
+  ],
+
+  ignoreDeadLinks: true,
+
+  vite: {
+    resolve: {
+      // Keep symlink paths so Vite resolves modules from webapp/node_modules,
+      // not from the real path of the symlinked learn/ and research/ directories.
+      preserveSymlinks: true,
+    },
+  },
+
   title: 'Build a CLI Coding Agent',
   description: 'Learn how to build a CLI coding agent from scratch in Rust',
 
@@ -88,13 +147,24 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Project Track', link: '/project/' },
-      { text: 'Linear Track', link: '/linear/' }
+      { text: 'Project Track', link: '/learn/project/' },
+      { text: 'Linear Track', link: '/learn/linear/' },
+      { text: 'Research', link: '/research/' },
     ],
 
     sidebar: {
-      '/project/': buildSidebar('project'),
-      '/linear/': buildSidebar('linear')
+      '/learn/project/': buildSidebar('learn/project'),
+      '/learn/linear/': buildSidebar('learn/linear'),
+      '/research/': [
+        {
+          text: 'Agents',
+          items: buildNestedSidebar('research/agents'),
+        },
+        {
+          text: 'Concepts',
+          items: buildNestedSidebar('research/concepts'),
+        },
+      ],
     },
 
     socialLinks: [

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")/webapp"
+
 if ! command -v node &> /dev/null; then
     echo "Error: Node.js is not installed. Please install Node.js 18+ first."
     echo "Visit: https://nodejs.org/"

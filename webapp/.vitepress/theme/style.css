@@ -52,10 +52,15 @@
   --vp-home-hero-image-filter: blur(40px);
 }
 
-/* JetBrains Mono for all code */
+/* Dynamic font size — controlled by useSettings composable via --k-font-size */
+.vp-doc {
+  font-size: var(--k-font-size, 16px);
+}
+
+/* Code font uses the VitePress mono variable (overridden dynamically by useSettings) */
 .vp-doc code,
 .vp-doc pre code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--vp-font-family-mono);
 }
 
 /* Custom callout: Coming from Python */
