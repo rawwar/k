@@ -295,7 +295,7 @@ For each agent, we examined:
 
 | File                                                        | Description                                                  |
 |-------------------------------------------------------------|--------------------------------------------------------------|
-| [README.md](./README.md)                                    | This file—overview of the research folder                    |
+| [README.md](./index.md)                                    | This file—overview of the research folder                    |
 | [permission-prompts.md](./permission-prompts.md)            | How agents ask for permission before actions                 |
 | [plan-and-confirm.md](./plan-and-confirm.md)                | Plan presentation and approval workflows                     |
 | [interactive-debugging.md](./interactive-debugging.md)      | Collaborative human-agent debugging sessions                 |

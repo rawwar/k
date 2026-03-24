@@ -616,7 +616,7 @@ Several agents integrate with continuous integration systems, either consuming C
 
 | File | Description |
 |------|-------------|
-| [`README.md`](README.md) | This file — overview of testing and verification patterns |
+| [`README.md`](index.md) | This file — overview of testing and verification patterns |
 | [`agent-comparison.md`](agent-comparison.md) | Detailed cross-agent comparison of verification strategies |
 | [`build-verification.md`](build-verification.md) | Build and compilation verification patterns |
 | [`ci-cd-integration.md`](ci-cd-integration.md) | CI/CD pipeline integration and automation |

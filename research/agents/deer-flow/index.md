@@ -117,7 +117,7 @@ DeerFlow is not measured on traditional coding benchmarks (SWE-bench, Terminal-B
 
 | File | Contents |
 |------|----------|
-| [README.md](README.md) | This file — overview, architecture, key patterns |
+| [README.md](index.md) | This file — overview, architecture, key patterns |
 | [architecture.md](architecture.md) | LangGraph stack, Python/Node.js split, sandbox modes, IM channels |
 | [agentic-loop.md](agentic-loop.md) | Lead agent loop, sub-agent spawning, parallel execution, result synthesis |
 | [tool-system.md](tool-system.md) | Skills-as-Markdown, progressive loading, MCP, core tools, skill archives |

@@ -492,7 +492,7 @@ flowchart TD
 - Less specialized than ForgeCode (general-purpose, not coding-first)
 - More complete than AutoGen/CrewAI (batteries-included harness, not just framework primitives)
 
-See [`/research/agents/deer-flow/`](../../agents/deer-flow/README.md) for full analysis.
+See [`/research/agents/deer-flow/`](../../agents/deer-flow/index.md) for full analysis.
 
 ---
 

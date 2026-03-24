@@ -681,7 +681,7 @@ tools = ToolRegistry([
 ## Relationship to Other Patterns
 
 The augmented LLM is the foundation. Every other pattern in the
-[Agent Design Patterns](README.md) catalog builds on it:
+[Agent Design Patterns](index.md) catalog builds on it:
 
 ```mermaid
 flowchart TD
@@ -741,7 +741,7 @@ investing in the building block before investing in orchestration.
 
 ---
 
-*This document is part of the [Agent Design Patterns](README.md) research
-series. For the complete pattern catalog, see the [README](README.md). For
+*This document is part of the [Agent Design Patterns](index.md) research
+series. For the complete pattern catalog, see the [README](index.md). For
 comparative analysis of all 17 agents, see
 [agent-comparison.md](agent-comparison.md).*

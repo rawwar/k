@@ -370,7 +370,7 @@ API has become the de facto standard interface.
 
 ## See Also
 
-- [README](README.md) — Overview of model providers in coding agents
+- [README](index.md) — Overview of model providers in coding agents
 - [OpenAI](openai.md) — OpenAI as a model provider
 - [Anthropic](anthropic.md) — Anthropic as a model provider
 - [Google](google.md) — Google as a model provider
