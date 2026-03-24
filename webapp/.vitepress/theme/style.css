@@ -2,53 +2,51 @@
   --vp-font-family-mono: 'JetBrains Mono', monospace;
 }
 
+/*
+ * Theme colors are applied dynamically via useSettings.ts → applyThemeColors().
+ * The .dark block below is a fallback for initial paint before JS runs.
+ */
 .dark {
   --vp-c-bg: #1e1e2e;
   --vp-c-bg-soft: #181825;
   --vp-c-bg-mute: #313244;
   --vp-c-bg-alt: #11111b;
-
   --vp-c-text-1: #cdd6f4;
   --vp-c-text-2: #bac2de;
   --vp-c-text-3: #a6adc8;
-
   --vp-c-brand-1: #b4befe;
   --vp-c-brand-2: #89b4fa;
   --vp-c-brand-3: #74c7ec;
   --vp-c-brand-soft: rgba(180, 190, 254, 0.14);
-
   --vp-c-default-1: #45475a;
   --vp-c-default-2: #313244;
   --vp-c-default-3: #181825;
   --vp-c-default-soft: rgba(69, 71, 90, 0.14);
-
   --vp-c-tip-1: #a6e3a1;
-  --vp-c-tip-2: rgba(166, 227, 161, 0.14);
   --vp-c-tip-soft: rgba(166, 227, 161, 0.14);
-
   --vp-c-warning-1: #f9e2af;
-  --vp-c-warning-2: rgba(249, 226, 175, 0.14);
   --vp-c-warning-soft: rgba(249, 226, 175, 0.14);
-
   --vp-c-danger-1: #f38ba8;
-  --vp-c-danger-2: rgba(243, 139, 168, 0.14);
   --vp-c-danger-soft: rgba(243, 139, 168, 0.14);
-
   --vp-c-divider: #313244;
   --vp-c-gutter: #181825;
-
   --vp-sidebar-bg-color: #181825;
   --vp-code-block-bg: #11111b;
-
   --vp-button-brand-bg: #b4befe;
   --vp-button-brand-hover-bg: #89b4fa;
   --vp-button-brand-text: #1e1e2e;
   --vp-button-brand-hover-text: #1e1e2e;
   --vp-button-brand-active-bg: #74c7ec;
-
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: linear-gradient(135deg, #b4befe 0%, #89b4fa 50%, #74c7ec 100%);
   --vp-home-hero-image-background-image: linear-gradient(135deg, #b4befe33 0%, #89b4fa33 50%, #74c7ec33 100%);
+  --vp-home-hero-image-filter: blur(40px);
+}
+
+/* Dynamic hero gradient — uses the active brand colors */
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, var(--vp-c-brand-1) 0%, var(--vp-c-brand-2) 50%, var(--vp-c-brand-3) 100%);
   --vp-home-hero-image-filter: blur(40px);
 }
 
@@ -65,12 +63,12 @@
 
 /* Custom callout: Coming from Python */
 .vp-doc .custom-block.python {
-  border-color: #f9e2af;
-  background-color: rgba(249, 226, 175, 0.08);
+  border-color: var(--vp-c-warning-1, #f9e2af);
+  background-color: var(--vp-c-warning-soft, rgba(249, 226, 175, 0.08));
 }
 
 .vp-doc .custom-block.python .custom-block-title {
-  color: #f9e2af;
+  color: var(--vp-c-warning-1, #f9e2af);
 }
 
 .vp-doc .custom-block.python .custom-block-title::before {
@@ -79,12 +77,12 @@
 
 /* Custom callout: In the wild */
 .vp-doc .custom-block.wild {
-  border-color: #94e2d5;
-  background-color: rgba(148, 226, 213, 0.08);
+  border-color: var(--vp-c-brand-3, #94e2d5);
+  background-color: var(--vp-c-brand-soft, rgba(148, 226, 213, 0.08));
 }
 
 .vp-doc .custom-block.wild .custom-block-title {
-  color: #94e2d5;
+  color: var(--vp-c-brand-3, #94e2d5);
 }
 
 .vp-doc .custom-block.wild .custom-block-title::before {
@@ -93,8 +91,8 @@
 
 /* What you'll learn box */
 .vp-doc blockquote:first-child {
-  border-left-color: #89b4fa;
-  background-color: rgba(137, 180, 250, 0.08);
+  border-left-color: var(--vp-c-brand-2, #89b4fa);
+  background-color: var(--vp-c-brand-soft, rgba(137, 180, 250, 0.08));
 }
 
 /* Chapter navigation cards */
@@ -108,17 +106,17 @@
 .chapter-nav a {
   display: block;
   padding: 1rem 1.25rem;
-  border: 1px solid #313244;
+  border: 1px solid var(--vp-c-divider, #313244);
   border-radius: 8px;
-  background: #181825;
-  color: #cdd6f4;
+  background: var(--vp-c-bg-soft, #181825);
+  color: var(--vp-c-text-1, #cdd6f4);
   text-decoration: none;
   transition: border-color 0.25s, background-color 0.25s;
 }
 
 .chapter-nav a:hover {
-  border-color: #b4befe;
-  background: rgba(180, 190, 254, 0.06);
+  border-color: var(--vp-c-brand-1, #b4befe);
+  background: var(--vp-c-brand-soft, rgba(180, 190, 254, 0.06));
 }
 
 /* ── Mermaid diagram styling ────────────────────────────────── */
@@ -137,12 +135,12 @@
 /* Ensure node text is readable in dark mode */
 .dark .mermaid svg .label,
 .dark .mermaid svg text {
-  color: #cdd6f4 !important;
-  fill: #cdd6f4 !important;
+  color: var(--vp-c-text-1, #cdd6f4) !important;
+  fill: var(--vp-c-text-1, #cdd6f4) !important;
 }
 
 .dark .mermaid svg .node rect,
 .dark .mermaid svg .node circle,
 .dark .mermaid svg .node polygon {
-  stroke: #45475a !important;
+  stroke: var(--vp-c-bg-mute, #45475a) !important;
 }
