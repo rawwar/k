@@ -16,14 +16,14 @@ onMounted(() => {
 
 const currentTrack = computed(() => {
   const path = route.path
-  if (path.startsWith('/project/')) return 'project'
-  if (path.startsWith('/linear/')) return 'linear'
+  if (path.startsWith('/learn/project/')) return 'project'
+  if (path.startsWith('/learn/linear/')) return 'linear'
   return null
 })
 
 const currentChapterSlug = computed(() => {
   if (!currentTrack.value) return null
-  const match = route.path.match(/^\/(project|linear)\/([^/]+)/)
+  const match = route.path.match(/^\/learn\/(project|linear)\/([^/]+)/)
   return match ? match[2] : null
 })
 
@@ -32,7 +32,7 @@ const isChapterIndex = computed(() => {
   // Chapter index pages end with the chapter slug (no subchapter)
   const path = route.path.replace(/\/$/, '')
   const parts = path.split('/').filter(Boolean)
-  return parts.length === 2 // e.g. ['project', '01-hello-rust-cli']
+  return parts.length === 3 // e.g. ['learn', 'project', '01-hello-rust-cli']
 })
 
 // Sidebar mode: track-level progress

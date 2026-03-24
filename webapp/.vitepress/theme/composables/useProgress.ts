@@ -22,7 +22,7 @@ export interface TrackProgress {
 const STORAGE_KEY = 'k-learn:progress'
 
 // Matches /project/CHAPTER/SUBCHAPTER or /linear/CHAPTER/SUBCHAPTER
-const SUBCHAPTER_RE = /^\/(project|linear)\/([^/]+)\/([^/]+)$/
+const SUBCHAPTER_RE = /^\/learn\/(project|linear)\/([^/]+)\/([^/]+)$/
 
 const data = ref<ProgressData>({
   visited: {},
@@ -51,8 +51,8 @@ function saveToStorage(d: ProgressData) {
 }
 
 function parseTrack(path: string): string | null {
-  if (path.startsWith('/project/')) return 'project'
-  if (path.startsWith('/linear/')) return 'linear'
+  if (path.startsWith('/learn/project/')) return 'project'
+  if (path.startsWith('/learn/linear/')) return 'linear'
   return null
 }
 
@@ -91,7 +91,7 @@ export function useProgress() {
   function getSidebarItems(track: string): Array<{ text: string; link?: string; items?: Array<{ text: string; link: string }> }> {
     try {
       const { theme } = useData()
-      const sidebarKey = `/${track}/`
+      const sidebarKey = `/learn/${track}/`
       return theme.value.sidebar?.[sidebarKey] || []
     } catch {
       return []

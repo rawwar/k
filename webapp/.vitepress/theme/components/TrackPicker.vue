@@ -1,7 +1,7 @@
 <template>
   <div class="track-picker">
     <div class="track-card">
-      <a href="/project/" class="track-link">
+      <a href="/learn/project/" class="track-link">
         <div class="track-icon">&#x1F3D7;&#xFE0F;</div>
         <h2>Project-Based Track</h2>
         <p class="track-desc">Build a working CLI coding agent step by step. Each chapter adds a new capability to your agent.</p>
@@ -14,7 +14,7 @@
       </a>
     </div>
     <div class="track-card">
-      <a href="/linear/" class="track-link">
+      <a href="/learn/linear/" class="track-link">
         <div class="track-icon">&#x1F4DA;</div>
         <h2>Linear Tutorial Track</h2>
         <p class="track-desc">Understand the theory and concepts first, then implement. Deep dives into each component of a coding agent.</p>
