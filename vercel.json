@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd webapp && npm install && npm run build",
+  "outputDirectory": "webapp/.vitepress/dist",
+  "framework": null,
+  "nodeVersion": "22"
+}
