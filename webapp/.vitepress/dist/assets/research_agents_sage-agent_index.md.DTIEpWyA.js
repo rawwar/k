@@ -1,0 +1,33 @@
+import{_ as e,o as n,c as s,a2 as t}from"./chunks/framework.B72_uj9U.js";const g=JSON.parse('{"title":"SageAgent Architecture Analysis","description":"","frontmatter":{"title":"SageAgent Architecture Analysis","status":"complete"},"headers":[],"relativePath":"research/agents/sage-agent/index.md","filePath":"research/agents/sage-agent/index.md"}'),i={name:"research/agents/sage-agent/index.md"};function l(p,a,r,o,c,d){return n(),s("div",null,[...a[0]||(a[0]=[t(`<h1 id="sageagent" tabindex="-1">SageAgent <a class="header-anchor" href="#sageagent" aria-label="Permalink to &quot;SageAgent&quot;">​</a></h1><blockquote><p>A Python-based multi-agent system framework by OpenSage for building AI agents with deep research and rapid execution modes.</p></blockquote><h2 id="overview" tabindex="-1">Overview <a class="header-anchor" href="#overview" aria-label="Permalink to &quot;Overview&quot;">​</a></h2><p>SageAgent (repo: <code>OpenSageAI/Sage</code>) is an open-source, MIT-licensed framework that orchestrates multiple specialized agents in a pipeline to accomplish complex tasks. Built by Zhang Zheng (zhangzheng-thu, likely Tsinghua-affiliated) under the OpenSageAI GitHub organization.</p><p>Key characteristics:</p><ul><li><strong>Multi-agent pipeline</strong>: Five specialized agents collaborate in sequence with a feedback loop</li><li><strong>Dual execution modes</strong>: Deep Research (comprehensive) and Rapid Execution (lightweight)</li><li><strong>MCP-native tooling</strong>: First-class Model Context Protocol support for tool integration</li><li><strong>Streamlit demo UI</strong>: Web-based interface via <code>sage_demo.py</code></li></ul><h2 id="architecture-high-level" tabindex="-1">Architecture (High-Level) <a class="header-anchor" href="#architecture-high-level" aria-label="Permalink to &quot;Architecture (High-Level)&quot;">​</a></h2><div class="language-"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki catppuccin-mocha vp-code" tabindex="0"><code><span class="line"><span>User Input</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ▼</span></span>
+<span class="line"><span>┌─────────────────┐</span></span>
+<span class="line"><span>│ AgentController  │  (entry point)</span></span>
+<span class="line"><span>└────────┬────────┘</span></span>
+<span class="line"><span>         ▼</span></span>
+<span class="line"><span>┌─────────────────┐</span></span>
+<span class="line"><span>│TaskAnalysisAgent │  Understand requirements</span></span>
+<span class="line"><span>└────────┬────────┘</span></span>
+<span class="line"><span>         ▼</span></span>
+<span class="line"><span>┌─────────────────┐</span></span>
+<span class="line"><span>│  PlanningAgent   │◄─────────────┐  Plan subtasks</span></span>
+<span class="line"><span>└────────┬────────┘               │</span></span>
+<span class="line"><span>         ▼                        │</span></span>
+<span class="line"><span>┌─────────────────┐               │</span></span>
+<span class="line"><span>│  ExecutorAgent   │               │  Execute via ToolManager</span></span>
+<span class="line"><span>│  ┌─────────────┐│               │</span></span>
+<span class="line"><span>│  │ ToolManager  ││               │</span></span>
+<span class="line"><span>│  │ Local │ MCP  ││               │</span></span>
+<span class="line"><span>│  └─────────────┘│               │</span></span>
+<span class="line"><span>└────────┬────────┘               │</span></span>
+<span class="line"><span>         ▼                        │</span></span>
+<span class="line"><span>┌─────────────────┐               │</span></span>
+<span class="line"><span>│ObservationAgent  │───(incomplete)┘  Monitor progress</span></span>
+<span class="line"><span>└────────┬────────┘</span></span>
+<span class="line"><span>         │ (complete)</span></span>
+<span class="line"><span>         ▼</span></span>
+<span class="line"><span>┌─────────────────┐</span></span>
+<span class="line"><span>│TaskSummaryAgent  │  Generate final output</span></span>
+<span class="line"><span>└────────┬────────┘</span></span>
+<span class="line"><span>         ▼</span></span>
+<span class="line"><span>    Final Output</span></span></code></pre></div><h2 id="benchmark-highlights" tabindex="-1">Benchmark Highlights <a class="header-anchor" href="#benchmark-highlights" aria-label="Permalink to &quot;Benchmark Highlights&quot;">​</a></h2><table tabindex="0"><thead><tr><th>Benchmark</th><th>Model</th><th>Score</th><th>Rank</th></tr></thead><tbody><tr><td>Terminal-Bench 2.0</td><td>GPT-5.3-Codex</td><td>78.4% ±2.2</td><td>#5</td></tr></tbody></table><p>Score ties with ForgeCode (Gemini 3.1 Pro) at 78.4%. Result dated 2026-03-13.</p><h2 id="file-index" tabindex="-1">File Index <a class="header-anchor" href="#file-index" aria-label="Permalink to &quot;File Index&quot;">​</a></h2><table tabindex="0"><thead><tr><th>File</th><th>Description</th></tr></thead><tbody><tr><td><a href="./architecture.html">architecture.md</a></td><td>Multi-agent pipeline, directory layout, execution modes</td></tr><tr><td><a href="./agentic-loop.html">agentic-loop.md</a></td><td>Agent pipeline flow and feedback mechanism</td></tr><tr><td><a href="./tool-system.html">tool-system.md</a></td><td>ToolBase, ToolManager, MCP integration</td></tr><tr><td><a href="./context-management.html">context-management.md</a></td><td>Message format, inter-agent context flow</td></tr><tr><td><a href="./unique-patterns.html">unique-patterns.md</a></td><td>Distinctive design patterns and decisions</td></tr><tr><td><a href="./benchmarks.html">benchmarks.md</a></td><td>Terminal-Bench 2.0 results</td></tr><tr><td><a href="./references.html">references.md</a></td><td>Links and resources</td></tr></tbody></table><h2 id="roadmap-from-readme" tabindex="-1">Roadmap (from README) <a class="header-anchor" href="#roadmap-from-readme" aria-label="Permalink to &quot;Roadmap (from README)&quot;">​</a></h2><ol><li>Tool System Enhancements — more comprehensive MCP server support</li><li>Logger Optimization</li><li>Supported Models — expand tested model coverage</li><li>Infinite Context — ultra-long and complex task support</li><li>Professional Agents — domain-specialized agent modules</li></ol><hr><p><em>This is a Tier 3 (lighter treatment) analysis. Some internal details are inferred from public README and directory structure rather than deep source review.</em></p>`,17)])])}const m=e(i,[["render",l]]);export{g as __pageData,m as default};
