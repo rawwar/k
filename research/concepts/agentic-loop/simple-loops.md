@@ -810,7 +810,7 @@ This is cleaner than the alternative (checking return codes from `step()`) becau
 
 ### Pattern: Template-Based Prompts (Jinja2)
 
-```python
+````python
 # templates/system.j2
 You are an autonomous software engineering agent.
 
@@ -840,7 +840,7 @@ Usage: {{ tool.usage_example }}
 {{ file.content }}
 ```
 {% endfor %}
-```
+````
 
 **Why this pattern:** Prompts are the most important part of an agent — and the most
 frequently iterated. Using Jinja2 templates:

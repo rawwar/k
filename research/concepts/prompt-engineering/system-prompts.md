@@ -495,7 +495,7 @@ framework achieves near-perfect parse rates even with smaller models. The tradeo
 
 Mini-SWE-Agent uses Jinja2 templates to inject OS-specific few-shot examples:
 
-```jinja2
+````jinja2
 {% if os_type == "linux" %}
 Example interaction:
 User: Find all Python files that import requests
@@ -511,7 +511,7 @@ THOUGHT: I'll use grep to search. On macOS, I'll use ggrep if available for bett
 grep -r "import requests" --include="*.py" .
 ```
 {% endif %}
-```
+````
 
 Few-shot examples in system prompts are powerful but expensive. Each example consumes tokens that
 could be used for other instructions. The tradeoff is measured empirically — Aider found that

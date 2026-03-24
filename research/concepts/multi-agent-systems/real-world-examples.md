@@ -447,6 +447,52 @@ agents to use any tool — terminal, browser, editor — just as a human develop
 | **AutoGen** | Configurable | AgentChat messages | Group chat | Configurable | Framework-level |
 | **CrewAI** | Role-based | Task outputs | Sequential/hierarchical | Reviewer agent | Task chaining |
 | **Devin** | Planning/Exec/Verify | Internal | Per-task VM | Verification agent | Cloud VM state |
+| **DeerFlow** | Lead + dynamic sub-agents | Structured SubAgentResult | Parallel (Send) | Skills-guided | Isolated subgraphs |
+
+---
+
+## DeerFlow: Dynamic Sub-Agent Harness
+
+DeerFlow (by ByteDance) is a **super agent harness** built on LangGraph that represents a different approach from the purpose-built coding agents above — it is a general-purpose orchestration runtime with dynamic sub-agent spawning.
+
+```mermaid
+flowchart TD
+    LA["Lead Agent (LangGraph graph)\ncoordinator → planner → researcher → reporter"]
+    SA1["Sub-Agent 1\nIsolated context\nScoped tools"]
+    SA2["Sub-Agent 2\nIsolated context\nScoped tools"]
+    SAN["Sub-Agent N\nIsolated context\nScoped tools"]
+    SB["Sandbox (Docker)\n/mnt/user-data/workspace\n/mnt/user-data/outputs"]
+    LA -->|"LangGraph Send() — parallel"| SA1
+    LA -->|"LangGraph Send() — parallel"| SA2
+    LA -->|"LangGraph Send() — parallel"| SAN
+    SA1 -->|"SubAgentResult (structured)"| LA
+    SA2 -->|"SubAgentResult (structured)"| LA
+    SAN -->|"SubAgentResult (structured)"| LA
+    LA --- SB
+    SA1 --- SB
+    SA2 --- SB
+```
+
+**What makes DeerFlow different:**
+
+1. **Dynamic sub-agent spawning** — unlike ForgeCode, Claude Code, or Capy where agent roles are statically defined, DeerFlow's lead agent spawns sub-agents on the fly for the specific sub-tasks of the current job. The number and scope of sub-agents varies per task.
+
+2. **LangGraph-native** — orchestration is a typed state graph with checkpointing, time-travel debugging, and durable execution. Sub-agents are subgraphs with isolated state.
+
+3. **Parallel execution via `Send()`** — LangGraph's `Send()` primitive dispatches multiple sub-agents concurrently when tasks are independent.
+
+4. **Skills-as-Markdown** — sub-agents load and follow Markdown skill files (workflow specifications) rather than hard-coded prompts. Skills are loaded progressively, only when needed.
+
+5. **Execution modes** — flash (fast), standard, pro (with planning), ultra (with sub-agents). Users select the trade-off between speed and thoroughness.
+
+**Multi-agent level**: Level 1–2 on the research spectrum. Standard/pro modes are Level 1 (sub-agent delegation); ultra mode is Level 2 (parallel orchestration).
+
+**Where it fits vs. other systems:**
+- More dynamic than ForgeCode (static 3-agent), Claude Code (static types), SageAgent (fixed 5-stage pipeline)
+- Less specialized than ForgeCode (general-purpose, not coding-first)
+- More complete than AutoGen/CrewAI (batteries-included harness, not just framework primitives)
+
+See [`/research/agents/deer-flow/`](../../agents/deer-flow/README.md) for full analysis.
 
 ---
 
@@ -501,3 +547,4 @@ adopting a framework wholesale.
 - CrewAI. https://github.com/crewAIInc/crewAI
 - Cognition. "Devin." https://devin.ai
 - Research files: `/research/agents/*/` — all agent directories
+- ByteDance. "DeerFlow." https://github.com/bytedance/deer-flow

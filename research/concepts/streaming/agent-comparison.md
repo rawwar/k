@@ -17,7 +17,7 @@ How each agent receives streamed tokens from LLM providers.
 | **Claude Code** | SSE | Anthropic Messages API | No | Content block streaming with start/delta/stop lifecycle |
 | **Codex** | SSE + WebSocket | Responses API | Yes (realtime) | Only supports OpenAI Responses API; WebSocket for realtime mode |
 | **Gemini CLI** | SSE | client.ts handler | No | Separate core and CLI packages; contentGenerator.ts bridges them |
-| **Goose** | Async stream | BoxStream<AgentEvent> | No | Rust async streams yielding (Message, Usage) tuples |
+| **Goose** | Async stream | `BoxStream<AgentEvent>` | No | Rust async streams yielding (Message, Usage) tuples |
 | **Aider** | SSE (via litellm) | litellm abstraction | No | Provider-agnostic through litellm; supports 100+ providers |
 | **Warp** | N/A (terminal-native) | PTY buffer | N/A | GPU-accelerated terminal, not an API client |
 | **Pi Coding Agent** | Provider-specific | Event streaming | No | Extension-based providers with tool:start/tool:complete events |

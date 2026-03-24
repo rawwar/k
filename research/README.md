@@ -5,7 +5,7 @@ Reference materials and personal notes for the CLI Coding Agent learning platfor
 ## Organization
 
 ### `agents/`
-Architecture analysis of 17 CLI coding agents (`agents/<agent-name>/`).
+Architecture analysis of 18 agents (`agents/<agent-name>/`) — 17 CLI coding agents plus DeerFlow (super agent harness).
 
 Each agent folder contains 8 standard files:
 `README.md` · `architecture.md` · `agentic-loop.md` · `tool-system.md` · `context-management.md` · `unique-patterns.md` · `benchmarks.md` · `references.md`
@@ -31,13 +31,14 @@ Each agent folder contains 8 standard files:
 | 12 | **mini-swe-agent** | Minimal 100-line bash-only agent from Princeton/Stanford |
 | 13 | **pi-coding-agent** | Radically extensible 4-tool agent by Mario Zechner |
 | 14 | **aider** | Pioneering AI pair programming tool, code-editing benchmark |
+| 15 | **deer-flow** | ByteDance super agent harness; skills-as-Markdown, dynamic sub-agents, Docker sandbox, LangGraph (#1 GitHub Trending Feb 2026) |
 
 **Tier 3 — Emerging / leaderboard notable:**
 | # | Agent | Description |
 |---|-------|-------------|
-| 15 | **sage-agent** | OpenSage multi-agent pipeline |
-| 16 | **tongagents** | BIGAI (Beijing), top-3 on Terminal-Bench 2.0 |
-| 17 | **capy** | Cloud IDE with two-agent split |
+| 16 | **sage-agent** | OpenSage multi-agent pipeline |
+| 17 | **tongagents** | BIGAI (Beijing), top-3 on Terminal-Bench 2.0 |
+| 18 | **capy** | Cloud IDE with two-agent split |
 
 ### `concepts/`
 Deep-dive concept notes organized into topic folders:

@@ -693,6 +693,39 @@ Long-term memory with automatic summarization and entity extraction.
 - **Native LangChain integration** — drop-in memory backend
 - **Hybrid search** — vector similarity + metadata filtering
 
+### DeerFlow (Built-In Harness Memory)
+
+- **URL:** https://github.com/bytedance/deer-flow
+- **License:** MIT
+
+DeerFlow implements memory directly in the harness rather than as a pluggable library.
+It combines several context management strategies into a single runtime:
+
+**Within-session strategies:**
+- **Sub-agent context isolation** — each spawned sub-agent gets its own context window; only a compact `SubAgentResult` struct crosses back to the lead agent, not raw tool call history
+- **Progressive skill loading** — Markdown skill files load on-demand (only the skills relevant to the current task), saving 2K–10K tokens per session compared to loading all skills upfront
+- **In-session summarization** — when context usage crosses a threshold, completed sub-tasks are compressed from raw tool calls + results to a prose summary
+- **Filesystem offload** — intermediate results (fetched pages, search results) are written to `/mnt/user-data/workspace/` rather than accumulated in context
+
+**Cross-session memory:**
+- User profile, preferences, writing style, technical stack, and recurring workflows persist locally across sessions
+- Injected into the system prompt at session start: "Based on past interactions, this user prefers..."
+- Stored locally (user-controlled); not sent to external services by default
+
+**Comparison with Mem0/Zep:**
+
+| Aspect | DeerFlow (built-in) | Mem0 | Zep |
+|--------|---------------------|------|-----|
+| Fact extraction | Basic (profile/prefs) | Advanced (LLM-based, dedup) | Named entity + summarization |
+| Multi-level memory | User + session | User + session + agent | User + session |
+| Storage | Local files | Vector + graph | Vector + metadata |
+| Integration | Built into harness | Python SDK, REST API | LangChain native |
+| Setup | Zero (already included) | Moderate | Moderate |
+
+**When to use:** DeerFlow's built-in memory is the right choice when using DeerFlow as
+the harness. Use Mem0 or Zep when building a custom agent that needs advanced fact
+extraction, deduplication, or vector-based retrieval across large knowledge bases.
+
 ---
 
 ## 7. Retrieval Approach Comparison

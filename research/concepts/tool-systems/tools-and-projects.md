@@ -439,25 +439,79 @@ flowchart TD
 
 Which agents use which infrastructure projects:
 
-| Project              | Codex | Claude Code | Cursor | Aider | OpenHands | Cline | OpenCode |
-|----------------------|-------|-------------|--------|-------|-----------|-------|----------|
-| MCP Protocol         | —     | ✓           | ✓      | —     | ✓         | ✓     | ✓        |
-| bubblewrap           | ✓     | —           | —      | —     | —         | —     | —        |
-| Landlock             | ✓     | —           | —      | —     | —         | —     | —        |
-| seccomp-bpf          | ✓     | —           | —      | —     | —         | —     | —        |
-| gVisor               | —     | —           | —      | —     | —         | —     | —        |
-| E2B                  | —     | —           | —      | —     | ✓         | —     | —        |
-| Daytona              | —     | —           | —      | —     | —         | —     | —        |
-| tree-sitter          | —     | ✓           | ✓      | ✓     | ✓         | —     | —        |
-| LSP                  | —     | —           | ✓      | —     | ✓         | —     | ✓        |
-| Universal Ctags      | —     | —           | —      | ✓     | —         | —     | —        |
-| diff-match-patch     | —     | —           | ✓      | ✓     | —         | —     | —        |
-| NeMo Guardrails      | —     | —           | —      | —     | —         | —     | —        |
-| Instructor           | —     | —           | —      | —     | —         | —     | —        |
-| LangChain Tools      | —     | —           | —      | —     | ✓         | —     | —        |
-| Semantic Kernel      | —     | —           | —      | —     | —         | —     | —        |
+| Project              | Codex | Claude Code | Cursor | Aider | OpenHands | Cline | OpenCode | DeerFlow |
+|----------------------|-------|-------------|--------|-------|-----------|-------|----------|----------|
+| MCP Protocol         | —     | ✓           | ✓      | —     | ✓         | ✓     | ✓        | ✓        |
+| bubblewrap           | ✓     | —           | —      | —     | —         | —     | —        | —        |
+| Landlock             | ✓     | —           | —      | —     | —         | —     | —        | —        |
+| seccomp-bpf          | ✓     | —           | —      | —     | —         | —     | —        | —        |
+| gVisor               | —     | —           | —      | —     | —         | —     | —        | —        |
+| E2B                  | —     | —           | —      | —     | ✓         | —     | —        | —        |
+| Docker sandbox       | —     | —           | —      | —     | —         | —     | —        | ✓        |
+| tree-sitter          | —     | ✓           | ✓      | ✓     | ✓         | —     | —        | —        |
+| LSP                  | —     | —           | ✓      | —     | ✓         | —     | ✓        | —        |
+| Universal Ctags      | —     | —           | —      | ✓     | —         | —     | —        | —        |
+| diff-match-patch     | —     | —           | ✓      | ✓     | —         | —     | —        | —        |
+| NeMo Guardrails      | —     | —           | —      | —     | —         | —     | —        | —        |
+| Instructor           | —     | —           | —      | —     | —         | —     | —        | —        |
+| LangChain Tools      | —     | —           | —      | —     | ✓         | —     | —        | ✓        |
+| LangGraph            | —     | —           | —      | —     | —         | —     | —        | ✓        |
+| Semantic Kernel      | —     | —           | —      | —     | —         | —     | —        | —        |
 
 **Legend**: ✓ = confirmed usage, — = not used or not confirmed.
+
+---
+
+## 7. Skills-as-Markdown (DeerFlow Pattern)
+
+DeerFlow introduces a novel tool-system pattern: **skills as Markdown capability modules**.
+
+### What Makes It Different
+
+In every other tool system covered in this document, tools are code:
+- TypeScript functions (Claude Code)
+- Rust trait implementations (Codex, Goose)
+- Python classes with `@tool` decorators (LangChain)
+- MCP server functions (Goose, Claude Code)
+
+DeerFlow's skills are **Markdown files that define workflows**. The LLM reads the skill file directly as part of its context. There is no parsing, no function registry, no schema — just structured Markdown that describes how to approach a class of tasks.
+
+```
+/mnt/skills/public/
+├── research/SKILL.md          ← how to do deep research
+├── report-generation/SKILL.md ← how to write structured reports
+├── slide-creation/SKILL.md    ← how to create slide decks
+├── web-page/SKILL.md          ← how to generate web pages
+└── image-generation/SKILL.md  ← how to generate images
+
+/mnt/skills/custom/
+└── your-skill/SKILL.md        ← drop any .md here
+```
+
+### Progressive Loading
+
+Skills load on-demand, not at startup. A task classifier infers which skills are relevant and loads only those:
+
+```
+User: "Research X"   → loads research/SKILL.md only (~2K tokens)
+User: "Make slides"  → loads slide-creation/SKILL.md only (~2K tokens)
+User: "Both"         → loads both (~4K tokens)
+```
+
+For agents with 5–50+ skills, this saves meaningful context budget compared to loading all skills at startup.
+
+### Trade-offs vs. Code-Based Tools
+
+| Aspect | Code-Based Tools | Markdown Skills |
+|--------|-----------------|-----------------|
+| Enforcement | Strict (function signature) | Soft (LLM follows guidance) |
+| Authoring | Requires code | Any Markdown editor |
+| Versioning | Git diff of code | Git diff of text |
+| Flexibility | Limited to function API | Nuanced prose guidance |
+| Schema validation | Yes | No |
+| Best for | Concrete operations (search, file I/O) | Workflow orchestration guidance |
+
+**The pattern in practice**: DeerFlow uses both. Markdown skills for high-level workflow guidance; Python tools (web_search, bash, file_write) for concrete operations. Skills tell the agent *how* to use tools; tools do the actual work.
 
 ---
 

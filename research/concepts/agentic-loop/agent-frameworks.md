@@ -1033,6 +1033,7 @@ early in the trajectory can compound through subsequent steps.
 | Mastra      | TypeScript  | Workflow       | Medium     | ✓ (workflow)    | ✓ (suspend)       | ~10K  |
 | OpenAI SDK  | Python      | Handoff        | Low        | ✓ (handoffs)    | —                 | ~15K  |
 | Google ADK  | Py/Java/Go  | Hierarchical   | Medium     | ✓ (parent/child)| ✓ (rewind)        | ~10K  |
+| **DeerFlow**| Python/JS   | **Harness**    | Low (user) | ✓ (dynamic)     | ✓ (LangGraph)     | ~20K  |
 
 ### Choosing by Use Case
 
@@ -1047,6 +1048,7 @@ early in the trajectory can compound through subsequent steps.
 | OpenAI-centric stack             | OpenAI Agents SDK           | Official, minimal, production-ready     |
 | Google Cloud / Gemini            | Google ADK                  | Native integration, session rewind      |
 | Conversational debugging         | AutoGen                     | Group chat, multi-turn refinement       |
+| **Batteries-included harness**   | **DeerFlow**                | Ships with sandbox, memory, skills, IM channels, web UI; configure and extend rather than build |
 
 ---
 
@@ -1184,6 +1186,10 @@ The agent framework landscape is evolving rapidly. Key trends:
    for tool and agent communication.
 5. **The custom loop endures**: For the highest-performance coding agents, building from
    scratch remains the dominant approach — but frameworks are closing the gap.
+6. **The harness category emerges**: DeerFlow (ByteDance) represents a new layer above
+   frameworks — a batteries-included runtime that ships with sandbox, memory, skills, IM
+   channels, and a web UI. Users configure and extend rather than build. This "super agent
+   harness" pattern may become a distinct category as agent infrastructure matures.
 
 The best framework is the one that matches your team's language, your agent's complexity,
 and your tolerance for dependency. For many teams, the answer is still "no framework at all."
