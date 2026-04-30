@@ -105,7 +105,7 @@ The table reveals several patterns:
 
 ### ForgeCode
 
-**Tier 1 — #1 Terminal-Bench 2.0 (81.8%)**
+**Tier 1 — #2 Terminal-Bench 2.0 (81.8%)**
 
 | Pattern | Implementation | Details |
 |---------|:---:|---------|
@@ -130,7 +130,7 @@ where it matters (frontier models for planning) and maximum efficiency where it 
 is minimal.
 
 **Key insight**: ForgeCode proves that layering many patterns can work when the orchestration
-is fast and the routing is intelligent. The 81.8% Terminal-Bench score suggests that pattern
+is fast and the routing is intelligent. The 81.8% Terminal-Bench score (#2 overall, statistically tied with Codex's 82.0%) suggests that pattern
 composition, not pattern simplicity, drives top performance.
 
 ---
@@ -685,7 +685,7 @@ Several patterns observed across the 17 agents don't map cleanly to Anthropic's 
 
 | Agent | Pattern Count (✅) | Pattern Count (✅+◐) | Terminal-Bench | Tier |
 |-------|:-----------------:|:-------------------:|:-------------:|:----:|
-| ForgeCode | 6 | 7 | 81.8% | 1 |
+| ForgeCode | 6 | 7 | 81.8% | 2 |
 | Claude Code | 5 | 7 | — | 1 |
 | Codex CLI | 2 | 4 | — | 1 |
 | Ante | 5 | 6 | — | 1 |

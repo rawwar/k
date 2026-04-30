@@ -229,8 +229,8 @@ delegating a browsing task to `BrowsingAgent`).
 | Benchmark              | Score / Rank                                    |
 | ---------------------- | ----------------------------------------------- |
 | **SWE-bench Verified** | **77.6%** (shown in their repo badge)           |
-| **Terminal-Bench 2.0** | Rank #49 (Claude Opus 4.5, 51.9%)               |
-| **Terminal-Bench 2.0** | Rank #58 (GPT-5, 43.8%)                         |
+| **Terminal-Bench 2.0** | Rank #51 (Claude Opus 4.5, 51.9%)               |
+| **Terminal-Bench 2.0** | Rank #60 (GPT-5, 43.8%)                         |
 
 The SWE-bench score is competitive with top proprietary agents. However, it is
 worth noting that SWE-bench performance depends heavily on the underlying LLM —

@@ -5,7 +5,7 @@ status: complete
 
 # Codex CLI
 
-> OpenAI's official terminal-native coding agent — open-source, Rust-native, with OS-level sandboxing.
+> OpenAI's official terminal-native coding agent — open-source, Rust-native, with OS-level sandboxing. **#1 on Terminal-Bench 2.0** (82.0% with GPT-5.5, 2026-04-23).
 
 ## Overview
 
@@ -102,11 +102,18 @@ Applied via `#[ctor::ctor]` before `main()`:
 
 ## Terminal-Bench 2.0 Scores
 
-| Rank | Model | Score |
-|---|---|---|
-| #27 | GPT-5.2 | 62.9% |
-| #34 | GPT-5.1-Codex-Max | 60.4% |
-| #53 | GPT-5 | 49.6% |
+| Rank | Model | Score | Date |
+|---|---|---|---|
+| **#1** | **GPT-5.5** | **82.0% ±2.2** | 2026-04-23 |
+| #9 | GPT-5.3-Codex (as "Simple Codex") | 75.1% ±2.4 | 2026-02-06 |
+| #29 | GPT-5.2 | 62.9% ±3.0 | 2025-12-18 |
+| #35 | GPT-5.1-Codex-Max | 60.4% ±2.7 | 2025-11-24 |
+| #55 | GPT-5 | 49.6% ±2.9 | 2025-11-04 |
+| #59 | GPT-5-Codex | 44.3% ±2.7 | 2025-11-04 |
+| #88 | GPT-5-Mini | 31.9% ±3.0 | 2025-11-04 |
+| #119 | GPT-5-Nano | 11.5% ±2.3 | 2025-11-04 |
+
+The GPT-5.5 entry (submitted 2026-04-23) is currently the top result on the entire Terminal-Bench 2.0 leaderboard, dethroning ForgeCode + GPT-5.4 (#2 at 81.8%) and TongAgents + Gemini 3.1 Pro (#3 at 80.2%).
 
 ## Key Features
 

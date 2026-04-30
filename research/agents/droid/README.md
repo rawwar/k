@@ -31,9 +31,11 @@ Factory has raised funding with participation from **Wipro Ventures** and serves
 
 | Benchmark | Model Config | Rank | Score |
 |-----------|-------------|------|-------|
-| Terminal-Bench 2.0 | Droid + GPT-5.3-Codex | #6 | 77.3% |
-| Terminal-Bench 2.0 | Droid + Claude Opus 4.6 | #16 | 69.9% |
-| Terminal-Bench 2.0 | Droid + GPT-5.2 | #23 | 64.9% |
+| Terminal-Bench 2.0 | Droid + GPT-5.3-Codex | #7 | 77.3% |
+| Terminal-Bench 2.0 | Droid + Claude Opus 4.6 | #17 | 69.9% |
+| Terminal-Bench 2.0 | Droid + GPT-5.2 | #24 | 64.9% |
+| Terminal-Bench 2.0 | Droid + Claude Opus 4.5 | #27 | 63.1% |
+| Terminal-Bench 2.0 | Droid + Gemini 3 Pro | #33 | 61.1% |
 | Terminal-Bench 1.0 | Droid + Claude Opus 4.1 | #5 | 58.8% |
 
 ## Key Stats
@@ -114,5 +116,5 @@ Factory has raised funding with participation from **Wipro Ventures** and serves
 - Docs: https://docs.factory.ai
 - Enterprise: https://factory.ai/enterprise
 - Security: https://factory.ai/security
-- Terminal-Bench 2.0: rank #6 (Droid + GPT-5.3-Codex, 77.3%); rank #16 (Claude Opus 4.6, 69.9%); rank #23 (GPT-5.2, 64.9%)
+- Terminal-Bench 2.0: rank #7 (Droid + GPT-5.3-Codex, 77.3%); rank #17 (Claude Opus 4.6, 69.9%); rank #24 (GPT-5.2, 64.9%); rank #27 (Claude Opus 4.5, 63.1%); rank #33 (Gemini 3 Pro, 61.1%)
 - Terminal-Bench 1.0: rank #5 (Claude Opus 4.1, 58.8%)

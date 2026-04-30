@@ -56,8 +56,8 @@ manipulation, system administration, development workflows, and shell scripting.
 
 | Rank | Agent + Model | Score |
 |---|---|---|
-| **#49** | OpenHands + Claude Opus 4.5 | **51.9%** |
-| **#58** | OpenHands + GPT-5 | **43.8%** |
+| **#51** | OpenHands + Claude Opus 4.5 | **51.9%** |
+| **#60** | OpenHands + GPT-5 | **43.8%** |
 
 ### Context
 
@@ -264,8 +264,8 @@ OpenHands's code-execution-first approach is less advantageous.
 | Benchmark | Score | Ranking | Significance |
 |---|---|---|---|
 | SWE-bench Verified | **77.6%** | **#1 open-source** | Headline metric; real-world bug fixing |
-| Terminal-Bench 2.0 (Claude Opus 4.5) | **51.9%** | **#49 / 100+** | Mid-range; reflects broader focus |
-| Terminal-Bench 2.0 (GPT-5) | **43.8%** | **#58 / 100+** | Model matters significantly |
+| Terminal-Bench 2.0 (Claude Opus 4.5) | **51.9%** | **#51 / 124** | Mid-range; reflects broader focus |
+| Terminal-Bench 2.0 (GPT-5) | **43.8%** | **#60 / 124** | Model matters significantly |
 
 **Bottom line**: OpenHands is the **strongest open-source coding agent on
 SWE-bench**, with a 77.6% score that puts it in the same tier as

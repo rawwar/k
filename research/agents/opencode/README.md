@@ -54,7 +54,7 @@ OpenCode was created by **Anomaly Innovations** (anomalyco). The project was ori
 
 ## Benchmark Performance
 
-- **Terminal-Bench 2.0**: Rank #50 (Claude Opus 4.5, 51.7%)
+- **Terminal-Bench 2.0**: Rank #53 (Claude Opus 4.5, 51.7%)
 - **Note**: As an early-stage project, benchmark scores reflect its nascent tooling maturity rather than architectural limitations
 
 ## Key Files for Understanding the Codebase

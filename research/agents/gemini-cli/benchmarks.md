@@ -12,8 +12,8 @@ codebases, understand context, make correct changes, and verify their work.
 
 | Configuration | Rank | Score | Notes |
 |---|---|---|---|
-| Gemini 3 Flash | #55 | 47.4% | Best Gemini CLI result |
-| Gemini 2.5 Pro | #105 | 19.6% | Significantly lower despite "Pro" label |
+| Gemini 3 Flash | #57 | 47.4% | Best Gemini CLI result |
+| Gemini 2.5 Pro | #108 | 19.6% | Significantly lower despite "Pro" label |
 
 ### Context: Leaderboard Position
 
@@ -26,11 +26,11 @@ Rank  Agent + Model               Score
 ...
 #20   [Strong performers]         ~60%
 ...
-#55   Gemini CLI (3 Flash)        47.4%  <-- Best Gemini result
+#57   Gemini CLI (3 Flash)        47.4%  <-- Best Gemini result
 ...
 #80   [Mid-tier agents]           ~30%
 ...
-#105  Gemini CLI (2.5 Pro)        19.6%  <-- Surprising underperformance
+#108  Gemini CLI (2.5 Pro)        19.6%  <-- Surprising underperformance
 ...
 ```
 
@@ -201,11 +201,11 @@ Agent: Gemini CLI (google-gemini/gemini-cli)
 
 Entry 1:
   Model: Gemini 3 Flash
-  Rank: #55
+  Rank: #57
   Score: 47.4%
   
 Entry 2:
   Model: Gemini 2.5 Pro
-  Rank: #105
+  Rank: #108
   Score: 19.6%
 ```

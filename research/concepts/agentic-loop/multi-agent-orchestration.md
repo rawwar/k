@@ -38,7 +38,7 @@ flowchart LR
 
 ## ForgeCode: Forge/Muse/Sage — Three Named Agents
 
-ForgeCode (the TermBench #1 agent) is the clearest example of purpose-built multi-agent orchestration. Three agents with hard capability boundaries:
+ForgeCode (the TermBench #2 agent — held #1 from late-2025 through April 2026) is the clearest example of purpose-built multi-agent orchestration. Three agents with hard capability boundaries:
 
 ### Architecture
 

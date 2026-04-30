@@ -186,7 +186,7 @@ Single Agent          Sub-Agent              Pipeline             Specialized
 
 | Agent | Unique Innovation | Why It Matters |
 |-------|------------------|---------------|
-| **ForgeCode** | Enforced verification + tool-call correction | Highest Terminal-Bench score (81.8%) |
+| **ForgeCode** | Enforced verification + tool-call correction | #2 Terminal-Bench score (81.8%, tied within margin with #1 Codex) |
 | **Claude Code** | Custom agents via markdown + worktree isolation | Most extensible sub-agent system |
 | **Codex CLI** | SQ/EQ + RAII resource management | Most robust sub-agent lifecycle |
 | **Capy** | Forcing functions (constraints as features) | Cleanest separation of concerns |
@@ -251,9 +251,10 @@ AutoGen for flexibility, CrewAI for role-based simplicity.
 
 | Rank | Agent | Score | Multi-Agent Level | Key Pattern |
 |------|-------|-------|-------------------|-------------|
-| 1 | **ForgeCode** (Opus 4.6) | 81.8% | Level 3 (Ensemble) | Enforced verification |
-| 1 | **ForgeCode** (GPT 5.4) | 81.8% | Level 3 (Ensemble) | Enforced verification |
-| 3 | **TongAgents** (Gemini Pro) | 80.2% | Level 3 (Ensemble) | Unknown |
+| 1 | **Codex** (GPT-5.5) | 82.0% | Single-agent | Native Responses API loop |
+| 2 | **ForgeCode** (GPT-5.4) | 81.8% | Level 3 (Ensemble) | Enforced verification |
+| 3 | **TongAgents** (Gemini 3.1 Pro) | 80.2% | Level 3 (Ensemble) | Unknown |
+| 4 | **ForgeCode** (Claude Opus 4.6) | 79.8% | Level 3 (Ensemble) | Enforced verification |
 | 4 | **Claude Code** (Opus 4.6) | 78.5% | Level 1 (Sub-Agent) | Task tool |
 | — | **Capy** | Not ranked | Level 3 (Ensemble) | Hard boundaries |
 | — | **SageAgent** | ~70% est | Level 2 (Pipeline) | 5-stage pipeline |
@@ -304,7 +305,7 @@ Legend:
 
 ### Tier 1: Specialized Ensembles (Level 3)
 
-**ForgeCode** — The highest-scoring agent on Terminal-Bench 2.0 (81.8%). Three agents
+**ForgeCode** — The #2 agent on Terminal-Bench 2.0 (81.8% with GPT-5.4, statistically tied with OpenAI's #1 Codex at 82.0%). Three agents
 with hard-enforced boundaries: Forge (read-write implementer), Muse (read-only planner),
 Sage (internal-only researcher). The bounded context model ensures only summaries — not
 raw exploration data — cross agent boundaries. The context engine achieves 93% token

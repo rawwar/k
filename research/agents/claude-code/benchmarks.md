@@ -10,9 +10,11 @@ Terminal-Bench is a benchmark specifically designed to evaluate terminal-based c
 
 | Rank | Agent + Model | Score | Notes |
 |------|--------------|-------|-------|
-| #39 | Claude Code (Claude Opus 4.6) | 58.0% | Best Claude Code configuration |
-| #48 | Claude Code (Claude Opus 4.5) | 52.1% | Previous generation Opus |
-| #69 | Claude Code (Claude Sonnet 4.5) | 40.1% | Cost-effective configuration |
+| #40 | Claude Code (Claude Opus 4.6) | 58.0% | Best Claude Code configuration |
+| #50 | Claude Code (Claude Opus 4.5) | 52.1% | Previous generation Opus |
+| #72 | Claude Code (Claude Sonnet 4.5) | 40.1% | Cost-effective configuration |
+| #83 | Claude Code (Claude Opus 4.1) | 34.8% | Older frontier model |
+| #95 | Claude Code (Claude Haiku 4.5) | 27.5% | Fast/cheap configuration |
 
 ### Context
 

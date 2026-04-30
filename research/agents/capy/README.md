@@ -31,7 +31,7 @@ Capy's most distinctive architectural decision is the **Captain/Build split** �
 
 | Benchmark | Model Config | Rank | Score |
 |-----------|-------------|------|-------|
-| Terminal-Bench 2.0 | Capy + Claude Opus 4.6 | #7 | 75.3% ±2.4 |
+| Terminal-Bench 2.0 | Capy + Claude Opus 4.6 | #8 | 75.3% ±2.4 |
 
 ## Key Stats
 
@@ -87,4 +87,4 @@ User (describes task in Capy IDE)
 
 - Website: https://capy.ai
 - Blog: "Captain vs Build: Why We Split the AI Agent in Two" (Feb 2026)
-- Terminal-Bench 2.0: rank #7 (Claude Opus 4.6, 75.3% ±2.4)
+- Terminal-Bench 2.0: rank #8 (Claude Opus 4.6, 75.3% ±2.4)

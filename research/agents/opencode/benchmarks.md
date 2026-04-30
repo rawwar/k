@@ -12,7 +12,7 @@ Terminal-Bench is a benchmark designed specifically for terminal-based AI coding
 
 | Metric | Value |
 |--------|-------|
-| **Rank** | #50 |
+| **Rank** | #53 |
 | **Model** | Claude Opus 4.5 |
 | **Score** | 51.7% |
 | **Category** | Terminal agents |

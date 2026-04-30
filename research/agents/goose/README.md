@@ -91,8 +91,9 @@ Automatic compaction at 80% of context window, background tool-pair summarizatio
 ### Terminal-Bench 2.0
 | Model | Rank | Score |
 |-------|------|-------|
-| Claude Opus 4.5 | #44 | 54.3% |
-| Claude Sonnet 4.5 | #61 | 43.1% |
+| Claude Opus 4.5 | #46 | 54.3% |
+| Claude Sonnet 4.5 | #64 | 43.1% |
+| Claude Haiku 4.5 | #79 | 35.5% |
 
 ### Terminal-Bench 1.0
 | Model | Rank | Score |

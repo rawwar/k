@@ -5,7 +5,7 @@ category: agents
 
 # ForgeCode
 
-> ZSH-native terminal coding agent; #1 on Terminal-Bench 2.0 (81.8% with both Claude Opus 4.6 and GPT-5.4).
+> ZSH-native terminal coding agent; **#2 on Terminal-Bench 2.0** (81.8% with GPT-5.4, 2026-03-12) — held #1 from late-2025 through April 2026, when OpenAI's Codex + GPT-5.5 took the top spot at 82.0%.
 
 ## Overview
 
@@ -39,11 +39,13 @@ What makes ForgeCode architecturally distinct from other terminal agents (Claude
 
 ## Benchmark Results (Terminal-Bench 2.0)
 
-| Model | Score | Rank |
-|-------|-------|------|
-| Claude Opus 4.6 | 81.8% | #1 |
-| GPT 5.4 | 81.8% | #1 (tied) |
-| Gemini 3.1 Pro Preview | 78.4% | (previous SOTA) |
+| Model | Score | Rank | Date |
+|-------|-------|------|------|
+| GPT-5.4 | 81.8% ±2.0 | #2 | 2026-03-12 |
+| Claude Opus 4.6 | 79.8% ±1.6 | #4 | 2026-03-12 |
+| Gemini 3.1 Pro | 78.4% ±1.8 | #6 | 2026-03-02 |
+
+ForgeCode held the #1 position from late-2025 through April 2026. It was overtaken by OpenAI's **Codex + GPT-5.5** (82.0%, 2026-04-23). ForgeCode is still the highest-ranked agent that runs *across* multiple frontier models within ~2 points of each other.
 
 For comparison, Google reports Gemini 3.1 Pro at 68.5% on TermBench running natively. ForgeCode's runtime harness added ~10 percentage points on the same model weights.
 

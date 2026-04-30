@@ -47,8 +47,8 @@ analysis, refactoring engines, project understanding — into the agentic AI era
 | First Release | April 2025 (GA); CLI mode June 2025 |
 | License | Proprietary / Commercial |
 | Pricing | AI Pro $100/yr; AI Ultimate $300/yr |
-| Terminal-Bench 2.0 (Multi-Model) | Rank #14 — 71.0% |
-| Terminal-Bench 2.0 (Gemini 3 Flash) | Rank #25 — 64.3% |
+| Terminal-Bench 2.0 (Multi-Model) | Rank #15 — 71.0% |
+| Terminal-Bench 2.0 (Gemini 3 Flash) | Rank #26 — 64.3% |
 | Primary Language | Kotlin/JVM (IDE plugin); CLI details undisclosed |
 | Supported LLMs | Claude, GPT, Gemini (multi-model routing) |
 | Open Source | No — closed source |

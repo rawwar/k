@@ -45,7 +45,7 @@ Podman, gVisor, and LXC.
 | **Context** | 1M tokens |
 | **Auth** | Google OAuth (free), API Key, Vertex AI |
 | **Release** | Weekly: nightly → preview (Tue) → stable (Tue) |
-| **Terminal-Bench** | #55 (Gemini 3 Flash, 47.4%) |
+| **Terminal-Bench** | #57 (Gemini 3 Flash, 47.4%) |
 
 ## Architecture at a Glance
 

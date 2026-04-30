@@ -33,7 +33,7 @@ Ante sits in a distinctive corner of the AI coding agent landscape. Where tools 
 
 | Benchmark | Configuration | Rank | Score |
 |-----------|--------------|------|-------|
-| Terminal-Bench 2.0 | Ante + Gemini 3 Pro | #17 | 69.4% |
+| Terminal-Bench 2.0 | Ante + Gemini 3 Pro | #18 | 69.4% |
 | Terminal-Bench 1.0 | Ante + Claude Sonnet 4.5 | #4 | 60.3% |
 
 ## Key Stats

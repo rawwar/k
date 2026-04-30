@@ -10,9 +10,9 @@ Terminal-Bench is a benchmark for evaluating terminal-based coding agents on rea
 
 | Model Configuration | Rank | Score | Notes |
 |--------------------|------|-------|-------|
-| Droid + GPT-5.3-Codex | #6 | 77.3% | Best Droid result; OpenAI frontier model |
-| Droid + Claude Opus 4.6 | #16 | 69.9% | Anthropic frontier model |
-| Droid + GPT-5.2 | #23 | 64.9% | Previous-gen OpenAI model |
+| Droid + GPT-5.3-Codex | #7 | 77.3% | Best Droid result; OpenAI frontier model |
+| Droid + Claude Opus 4.6 | #17 | 69.9% | Anthropic frontier model |
+| Droid + GPT-5.2 | #24 | 64.9% | Previous-gen OpenAI model |
 
 ### Analysis
 

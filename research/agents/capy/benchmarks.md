@@ -1,6 +1,6 @@
 # Capy — Benchmarks
 
-> Terminal-Bench 2.0 results: rank #7 with Claude Opus 4.6 at 75.3% ±2.4.
+> Terminal-Bench 2.0 results: rank #8 with Claude Opus 4.6 at 75.3% ±2.4.
 
 ## Terminal-Bench 2.0
 
@@ -12,13 +12,14 @@
 
 **Terminal-Bench 2.0** is a benchmark for evaluating AI coding agents on real-world terminal-based software engineering tasks. A rank of #7 places Capy in the upper tier of commercial coding agents.
 
-For reference, nearby results on the same benchmark (as of the same period):
+For reference, nearby results on the same benchmark (as of May 2026):
 
 | Rank | Agent | Score |
 |------|-------|-------|
-| #1 | ForgeCode (Claude Opus 4.6 / GPT-5.4) | 81.8% |
-| #6 | Droid + GPT-5.3-Codex | 77.3% |
-| **#7** | **Capy + Claude Opus 4.6** | **75.3% ±2.4** |
+| #1 | Codex + GPT-5.5 | 82.0% ±2.2 |
+| #2 | ForgeCode + GPT-5.4 | 81.8% ±2.0 |
+| #7 | Droid + GPT-5.3-Codex | 77.3% |
+| **#8** | **Capy + Claude Opus 4.6** | **75.3% ±2.4** |
 
 ### Interpretation
 

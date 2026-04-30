@@ -4,24 +4,33 @@
 
 Terminal-Bench (TermBench) 2.0 is a realistic evaluation suite where agents receive coding tasks in a sandboxed terminal environment and must complete them autonomously under strict time constraints. It tests codebase navigation, problem decomposition, tool calling, and task completion.
 
-### Current Leaderboard Positions
+### Current Leaderboard Positions (top of leaderboard, 2026-05)
 
 | Rank | Agent + Model | Completion % |
 |------|--------------|--------------|
-| #1 | ForgeCode + Claude Opus 4.6 | **81.8%** |
-| #1 | ForgeCode + GPT 5.4 | **81.8%** |
-| — | ForgeCode + Gemini 3.1 Pro Preview | **78.4%** |
-| — | Warp | 61.2% |
-| — | Claude Code | 58% |
-| — | Open Code | 51.7% |
+| #1 | Codex + GPT-5.5 (2026-04-23) | **82.0% ±2.2** |
+| **#2** | **ForgeCode + GPT-5.4** | **81.8% ±2.0** |
+| #3 | TongAgents + Gemini 3.1 Pro | 80.2% ±2.6 |
+| **#4** | **ForgeCode + Claude Opus 4.6** | **79.8% ±1.6** |
+| #5 | SageAgent + GPT-5.3-Codex | 78.4% ±2.2 |
+| **#6** | **ForgeCode + Gemini 3.1 Pro** | **78.4% ±1.8** |
+| #7 | Droid + GPT-5.3-Codex | 77.3% |
+| #8 | Capy + Claude Opus 4.6 | 75.3% |
+| #9 | Simple Codex + GPT-5.3-Codex | 75.1% |
+| #15 | Junie CLI (Multiple) | 71.0% |
+| #32 | Warp (Multiple) | 61.2% |
+| #40 | Claude Code + Claude Opus 4.6 | 58.0% |
+| #53 | OpenCode + Claude Opus 4.5 | 51.7% |
 
-Source: [tbench.ai leaderboard](https://www.tbench.ai/leaderboard/terminal-bench/2.0) and ForgeCode landing page.
+Source: [tbench.ai leaderboard](https://www.tbench.ai/leaderboard/terminal-bench/2.0) (snapshot May 2026).
+
+ForgeCode held the #1 slot from late-2025 through mid-April 2026. The leaderboard shifted on **2026-04-23** when OpenAI submitted Codex with the new GPT-5.5 model and scored 82.0%. ForgeCode + GPT-5.4 remains within 0.2 percentage points of the top — well inside the ±2.0% confidence interval — so the top of the leaderboard is now a statistical tie between Codex and ForgeCode at the 95% level.
 
 ### Model-Vendor Comparison
 
 Google reports Gemini 3.1 Pro Preview scoring 68.5% on TermBench when run natively. ForgeCode ran the same model and scored 78.4% — a **10 percentage point improvement** from the same weights in a better runtime harness.
 
-## The Journey: 25% → 78.4% → 81.8%
+## The Journey: 25% → 78.4% → 81.8% (#2)
 
 ForgeCode's benchmark improvement was documented in two detailed blog posts. The progression reveals how specific failure-mode fixes compound into large gains.
 

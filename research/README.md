@@ -13,10 +13,10 @@ Each agent folder contains 8 standard files:
 **Tier 1 — Top benchmark performers & major players:**
 | # | Agent | Description |
 |---|-------|-------------|
-| 1 | **forgecode** | #1 Terminal-Bench 2.0 (81.8%), ZSH-native multi-agent |
-| 2 | **claude-code** | Anthropic's CLI coding agent |
-| 3 | **codex** | OpenAI's Codex CLI agent (Rust, 3-layer sandbox) |
-| 4 | **droid** | Factory.ai enterprise multi-interface agent |
+| 1 | **codex** | OpenAI's Codex CLI — **#1 Terminal-Bench 2.0** (82.0% with GPT-5.5, 2026-04-23), Rust, 3-layer sandbox |
+| 2 | **forgecode** | **#2 Terminal-Bench 2.0** (81.8% with GPT-5.4), ZSH-native multi-agent |
+| 3 | **claude-code** | Anthropic's first-party CLI coding agent |
+| 4 | **droid** | Factory.ai enterprise multi-interface agent (#7 with GPT-5.3-Codex, 77.3%) |
 | 5 | **ante** | Antigma Labs, Rust-built self-organizing agent |
 | 6 | **opencode** | Open-source Go-based CLI agent |
 | 7 | **openhands** | Open-source, formerly OpenDevin, event-driven architecture |

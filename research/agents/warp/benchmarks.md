@@ -38,9 +38,9 @@ require:
 
 | Rank | Configuration | Score | Notes |
 |------|--------------|-------|-------|
-| #31 | Warp (config A) | 61.2% | Best Warp 2.0 result |
-| #36 | Warp (config B) | 59.1% | Mid-tier configuration |
-| #52 | Warp (config C) | 50.1% | Lower-tier configuration |
+| #32 | Warp (config A) | 61.2% | Best Warp 2.0 result |
+| #37 | Warp (config B) | 59.1% | Mid-tier configuration |
+| #54 | Warp (config C) | 50.1% | Lower-tier configuration |
 
 ### Context in the Leaderboard
 
@@ -56,7 +56,7 @@ xychart-beta
 ### Model Configuration Analysis
 
 Warp's multi-model support means different configurations yield different benchmark
-results. The spread between best (#31, 61.2%) and worst (#52, 50.1%) Warp results
+results. The spread between best (#32, 61.2%) and worst (#54, 50.1%) Warp results
 spans ~11 percentage points, indicating:
 
 1. **Model choice matters significantly**: The underlying LLM has a major impact on
@@ -73,9 +73,9 @@ different model tiers:
 
 | Config | Likely Model Tier | Score | Trade-off |
 |--------|------------------|-------|-----------|
-| A (#31) | Genius / Top-tier model | 61.2% | Best quality, highest cost |
-| B (#36) | Responsive / Mid-tier | 59.1% | Balanced speed/quality |
-| C (#52) | Cost-efficient / Budget | 50.1% | Lowest cost, adequate quality |
+| A (#32) | Genius / Top-tier model | 61.2% | Best quality, highest cost |
+| B (#37) | Responsive / Mid-tier | 59.1% | Balanced speed/quality |
+| C (#54) | Cost-efficient / Budget | 50.1% | Lowest cost, adequate quality |
 
 ## Warp's Terminal-Bench 1.0 Results
 
@@ -92,14 +92,14 @@ Warp Performance Across Benchmark Versions:
 
          Terminal-Bench 1.0    Terminal-Bench 2.0
          ─────────────────    ─────────────────
-Rank:         #11                 #31 / #36 / #52
+Rank:         #11                 #32 / #37 / #54
 Score:       52.0%              61.2% / 59.1% / 50.1%
 ```
 
 **Observations**:
 - Warp's best 2.0 score (61.2%) exceeds its 1.0 score (52.0%), suggesting improvement
   in the agent platform over time
-- The rank dropped from #11 to #31+ as more competitors entered the 2.0 leaderboard
+- The rank dropped from #11 to #32+ as more competitors entered the 2.0 leaderboard
 - The 2.0 benchmark is harder, so absolute score improvements may understate progress
 - Multiple 2.0 entries vs. single 1.0 entry reflects the multi-model configuration
 
@@ -114,9 +114,10 @@ Terminal-Bench 2.0 — Selected Agents (approximate):
 
 Agent                        Best Score    Best Rank
 ─────────────────────────   ──────────    ─────────
-Claude Code (Opus 4)          ~82%          ~#1-3
-Codex CLI                     ~70%          ~#10-15
-Warp (best config)            61.2%         #31
+Codex (GPT-5.5)               82.0%         #1
+ForgeCode (GPT-5.4)           81.8%         #2
+Codex CLI                     ~60-65%       ~#29-35
+Warp (best config)            61.2%         #32
 Aider (architect)             ~55-60%       ~#35-45
 ```
 

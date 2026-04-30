@@ -21,8 +21,8 @@ agents on real-world terminal-based programming tasks. Junie has two entries:
 
 | Configuration | Score | Rank | Notes |
 |---|---|---|---|
-| Junie (Multiple Models) | 71.0% | #14 | Multi-model orchestration |
-| Junie (Gemini 3 Flash) | 64.3% | #25 | Single model baseline |
+| Junie (Multiple Models) | 71.0% | #15 | Multi-model orchestration |
+| Junie (Gemini 3 Flash) | 64.3% | #26 | Single model baseline |
 
 ### Performance Context
 
@@ -36,11 +36,11 @@ Top Tier (75%+):
 
 Upper-Mid Tier (70-75%):
   Rank ~9-16: Strong performers
-  ★ Junie (Multiple Models) at 71.0% — Rank #14
+  ★ Junie (Multiple Models) at 71.0% — Rank #15
 
 Mid Tier (60-70%):
   Rank ~17-30: Capable agents
-  ★ Junie (Gemini 3 Flash) at 64.3% — Rank #25
+  ★ Junie (Gemini 3 Flash) at 64.3% — Rank #26
 
 Lower Tier (<60%):
   Rank ~31+: Developing agents or limited configurations
@@ -48,14 +48,14 @@ Lower Tier (<60%):
 
 ### What the Rankings Mean
 
-**Rank #14 (71.0%, Multi-Model)**:
+**Rank #15 (71.0%, Multi-Model)**:
 - Places Junie in the upper-mid tier of CLI agents
 - Competitive with well-established agents
 - Demonstrates that JetBrains' IDE heritage and multi-model approach
   translate to real terminal-based task performance
 - Notably strong for a relatively new CLI entrant
 
-**Rank #25 (64.3%, Gemini 3 Flash)**:
+**Rank #26 (64.3%, Gemini 3 Flash)**:
 - Places single-model Junie in the mid tier
 - Gemini 3 Flash is a fast, cost-effective model — not the strongest
 - Serves as a valuable baseline for measuring multi-model uplift
@@ -74,7 +74,7 @@ Single-Model Score:    64.3%
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Absolute Uplift:       +6.7 percentage points
 Relative Uplift:       +10.4% improvement
-Rank Improvement:      +11 positions (#25 → #14)
+Rank Improvement:      +11 positions (#26 → #15)
 ```
 
 ### Interpreting the 6.7pp Uplift
@@ -317,11 +317,11 @@ Terminal-Bench 2.0 evaluates agents on:
    from multi-model vs single-model is the strongest evidence we have for
    the value of intelligent model selection in coding agents.
 
-2. **Junie is competitive as a new CLI entrant**: Rank #14 in its first major
+2. **Junie is competitive as a new CLI entrant**: Rank #15 in its first major
    benchmark appearance is impressive, especially given the agent's IDE origins.
 
 3. **The JetBrains framework adds value beyond model selection**: Even the
-   single-model (Gemini Flash) configuration at Rank #25 shows that the agent
+   single-model (Gemini Flash) configuration at Rank #26 shows that the agent
    framework itself (project understanding, test integration, etc.) contributes
    to performance.
 

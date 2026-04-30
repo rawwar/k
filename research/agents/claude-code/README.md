@@ -22,9 +22,11 @@ Claude Code is Anthropic's official CLI coding agent. It lives in the terminal, 
 
 | Rank | Agent + Model | Score |
 |------|--------------|-------|
-| #39 | Claude Code (Claude Opus 4.6) | 58.0% |
-| #48 | Claude Code (Claude Opus 4.5) | 52.1% |
-| #69 | Claude Code (Claude Sonnet 4.5) | 40.1% |
+| #40 | Claude Code (Claude Opus 4.6) | 58.0% |
+| #50 | Claude Code (Claude Opus 4.5) | 52.1% |
+| #72 | Claude Code (Claude Sonnet 4.5) | 40.1% |
+| #83 | Claude Code (Claude Opus 4.1) | 34.8% |
+| #95 | Claude Code (Claude Haiku 4.5) | 27.5% |
 
 ## Key Capabilities
 

@@ -196,16 +196,21 @@ Each improvement was directly motivated by failure analysis on Terminal-Bench ta
 
 ### Notable Results
 
-| Agent | Terminal-Bench 2.0 Score | Key Feature |
-|-------|--------------------------|-------------|
-| TongAgents | 80.2 % | Multi-agent collaboration |
-| ForgeCode (latest) | ~38 % | Verification + tool correction |
-| Baseline GPT-4 | ~20 % | No agentic loop |
+| Rank | Agent + Model | Terminal-Bench 2.0 Score | Key Feature |
+|------|---------------|--------------------------|-------------|
+| #1 | Codex + GPT-5.5 | 82.0 % | Native Responses API loop on frontier model |
+| #2 | ForgeCode + GPT-5.4 | 81.8 % | Verification + tool-call correction + multi-agent |
+| #3 | TongAgents + Gemini 3.1 Pro | 80.2 % | Multi-agent collaboration |
+| #5 | SageAgent + GPT-5.3-Codex | 78.4 % | Pipeline orchestration |
+| #7 | Droid + GPT-5.3-Codex | 77.3 % | Enterprise multi-interface |
+| #15 | Junie CLI (Multi-Model) | 71.0 % | Per-task model routing |
+| — | Baseline (no agentic loop) | ~20 % | Single-shot LM |
 
-The gap between TongAgents (80.2 %) and a bare model (20 %) demonstrates that **loop
+The gap between Codex/ForgeCode (~82 %) and a bare model (~20 %) demonstrates that **loop
 design matters enormously for terminal tasks**, even more so than for code editing tasks.
 Multi-agent architectures — where one agent plans and another executes — show particular
-strength here.
+strength here, though the new #1 (Codex) shows that a tightly-engineered single-agent loop
+on a top-tier model can also reach the SOTA frontier.
 
 ---
 

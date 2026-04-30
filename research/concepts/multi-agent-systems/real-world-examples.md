@@ -77,7 +77,7 @@ flowchart TD
 
 ### ForgeCode: Three-Agent Bounded Context
 
-ForgeCode achieves the highest Terminal-Bench score (81.8%) with a three-agent
+ForgeCode achieves the second-highest Terminal-Bench score (81.8%, statistically tied with #1 Codex at 82.0%) with a three-agent
 model built on bounded context and enforced verification.
 
 ```mermaid

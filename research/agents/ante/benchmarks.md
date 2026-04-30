@@ -18,7 +18,7 @@ tasks inside a terminal environment.
 
 | Leaderboard        | Rank | Agent Configuration            | Score  |
 | ------------------- | ---- | ------------------------------ | ------ |
-| Terminal-Bench 2.0  | #17  | Ante + Gemini 3 Pro            | 69.4 % |
+| Terminal-Bench 2.0  | #18  | Ante + Gemini 3 Pro            | 69.4 % |
 | Terminal-Bench 1.0  | #4   | Ante + claude-sonnet-4-5       | 60.3 % |
 
 Antigma has noted that Ante "topped Terminal-Bench twice before," referring

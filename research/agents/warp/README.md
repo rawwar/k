@@ -66,7 +66,7 @@ The company has raised $170M+ in funding, reflecting the scale of ambition: repl
 | **Platform** | macOS (primary), Linux, Windows (coming) |
 | **Models** | GPT-5.x, Claude Opus/Sonnet 4.x, Gemini 3 Pro, Gemini 2.5 Pro |
 | **Auto Modes** | Cost-efficient, Responsive, Genius |
-| **Terminal-Bench 2.0** | Rank #31 (61.2%), #36 (59.1%), #52 (50.1%) |
+| **Terminal-Bench 2.0** | Rank #32 (61.2%), #37 (59.1%), #54 (50.1%) |
 | **Terminal-Bench 1.0** | Rank #11 (52.0%) |
 | **Funding** | $170M+ raised |
 | **SOC 2** | Compliant; Zero Data Retention with all LLM providers |
