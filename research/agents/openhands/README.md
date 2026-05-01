@@ -321,3 +321,24 @@ newcomers. The enterprise/cloud layers also introduce licensing ambiguity (the
 - CodeAct Paper: https://arxiv.org/abs/2402.01030
 - Tech Report: https://arxiv.org/abs/2511.03690
 - Cloud Platform: https://app.all-hands.dev
+
+## Recent Updates (March 2026)
+
+OpenHands shipped two minor releases in the window: `1.5.0` (2026-03-11) and `1.6.0` (2026-03-30).
+
+**1.5.0 (2026-03-11)**
+- Added a **planning agent** ([#12880](https://github.com/All-Hands-AI/OpenHands/pull/12880)).
+- New **Task List** tab in the right panel showing the agent's current task list with real-time status updates.
+- New **slash command menu** in the chat input that surfaces available agent skills/commands when typing `/`.
+- **Bitbucket Datacenter** support added ([#11052](https://github.com/All-Hands-AI/OpenHands/pull/11052)).
+- Ability to attach or change the Git repository for an existing conversation.
+- New model coverage: Claude Opus 4.6, Claude-Sonnet-4-6, GLM-4.7, GLM-5, Kimi-K2.5, Qwen3-Coder-Next, Gemini-3.1-Pro-Preview.
+- Microagent management UI hidden (deprecation signal).
+
+**1.6.0 (2026-03-30)**
+- **Hooks support** added ([#12773](https://github.com/All-Hands-AI/OpenHands/pull/12773)) — first-class lifecycle hooks for V1 conversations.
+- `/clear` slash command for V1 conversations — creates a new conversation that inherits the current sandbox and configuration but starts a fresh chat history (runtime state preserved).
+- `/new` slash command exposed in the slash-command menu.
+- Default global skills can now be enabled/disabled.
+- Catalan language added; copy button on code blocks; conversation persistence and `Export Conversation` deduplication fixes.
+- Multiple CVE fixes via dependency updates.

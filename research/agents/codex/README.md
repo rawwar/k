@@ -161,6 +161,18 @@ The SQ/EQ (Submission Queue / Event Queue) pattern decouples the UI from the
 agent core. The UI submits `Op` variants (user input, approvals, config changes)
 and receives `EventMsg` variants (agent messages, approval requests, token usage).
 
+## Recent Updates (March–April 2026)
+
+Highlights from `rust-v0.125.0` → `rust-v0.128.0` (released through late April 2026):
+
+- **Persisted `/goal` workflows** — long-running goals are now first-class objects with create/pause/resume/clear, app-server APIs, model tools, and TUI controls.
+- **`codex update`** — built-in self-update command; the long-standing `--full-auto` flag is now deprecated in favor of explicit permission profiles.
+- **Expanded permission profiles** — built-in defaults, sandbox CLI profile selection, cwd controls, and active-profile metadata exposed to clients.
+- **Plugin marketplace** — installation from a remote marketplace, remote bundle caching, plugin-bundled hooks, hook enablement state, and external-agent config import.
+- **External agent session import** — Codex can import sessions originating from other agents (background imports, imported-session title handling).
+- **MultiAgentV2 hardening** — explicit thread caps, wait-time controls, root/sub-agent hints, and v2-specific depth handling.
+- **GPT-5.5 / `gpt-image-2`** — bundled OpenAI Docs skill refreshed; Bedrock GPT-5.4 endpoint/model metadata corrected; Bedrock GPT-5.4 `apply_patch` regression fixed.
+
 ## See Also
 
 - [Architecture](architecture.md) — Full architecture deep-dive

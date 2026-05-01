@@ -118,3 +118,16 @@ Works on macOS, Linux, Android, and Windows (WSL/Git Bash). Requires ZSH and a N
 - Blog (Part 1): https://forgecode.dev/blog/benchmarks-dont-matter/
 - Blog (Part 2): https://forgecode.dev/blog/gpt-5-4-agent-improvements/
 - Terminal-Bench 2.0 leaderboard: https://www.tbench.ai/leaderboard/terminal-bench/2.0
+
+## Recent Updates (April 2026)
+
+Highlights from the `v2.12.7` → `v2.12.10` release stream (late April 2026):
+
+- **GPT-5.5 / GPT-5.5-pro support** — added to the provider layer ([#3158](https://github.com/antinomyhq/forge/pull/3158)). (The TB2 #2 result of 81.8% was set on GPT-5.4; GPT-5.5 support landed as Codex moved into #1 with the same model family.)
+- **NVIDIA provider** — new OpenAI-compatible NVIDIA provider support ([#2847](https://github.com/antinomyhq/forge/pull/2847)).
+- **DeepSeek improvements** — DeepSeek V4 models added to the OpenCode providers list; `reasoning_effort` now propagated to the DeepSeek API ([#3159](https://github.com/antinomyhq/forge/pull/3159)).
+- **MiMo V2.5 Pro** added to the OpenCode Go provider list ([#3185](https://github.com/antinomyhq/forge/pull/3185)).
+- **Sub-agent / tool-registry refactor** — research sub-agent filtering moved into the tool registry ([#3114](https://github.com/antinomyhq/forge/pull/3114)).
+- **MCP race-condition fix** — concurrent MCP initialisation race resolved ([#3181](https://github.com/antinomyhq/forge/pull/3181)).
+- **Ergonomics** — custom terminal-safe spinner replaces `indicatif` ([#3178](https://github.com/antinomyhq/forge/pull/3178)); reasoning-effort rendered next to model in the CLI prompt; `forge logs` command added; local provider config renames `URL` → `HOST` (with backward compatibility); `use_forge_committer` git config option to control commit author identity.
+- **Reliability** — Codex 503 responses now retried; OpenAI Responses strict-mode disabled for "open" tool schemas to avoid spurious rejections; `InvalidContentType` SSE errors now include the response body for easier debugging.

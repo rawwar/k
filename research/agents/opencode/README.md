@@ -71,3 +71,15 @@ OpenCode was created by **Anomaly Innovations** (anomalyco). The project was ori
 | `internal/message/message.go` | Message persistence |
 | `internal/pubsub/broker.go` | Generic pub/sub event system |
 | `internal/permission/permission.go` | Permission request/grant flow |
+
+## Recent Updates (April 2026)
+
+Highlights from the `v1.14.x` release stream (note: development continues at `sst/opencode` though the original codebase has also been forked into the Charm team's `crush` project — see references):
+
+- **New model support** — Mistral Medium 3.5 with reasoning ([#24996](https://github.com/sst/opencode/pull/24996)); GitHub Copilot model variants kept in sync with upstream API capabilities.
+- **Provider robustness** — Moonshot/Kimi tool schemas sanitized to avoid rejected tool calls; DeepSeek OpenAI-compatible setups keep `reasoning_content` interleaved by default; Google Vertex defaults tool-call streaming off; Azure Responses defaults adjusted to avoid reasoning-item ordering errors.
+- **Configurable default shell** — new setting (and Desktop UI) for choosing the default shell used by terminals and agent shell commands (`v1.14.27`).
+- **Editor / IDE integration** — Zed editor selection support for editor context (UTF-8 selection ranges fixed); editor-context reconnect when switching to a session in another directory.
+- **Sessions** — relative workspace paths; current-path filter by default with a setting to show the whole project; forked sessions correctly remap the compaction tail so compacted history stays intact.
+- **Instruction precedence** — global instructions are now applied before project and skill instructions, making precedence predictable.
+- **Operational** — reduced memory growth in long-running bash tool usage; `opencode/<version>` `User-Agent` header added to outgoing HTTP requests.

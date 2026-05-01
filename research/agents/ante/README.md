@@ -81,3 +81,9 @@ Ante sits in a distinctive corner of the AI coding agent landscape. Where tools 
 | [unique-patterns.md](unique-patterns.md) | Lock-free scheduling, self-organizing intelligence, own inference stack |
 | [benchmarks.md](benchmarks.md) | Terminal-Bench 1.0 and 2.0 results, benchmark integrity analysis |
 | [references.md](references.md) | Links to Antigma Labs site, GitHub repos, blog posts, docs |
+
+## Recent Updates (March–April 2026)
+
+- **Public introduction (Mar 31, 2026)** — Antigma Labs published *"Introduce Ante: Self-Contained Agent That Self-Organize"* on the day Anthropic open-sourced Claude Code, framing Ante as the precursor to their broader self-organizing-intelligence mission. ([blog](https://antigma.ai/blog/2026/03/31/introducing-ante))
+- **Offline coding research (Apr 24, 2026)** — *"From Arcade to Living Room: Offline Coding Models Hit Their Console Moment"* — an Antigma analysis arguing that on Terminal-Bench 2.0, open-weight 27B–35B models now match what hosted-frontier models posted 6–8 months earlier, making local execution a serious option for privacy-first / air-gapped teams. Reinforces Ante's offline-first positioning. ([blog](https://antigma.ai/blog/2026/04/24/offline-coding-models))
+- The core Ante binary remains proprietary; no public source repo for `ante` itself was published in this window. The supporting open-source crates (`mcp-sdk`, `nanochat-rs`) had no tagged releases between March 1 and May 1, 2026.

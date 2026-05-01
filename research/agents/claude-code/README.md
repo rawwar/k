@@ -18,6 +18,21 @@ Claude Code is Anthropic's official CLI coding agent. It lives in the terminal, 
 - **Runtime**: Node.js 18+, TypeScript, Ink (React for CLI)
 - **Models**: Claude Sonnet, Opus, and Haiku (user-selectable per session)
 
+### Recent Updates (March–April 2026)
+
+Notable additions across the `v2.1.121` → `v2.1.126` release stream (April 2026):
+
+- **`claude project purge [path]`** — wipes all Claude Code state for a project (transcripts, tasks, file history, config entry); supports `--dry-run`, `-y/--yes`, `-i/--interactive`, `--all`.
+- **Gateway-aware `/model` picker** — when `ANTHROPIC_BASE_URL` points at an Anthropic-compatible gateway, the picker now lists models from the gateway's `/v1/models` endpoint.
+- **`claude plugin prune`** — removes orphaned auto-installed plugin dependencies; `plugin uninstall --prune` cascades.
+- **MCP `alwaysLoad`** — opt-out of tool-search deferral on a per-server basis so all tools from that server are always available.
+- **PostToolUse output replacement** — hooks can now replace tool output for *all* tools via `hookSpecificOutput.updatedToolOutput` (previously MCP-only).
+- **`/resume` by PR URL** — pasting a GitHub/GitHub Enterprise/GitLab/Bitbucket PR URL into the search box finds the session that produced it.
+- **OAuth code paste fallback** — `claude auth login` accepts the OAuth code pasted into the terminal when the browser callback can't reach localhost (WSL2, SSH, containers).
+- **Bedrock service tier** — new `ANTHROPIC_BEDROCK_SERVICE_TIER` env (`default` / `flex` / `priority`) sent as `X-Amzn-Bedrock-Service-Tier`.
+- **Windows hardening** — PowerShell 7 detection (Microsoft Store, MSI, .NET global tool); when the PowerShell tool is enabled, Claude treats PowerShell as the primary shell instead of Bash; clipboard writes no longer expose copied content via process command-line arguments visible to EDR/SIEM.
+- **OpenTelemetry** — `claude_code.skill_activated` now fires for user-typed slash commands and carries an `invocation_trigger` attribute (`"user-slash"`, `"claude-proactive"`, `"nested-skill"`); numeric attributes on `api_request`/`api_error` are now emitted as numbers.
+
 ## Terminal-Bench 2.0 Rankings
 
 | Rank | Agent + Model | Score |

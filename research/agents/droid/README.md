@@ -118,3 +118,21 @@ Factory has raised funding with participation from **Wipro Ventures** and serves
 - Security: https://factory.ai/security
 - Terminal-Bench 2.0: rank #7 (Droid + GPT-5.3-Codex, 77.3%); rank #17 (Claude Opus 4.6, 69.9%); rank #24 (GPT-5.2, 64.9%); rank #27 (Claude Opus 4.5, 63.1%); rank #33 (Gemini 3 Pro, 61.1%)
 - Terminal-Bench 1.0: rank #5 (Claude Opus 4.1, 58.8%)
+
+## Recent Updates (April 2026)
+
+Highlights from the Factory CLI changelog `v0.109.x` → `v0.114.0` (Apr 23–30, 2026):
+
+- **Hybrid ripgrep Grep tool** — Grep now uses a hybrid ripgrep engine for substantially faster search.
+- **Security-review skill on by default** — the `security-review` skill is now enabled out of the box.
+- **`interval` loop command** — new CLI command for running tasks on a recurring interval, complementing scheduled missions.
+- **Auto-fallback to Droid Core** — sessions hitting usage limits automatically fall back to Droid Core when the org's overage preference is set accordingly.
+- **Per-tool MCP autonomy overrides** — new `mcpAutonomyOverrides` setting lets you set autonomy levels per individual MCP tool.
+- **Fast-mode toggle** — single opt-in toggle to enable fast-mode model variants across the agent.
+- **BYOM admin toggle** — org admins can enable/disable bring-your-own-machine computers from enterprise settings.
+- **Droid Shield improvements** — push scanning targets only commits not yet on any remote (no duplicate scans); max buffer raised from 20 MB → 64 MB.
+- **Per-run automation viewer** and **org-level model access table** added in the web app.
+- **Mission entry overage gating** and snapshotted mission model settings keep long-running missions from drifting mid-run.
+- **Slack** — multi-turn delegation fix; per-channel auto-run model selection; native loading status indicators.
+- **Models** — DeepSeek V4 Pro added; sorted CLI model list by release date (newest first).
+- **i18n** — Italian translations added for the CLI.
