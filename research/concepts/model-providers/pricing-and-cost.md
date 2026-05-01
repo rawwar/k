@@ -25,6 +25,7 @@ strategies for minimizing costs without sacrificing quality.
 | o3 | $2.00 | $0.50 | $8.00 | $1.00 | $4.00 |
 | o4-mini | $1.10 | $0.275 | $4.40 | $0.55 | $2.20 |
 | **Anthropic** | | | | | |
+| Claude Opus 4.7 | $5.00 | $0.50 | $25.00 | $2.50 | $12.50 |
 | Claude Opus 4.6 | $5.00 | $0.50 | $25.00 | $2.50 | $12.50 |
 | Claude Sonnet 4.6 | $3.00 | $0.30 | $15.00 | $1.50 | $7.50 |
 | Claude Haiku 4.5 | $1.00 | $0.10 | $5.00 | $0.50 | $2.50 |
@@ -478,6 +479,21 @@ GROUP BY model;
 | DeepSeek | None (but very cheap) | — | Budget users |
 | Ollama | All open models | Hardware only | Privacy, offline |
 | OpenRouter | Free model tier | Limited | Experimentation |
+
+---
+
+## Per-Request Cost Observability (xAI, Apr 2026)
+
+A small but useful 2026 development: xAI now returns the **exact cost of
+every request** in the API response itself, via a `cost_in_usd_ticks` field
+inside the standard `usage` object (Apr 30, 2026). This works uniformly across
+chat completions, the Responses API, image and video generation, and
+streaming. Agents that previously reconciled token counts against pricing
+tables to estimate spend can now read the authoritative number per request,
+which sidesteps the entire class of "we counted tokens differently than the
+provider does" cost-tracking bugs. No equivalent field exists on OpenAI,
+Anthropic, or Google as of May 2026; for those providers, agents still derive
+cost from `usage.input_tokens` × current pricing.
 
 ---
 

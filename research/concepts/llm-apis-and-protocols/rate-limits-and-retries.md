@@ -73,6 +73,12 @@ Key Anthropic-specific details:
 - Rate limits apply per **workspace**, not per API key
 - The `claude-3-5-sonnet` and `claude-3-5-haiku` model families have different limits
 - Anthropic provides a `retry-after` header indicating seconds to wait
+- **Rate Limits API** (released Apr 24, 2026): administrators can now query
+  configured org/workspace limits programmatically instead of inferring them
+  from observed 429s. See [Rate Limits API](https://docs.anthropic.com/en/docs/build-with-claude/rate-limits-api).
+  This is the first time provider-side limit metadata is exposed as a
+  first-class API surface — useful for agents that want to size their own
+  client-side token buckets correctly on cold start.
 
 ### Google (Gemini) Rate Limits
 

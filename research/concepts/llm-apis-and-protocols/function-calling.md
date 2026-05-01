@@ -819,6 +819,21 @@ You can also restrict which functions are available:
 }
 ```
 
+### Mixing Built-in Tools and Custom Functions (Mar 2026)
+
+Until early 2026, a Gemini request had to choose between Google's hosted
+"built-in" tools (Search grounding, Maps grounding, Code Execution, URL
+context, File Search) **or** custom `functionDeclarations` — not both. As of
+Mar 18, 2026, the [Built-in Tools and Function Calling Combination](https://ai.google.dev/gemini-api/docs/tool-combination)
+feature lifts that restriction: a single `tools` array can mix both. For
+coding agents this matters because it removes the need to fan out queries
+across two requests when, e.g., the agent wants to ground on Google Search
+**and** call a custom `read_file` tool in the same turn.
+
+A separate endpoint, `gemini-3.1-pro-preview-customtools`, is tuned to
+prioritize the custom tools when the model has both kinds available — useful
+when bash/edit tools should win ties against hosted Code Execution.
+
 ### Wire Format Example
 
 **Request with function calling:**

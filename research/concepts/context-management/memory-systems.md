@@ -252,6 +252,20 @@ The agent itself decides what to remember and forget. No external system summari
 conversations — the agent uses memory tools as part of its reasoning. This creates a
 feedback loop: memory management improves as the model improves.
 
+The same self-managed-memory shape now ships in two other places worth
+tracking:
+
+- **letta-code** (added in our agent set in Pass D) productizes the Letta
+  primitives as a CLI: persistent agents that survive restarts, with the same
+  core-memory / archival-memory / recall-memory split exposed as tools.
+- **Claude Managed Agents — Memory** (Anthropic public beta, Apr 23, 2026,
+  header `managed-agents-2026-04-01`) adds first-party persistent memory to
+  Anthropic's hosted agent harness. The integration guide is at
+  `/docs/en/managed-agents/memory`. Anthropic's framing — "memory" as a
+  property of an agent that survives across sessions — is closer to Letta's
+  model than to a static `CLAUDE.md` file: the agent writes and reads memory
+  through the platform, rather than the user editing a tracked file.
+
 ---
 
 ## 9. Short-Term vs Long-Term Memory Patterns

@@ -73,7 +73,7 @@ An even cheaper variant for high-volume tasks:
 
 ### Gemini 3 (Latest Generation)
 
-The newest generation, announced in 2025:
+The newest generation, with the 3.x line stabilizing in early 2026:
 
 | Property | Value |
 |----------|-------|
@@ -83,6 +83,39 @@ The newest generation, announced in 2025:
 
 Gemini 3 Flash is the default model in Gemini CLI. It builds on the 2.5 generation
 with improved coding capabilities and faster inference.
+
+### Gemini 3.1 (Spring 2026)
+
+Google rolled the Gemini 3 line forward through Q1 2026. As of May 2026:
+
+- **`gemini-3.1-pro-preview`** (Feb 19, 2026) is the current Pro tier; the
+  earlier `gemini-3-pro-preview` alias was shut down on Mar 9, 2026 and now
+  resolves to 3.1 Pro.
+- A separate endpoint **`gemini-3.1-pro-preview-customtools`** is tuned to
+  prioritize custom tools when the request mixes built-in tools and bash —
+  relevant for coding agents that combine Google's hosted tools (Search, Code
+  Execution, File Search) with their own shell/edit tools.
+- **`gemini-3.1-flash-lite-preview`** (Mar 3, 2026) is the first Flash-Lite in
+  the 3 series and replaces the 2.5 Flash-Lite preview shut down Mar 31, 2026.
+- **`gemini-3.1-flash-live-preview`** (Mar 26, 2026) targets real-time
+  audio-to-audio voice agents via the Live API.
+
+Two API surface changes from the same window matter for agent builders:
+
+- **Built-in Tools + Function Calling Combination** (Mar 18, 2026) — a single
+  request can now mix Google's hosted tools (Search, Maps grounding, Code
+  Execution, File Search, URL context) with custom function-calling tools. This
+  is the Gemini equivalent of OpenAI's hosted-tools-on-Responses pattern and
+  removes the previous either/or constraint.
+- **Flex and Priority inference tiers** (Apr 1, 2026) — Gemini joins the
+  multi-tier latency/cost trade-off pattern: Priority pays a premium for
+  guaranteed latency, Flex trades latency for cheaper tokens, on top of the
+  existing standard tier.
+
+The **Deep Research** agent (Google's first-party research-agent product) was
+also refreshed Apr 21, 2026 with collaborative planning, visualization,
+**MCP server integration**, and File Search — making Deep Research a notable
+first-party MCP client alongside Claude Desktop and ChatGPT.
 
 ---
 

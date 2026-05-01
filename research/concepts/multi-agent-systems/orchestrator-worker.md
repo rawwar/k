@@ -639,6 +639,28 @@ their specific subtask. This is where ForgeCode's bounded context model excels.
 
 ---
 
+## Adjacent Pattern: Executor + Advisor (Anthropic, 2026)
+
+In April 2026 Anthropic shipped the **Advisor tool** (public beta, header
+`advisor-tool-2026-03-01`) which formalizes a narrow but increasingly common
+variant of orchestrator-worker:
+
+- A **fast executor model** (e.g. Sonnet 4.6) drives the bulk of token
+  generation and tool calls.
+- A **higher-intelligence advisor model** (e.g. Opus 4.7) is invoked
+  mid-generation as a tool call to provide strategic guidance — it does not
+  carry the conversation, only answers targeted questions from the executor.
+
+This inverts the usual pattern: there is no separate orchestrator agent
+deciding who runs. The executor *is* the loop, and the advisor is exposed as
+just another tool. The economic argument is that long-horizon agentic
+workloads can approach advisor-solo quality at executor pricing, because the
+advisor only sees a small slice of context per call. LangChain's Deep Agents
+harness (added in Pass D) reaches similar ends through a planner subagent;
+Anthropic's Advisor tool collapses the same pattern to a single API primitive.
+
+---
+
 ## References
 
 - Anthropic. "Building Effective Agents." 2024. https://www.anthropic.com/research/building-effective-agents

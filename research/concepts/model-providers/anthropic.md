@@ -9,13 +9,39 @@ of frontier intelligence (particularly in coding), a 1M token context window, ex
 prompt caching, extended thinking capabilities, and the fact that Claude Code—the
 most prominent CLI coding agent—is built by Anthropic itself.
 
-Claude Opus 4.6 is widely considered the most capable model for building agents and
-writing code as of mid-2025, while Claude Sonnet 4.6 offers the best balance of
-speed and intelligence for interactive coding sessions.
+Claude Opus 4.7 (released April 16, 2026) is the current most capable model
+for complex reasoning and agentic coding; Claude Opus 4.6 remains a widely
+deployed alternative at the same price point. Claude Sonnet 4.6 is the
+default model in Claude Code and offers the best balance of speed and
+intelligence for interactive coding sessions.
 
 ---
 
 ## Model Lineup
+
+### Claude Opus 4.7
+
+The current top of the Claude line (released April 16, 2026):
+
+| Property | Value |
+|----------|-------|
+| **Model ID** | `claude-opus-4-7` |
+| **Context Window** | 1,000,000 tokens |
+| **Input Price** | $5.00 / MTok (unchanged from 4.6) |
+| **Output Price** | $25.00 / MTok (unchanged from 4.6) |
+| **Extended Thinking** | Yes (adaptive) |
+
+Anthropic positions 4.7 as their "most capable generally available model for
+complex reasoning and agentic coding." Pricing was held flat versus Opus 4.6.
+Two caveats for integrators:
+
+- **API breaking changes vs. Opus 4.6.** Anthropic published a dedicated
+  migration guide; agents pinning a Claude version should not blind-upgrade.
+- **Updated tokenizer.** Token counts (and therefore cache layouts and
+  rate-limit math) shift relative to 4.6, even for identical prompts.
+
+Opus 4.7 is also available in Amazon Bedrock from the April 16, 2026 launch
+day across 27 regions.
 
 ### Claude Opus 4.6
 
@@ -740,6 +766,45 @@ MODEL_SELECTION = {
     {"type": "tool_result", "tool_use_id": "toolu_123", "content": "result"}
 ]}
 ```
+
+---
+
+## Recent Platform Updates (Spring 2026)
+
+A cluster of Anthropic platform releases between mid-March and late April 2026
+materially changes how coding agents integrate with Claude:
+
+- **Claude Managed Agents** (public beta, Apr 8, 2026) — a fully managed agent
+  harness with secure sandboxing, built-in tools, and SSE streaming. Agents,
+  containers, and sessions are first-class API resources. Requires the
+  `managed-agents-2026-04-01` beta header. This is Anthropic's answer to
+  hosting-the-loop-yourself; agents like Claude Code remain client-side, but
+  Managed Agents lets third parties run "Claude as an autonomous agent" without
+  building their own scaffold.
+- **Memory for Managed Agents** (public beta, Apr 23, 2026) — adds persistent
+  per-agent memory accessible across sessions through the same beta header.
+  See `context-management/memory-systems.md` for cross-references.
+- **Advisor tool** (public beta, Apr 9, 2026) — a built-in tool that pairs a
+  fast executor model with a higher-intelligence advisor model that provides
+  strategic guidance mid-generation. Token volume stays cheap (executor) while
+  hard reasoning happens at advisor quality. Beta header
+  `advisor-tool-2026-03-01`. See `multi-agent-systems/orchestrator-worker.md`.
+- **`ant` CLI** (Apr 8, 2026) — first-party command-line client for the
+  Claude API with Claude Code integration and YAML-versioned API resources.
+- **Rate Limits API** (Apr 24, 2026) — administrators can now programmatically
+  query org and workspace rate limits.
+- **300k `max_tokens` beta** for Opus 4.6 / Sonnet 4.6 on the Message Batches
+  API (Mar 30, 2026; header `output-300k-2026-03-24`).
+- **`thinking.display: "omitted"`** (Mar 16, 2026) — strips thinking content
+  from streamed responses while preserving `signature` for multi-turn
+  continuity. Billing is unchanged (the model still does the work). See
+  `llm-apis-and-protocols/extended-thinking.md`.
+- **Models API capability fields** (Mar 18, 2026) — `max_input_tokens`,
+  `max_tokens`, and a `capabilities` object are now returned by `GET /v1/models`,
+  enabling agents to negotiate features at runtime instead of hard-coding tables.
+- **1M context fully GA at standard pricing** for Opus 4.6 + Sonnet 4.6
+  (Mar 13, 2026). The 1M beta header was retired entirely for Sonnet 4.5/4 on
+  Apr 30, 2026 — those older models now error above 200k.
 
 ---
 

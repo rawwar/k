@@ -73,6 +73,8 @@ Key milestones:
 | Mar 2025     | Protocol revision 2025-03-26 (Streamable HTTP)      |
 | Apr 2025     | OpenAI announces MCP support in ChatGPT agents       |
 | Mid-2025     | Linux Foundation governance announced                |
+| Jun 2025     | Protocol revision 2025-06-18 (elicitation, structured tool output) |
+| Nov 2025     | Protocol revision 2025-11-25 — current stable        |
 
 ### Relationship to LSP
 
@@ -262,6 +264,9 @@ directories/files they are allowed to operate within. Declared as URI lists.
 
 **Elicitation** — Allows Servers to request additional information from the
 user through the Client. The Client presents the request as a UI prompt.
+As of revision `2025-11-25`, elicitation supports **URL mode** (servers can
+ask the client to open a URL for OAuth-style consent flows) and richer
+`EnumSchema` shapes (titled / untitled, single- and multi-select).
 
 ### Additional Utilities
 
@@ -1003,13 +1008,35 @@ flowchart TD
 ### Protocol Evolution
 
 The specification uses dated revisions (e.g., `2025-03-26`) rather than semver.
-Future revisions are expected to add:
+Clients and servers negotiate a single shared revision during `initialize`.
 
-- Richer media types in tool results (audio, video)
-- Batch tool invocation for efficiency
-- Server-to-server authentication standards
-- Formal capability versioning
-- Improved error taxonomy
+**Revision history at a glance** (as of May 2026):
+
+| Revision     | Status   | Notable additions                                       |
+|--------------|----------|---------------------------------------------------------|
+| `2024-11-05` | Final    | Initial public specification                            |
+| `2025-03-26` | Final    | Streamable HTTP transport replaces SSE-only             |
+| `2025-06-18` | Final    | Elicitation, structured tool output, refined OAuth      |
+| `2025-11-25` | **Current** | Tasks (durable requests), tool/resource icons, OIDC discovery, URL-mode elicitation, tool calling in `sampling`, OAuth Client ID Metadata Documents, JSON Schema 2020-12 as default dialect |
+| draft        | In-progress | OpenTelemetry trace context in `_meta`, deterministic `tools/list` ordering, capability `extensions` field |
+
+The 2025-11-25 revision is the largest expansion since Streamable HTTP. Two
+items deserve highlighting for coding agents:
+
+- **Tasks** (`/specification/2025-11-25/basic/utilities/tasks`) — experimental
+  support for durable, pollable requests. A client can submit a long-running
+  tool call, disconnect, and later poll for the result. This is the
+  protocol-level analogue of OpenAI's background mode on the Responses API and
+  enables remote MCP servers to host slow operations (long builds, large
+  refactors) without holding a session open.
+- **Icons + tool naming guidance** — servers may now attach icons to tools,
+  resources, and prompts, and the spec adds normative guidance on tool names.
+  Combined with the draft change requiring deterministic `tools/list` ordering,
+  this directly improves prompt-cache hit rates on the host side.
+
+Future drafts continue to focus on observability (OTel context propagation),
+host-side caching ergonomics, and per-request header plumbing
+(`Mcp-Method`, `Mcp-Name`, `x-mcp-header`).
 
 ---
 
