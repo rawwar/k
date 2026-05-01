@@ -13,7 +13,12 @@
 
 | Title | Date | Relevance |
 |-------|------|-----------|
-| "Captain vs Build: Why We Split the AI Agent in Two" | Feb 2026 | Core architecture explanation; source for Captain/Build system prompts and design rationale |
+| "Captain vs Build: Why We Split the AI Agent in Two" | 9 Feb 2026 | Core architecture explanation; source for Captain/Build system prompts and design rationale |
+| "We Stress-Tested GPT-5.4 Before Launch. Here's What Happened." | 5 Mar 2026 | Pre-launch eval of GPT-5.4 in the Capy harness |
+| "Capy Is SOC 2 Type II Certified" | 10 Mar 2026 | Security/compliance announcement |
+| "$1,000 in Capy Credits for Every YC Company" | 9 Apr 2026 | YC partnership / distribution |
+| "The April Update: Captain Takes the Helm" | 16 Apr 2026 | Build mode deprecated; Captain-only workflow; thread-local task IDs; thread-scoped model selection; Opus 4.7 default Captain; CI-aware Captain |
+| "GPT-5.5 Is the First OpenAI Model We'd Actually Run as Captain." | 23 Apr 2026 | Production telemetry from 495 sessions / ~56k model calls comparing GPT-5.5 vs Opus 4.6 vs GPT-5.4 as Captain (tail latency, ambition, review-loop convergence) |
 
 ## Benchmark Sources
 

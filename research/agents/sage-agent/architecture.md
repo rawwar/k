@@ -2,6 +2,11 @@
 
 ## Multi-Agent Pipeline
 
+> **2026 Q2 note**: A `TaskRouterAgent` was briefly inserted between `TaskAnalysisAgent`
+> and `PlanningAgent` in earlier 2026 releases but was removed on 2026-04-24
+> (`c25a7fa` "remove TaskRouterAgent and simplify default flow"), restoring the canonical
+> 5-agent pipeline described below.
+
 SageAgent's core architecture is a sequential pipeline of five specialized agents, coordinated
 by an `AgentController` that serves as the main entry point for user requests.
 
@@ -83,6 +88,21 @@ toggle API is not deeply documented in the public README.
 The `professional_agents/` directory suggests a plugin system for domain-specialized agents.
 This is listed on the roadmap but appears to be in early stages. The concept would allow
 specialized agents (e.g., for code review, data analysis) to be plugged into the pipeline.
+
+A **self-check agent** was added on 2026-04-29 (`260bd1b`) — an early example of this
+extensibility pattern in practice, alongside passthrough sandbox config and a chat
+markdown workspace.
+
+## Clients (2026 Q2)
+
+Two first-party UIs now ship with the framework:
+
+- **Streamlit web demo** (`sage_demo.py`) — original UI from initial release.
+- **Sage Terminal (TUI)** — new terminal client added across 2026-04-25 → 2026-04-30
+  (`add29b9`, `4232168`, `2713790`, `58f74b1`). Driven by the same `AgentController`
+  runtime; adds composer/overlay polish and a packaged runtime distribution.
+- **Desktop bundles** — Windows NSIS-only installer and macOS desktop builds landed
+  2026-04-26 → 2026-04-27 (`867c977`, `d50bdf3`, `5f10f04`).
 
 ---
 

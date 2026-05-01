@@ -42,6 +42,20 @@ Traditional single-agent systems (Claude Code, Cursor Agent, Codex) use one agen
 
 The Captain/Build split addresses all three by making the spec the mandatory interface between planning and execution.
 
+### April 2026: Captain-Only Surface
+
+The **2026-04-16 update** ("Captain Takes the Helm") deprecated the user-selectable Build
+mode. Build agents continue to exist as the execution backend, but they are no longer a
+separate UX surface — Captain now owns the full conversation and **delegates** to Build
+internally. From a user's perspective the architecture went from "two modes you switch
+between" to "one Captain conversation that orchestrates Build under the hood." Captain
+also became **CI-aware**: when it opens a PR it subscribes to the PR's checks, ingests
+failures, and can re-route work back to Build without the user pasting log output.
+
+The hard capability boundaries described above (Captain still cannot directly edit code,
+Build still cannot ask the user questions mid-task) remain in force — only the surfacing
+of the two roles to the user has changed.
+
 ## Cloud Execution Model
 
 ### Sandboxed Ubuntu VMs
@@ -85,15 +99,18 @@ Capy is **model-agnostic** — it does not lock users into a single LLM provider
 
 | Provider | Models |
 |----------|--------|
-| Anthropic | Claude Opus 4.6 |
-| OpenAI | GPT-5.3 Codex |
+| Anthropic | Claude Opus 4.7 *(default Captain since Apr 2026)*, Claude Opus 4.6 |
+| OpenAI | GPT-5.5 *(added Apr 2026)*, GPT-5.4, GPT-5.3 Codex |
 | Google | Gemini 3 Pro |
 | xAI | Grok 4 Fast |
 | Moonshot | Kimi K2 |
 | Zhipu | GLM 4.7 |
 | Alibaba | Qwen 3 Coder |
 
-Both Captain and Build can presumably use different models, though the exact model routing logic is not publicly documented.
+Both Captain and Build can use different models. As of the April 2026 update, model
+selection is **thread-scoped** — users pick the Captain model and the Build model per
+thread (with separate speed and reasoning toggles), rather than configuring a global
+default before each task.
 
 ## Security
 

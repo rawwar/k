@@ -4,8 +4,8 @@
 
 | Resource | URL |
 |---|---|
-| GitHub Repository (OpenSageAI) | https://github.com/OpenSageAI/Sage |
-| GitHub Repository (mirror) | https://github.com/ZHangZHengEric/Sage |
+| GitHub Repository (active trunk, **2026**) | https://github.com/ZHangZHengEric/Sage |
+| GitHub Repository (OpenSageAI mirror, stale since May 2025) | https://github.com/OpenSageAI/Sage |
 | OpenSage Website | https://opensage.ai *(appears to be down as of analysis)* |
 
 ## Organization

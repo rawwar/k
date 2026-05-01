@@ -23,9 +23,32 @@ Capy's most distinctive architectural decision is the **Captain/Build split** �
 
 3. **Task-Based Workflow**: Think in tasks, not tabs. Each task groups its chat, branch, environment, and PR as a single unit.
 
-4. **Model Agnostic**: Supports Claude Opus 4.6, GPT-5.3 Codex, Gemini 3 Pro, Grok 4 Fast, Kimi K2, GLM 4.7, Qwen 3 Coder, and more.
+4. **Model Agnostic**: Supports Claude Opus 4.7 (default Captain as of Apr 2026), Claude Opus 4.6, GPT-5.5, GPT-5.4, GPT-5.3 Codex, Gemini 3 Pro, Grok 4 Fast, Kimi K2, GLM 4.7, Qwen 3 Coder, and more.
 
 5. **Multiplayer Collaboration**: Tag teammates, resume issues, collaborative by default — designed for teams, not solo use.
+
+## April 2026 Update — Captain-Only Workflow
+
+As of the **2026-04-16 product update** ("Captain Takes the Helm"), Capy has consolidated to
+a single user-facing surface: **Captain handles every task from one conversation**. The
+explicit user-selectable **Build mode is deprecated** — Build agents still exist, but
+Captain now plans, delegates implementation to Build, monitors progress, and ships PRs
+without requiring users to switch modes. Other notable changes in the same release:
+
+- **Thread-local task IDs** — each thread gets its own `Task 1, 2, 3 …` sequence (was global).
+- **Thread-scoped model selection** — Captain model and Build model are picked per thread,
+  with speed/reasoning toggles per thread instead of a global setting.
+- **Default Captain model bumped to Claude Opus 4.7** (was Opus 4.6).
+- **Stable thread identifiers** like `SCO-1234` surfaced in sidebar, dashboard, and Slack.
+- **CI awareness** — when Captain opens a PR it subscribes to the PR's checks, reads
+  failures, and feeds fixes back through the workflow without the user pasting logs.
+
+A follow-up post on **2026-04-23** added **GPT-5.5** as a Captain-eligible model. Capy's
+own production telemetry (495 sessions, ~56k model calls over 10 days) reports GPT-5.5
+tail latency of p95 16.8s / p99 35.4s as Captain, vs. Opus 4.6 at 57.7s / 137s and
+GPT-5.4 at 46.5s / 85.2s — making it the first OpenAI model Capy says it would actually
+default to for the orchestrator role, with the caveat that its review-and-fix loops still
+fail to converge cleanly on multi-round PR reviews.
 
 ## Terminal-Bench Scores
 

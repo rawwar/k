@@ -17,9 +17,10 @@ The user creates a new task (or "jam") in the Capy IDE and describes what they w
 - Can tag teammates for collaboration
 - The task becomes the organizing unit — it groups the chat, branch, environment, and eventual PR
 
-### Phase 2: Captain Plans
+### Phase 2: Captain Plans (and, since April 2026, also Orchestrates)
 
-Captain activates as the **planning agent**:
+Captain activates as the **planning agent** — and, as of the **2026-04-16 product update**,
+also as the single user-facing surface that orchestrates the rest of the workflow:
 
 1. **Codebase Exploration**: Captain reads the relevant parts of the codebase to understand the current architecture, patterns, and conventions
 2. **Clarification Loop**: If the task description is ambiguous, Captain **asks the user clarifying questions**. This is a key capability — Captain can have a back-and-forth dialogue with the user to fully understand requirements
@@ -83,6 +84,15 @@ flowchart LR
 ```
 
 If Build's output is unsatisfactory, the user creates a **new task** with feedback, potentially triggering another Captain → Build cycle. This is more like a code review loop than an interactive debugging session.
+
+### CI-Aware Follow-Up (April 2026)
+
+Once Build opens a PR, Captain now **subscribes to the PR's CI checks** and watches them
+as they run. If a check fails, Captain reads the failure output and can route a fix back
+through Build automatically — closing part of the asynchronous gap above without the user
+having to copy CI logs into chat or open a new task. The user-controlled "new task with
+feedback" loop is still the path for design-level iteration; CI-aware follow-up handles
+the mechanical "build is red, fix it" case.
 
 ### Parallel Task Management
 

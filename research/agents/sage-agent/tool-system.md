@@ -82,6 +82,25 @@ MCP servers are configured via `mcp_servers/mcp_setting.json`:
 > Note: Exact schema inferred from common MCP patterns; specific SageAgent config
 > format not deeply reviewed.
 
+## Tooling Updates (2026 Q2)
+
+Several tool-system changes landed in the **`ZHangZHengEric/Sage`** trunk between
+2026-03 and 2026-04-30 that are worth flagging:
+
+- **Codebase tools** — added 2026-04-24 (`416de97` "feat: codebase tools, prompt cache
+  breakpoints, finish_turn guard, browser tool grouping").
+- **Lint tool + structured tool errors** — added 2026-04-24 (`bfdf679`).
+- **Shell tool improvements** — adaptive `await_shell` with completion push notifications
+  (Apr 27, `95f09bf`); full stdout returned on completion with explicit truncation marker
+  (Apr 29, `f9bc1ec`); test/i18n/error-line tail polish (Apr 28, `2305adb`).
+- **AnyTool per-tool editor** — Apr 23 (`098777c`) plus a context-param visibility fix on
+  Apr 29 (`c553bcf` "hide AnyTool context params while preserving injection").
+- **Tool-call args** — stream-safe `todo_write` argument parsing (Apr 29, `4268fca`).
+- **`SAGE_FORCE_TOOL_CHOICE_REQUIRED` env var** — Apr 29 (`24c4e27`) makes the previously
+  hard-coded `tool_choice=required` opt-in; a follow-up tool-call-loop bug under that flag
+  was fixed Apr 30 (`5e656d3`, PR #143).
+- **Server-side web tool progress streaming** — Apr 30 (`9f34757`, `d5845ea`).
+
 ## Tool Discovery Flow
 
 ```

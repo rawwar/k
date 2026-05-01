@@ -16,6 +16,16 @@ This two-type system is simpler than frameworks that use many message roles (e.g
 user, assistant, tool, function). The `thinking` type likely maps to chain-of-thought
 traces that can be displayed in the UI or logged for debugging.
 
+## Turn Status Protocol (2026-04-26)
+
+The earlier `finish_turn` signal — used by the ExecutorAgent to declare a turn complete —
+was replaced with a richer **`turn_status` protocol** on 2026-04-26 (`2d80b89` "replace
+finish_turn with turn_status protocol; fix need_summary after turn_status"). Follow-ups
+across Apr 27 (`7b373cf`, `de8abb1`, `03a3ca8`) hide `turn_status` from SSE output while
+keeping it visible to the LLM, slim the success payload, add an i18n rejection message,
+and tag coerced status with `metadata.coerced_from`. This affects how the
+ObservationAgent → PlanningAgent feedback edge serializes turn boundaries to clients.
+
 ## Inter-Agent Context Flow
 
 Context flows through the pipeline sequentially. Each agent receives output from the
