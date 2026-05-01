@@ -5,7 +5,7 @@ Reference materials and personal notes for the CLI Coding Agent learning platfor
 ## Organization
 
 ### `agents/`
-Architecture analysis of 17 CLI coding agents (`agents/<agent-name>/`).
+Architecture analysis of 23 CLI coding agents (`agents/<agent-name>/`).
 
 Each agent folder contains 8 standard files:
 `README.md` · `architecture.md` · `agentic-loop.md` · `tool-system.md` · `context-management.md` · `unique-patterns.md` · `benchmarks.md` · `references.md`
@@ -20,24 +20,41 @@ Each agent folder contains 8 standard files:
 | 5 | **ante** | Antigma Labs, Rust-built self-organizing agent |
 | 6 | **opencode** | Open-source Go-based CLI agent |
 | 7 | **openhands** | Open-source, formerly OpenDevin, event-driven architecture |
+| 8 | **terminus-2** | AfterQuery / Laude Institute reference scaffold — 25 leaderboard rows, the most useful cross-model comparison on TB2 |
+| 9 | **mux** | Coder's parallel-workspaces desktop+browser agent (#12 with GPT-5.3-Codex, 74.6%) |
 
 **Tier 2 — Notable & differentiated:**
 | # | Agent | Description |
 |---|-------|-------------|
-| 8 | **warp** | AI-native terminal (Rust+Metal GPU rendering) |
-| 9 | **gemini-cli** | Google's first-party terminal agent (1M token context) |
-| 10 | **goose** | Block (fka Square), MCP-native extensible agent |
-| 11 | **junie-cli** | JetBrains' dual IDE/CLI agent |
-| 12 | **mini-swe-agent** | Minimal 100-line bash-only agent from Princeton/Stanford |
-| 13 | **pi-coding-agent** | Radically extensible 4-tool agent by Mario Zechner |
-| 14 | **aider** | Pioneering AI pair programming tool, code-editing benchmark |
+| 10 | **warp** | AI-native terminal (Rust+Metal GPU rendering) |
+| 11 | **gemini-cli** | Google's first-party terminal agent (1M token context) |
+| 12 | **goose** | Block (fka Square), MCP-native extensible agent |
+| 13 | **junie-cli** | JetBrains' dual IDE/CLI agent |
+| 14 | **mini-swe-agent** | Minimal 100-line bash-only agent from Princeton/Stanford |
+| 15 | **pi-coding-agent** | Radically extensible 4-tool agent by Mario Zechner |
+| 16 | **aider** | Pioneering AI pair programming tool, code-editing benchmark |
+| 17 | **deep-agents** | LangChain's batteries-included harness on LangGraph (#21 with GPT-5.2-Codex, 66.5%) |
+| 18 | **letta-code** | Letta's memory-first CLI; persistent agents that learn (#36 with Opus 4.5, 59.1%) |
+| 19 | **grok-cli** | Vibe Kit / superagent-ai's Bun+OpenTUI agent for xAI Grok (#43 with Grok 4.20 Reasoning, 57.3%) |
+| 20 | **camel-ai** | Multi-agent research framework, role-play origin, 100+ research contributors (#58 with Sonnet 4.5, 46.5%) |
 
 **Tier 3 — Emerging / leaderboard notable:**
 | # | Agent | Description |
 |---|-------|-------------|
-| 15 | **sage-agent** | OpenSage multi-agent pipeline |
-| 16 | **tongagents** | BIGAI (Beijing), top-3 on Terminal-Bench 2.0 |
-| 17 | **capy** | Cloud IDE with two-agent split |
+| 21 | **sage-agent** | OpenSage multi-agent pipeline |
+| 22 | **tongagents** | BIGAI (Beijing), top-3 on Terminal-Bench 2.0 |
+| 23 | **capy** | Cloud IDE with two-agent split |
+
+**Leaderboard sightings (no full pages):** Several other agents appear on
+TB2 with one or two rows but don't yet warrant full deep-dives — typically
+because public information is sparse or the agent is a one-team project
+without broader documentation. These include **Terminus-KIRA** (KRAFTON
+AI), **MAYA-V2** (ADYA), **CodeBrain-1** (Feeling AI), **II-Agent**
+(Intelligent Internet), **Abacus AI Desktop** (Abacus.AI), **Dakou
+Agent** (iflow / Alibaba), **IndusAGI Coding Agent** (Varun Israni / solo),
+**cchuter** (teamblobfish.com), and **spoox-m** (TUM research). See
+[tbench.ai/leaderboard/terminal-bench/2.0](https://www.tbench.ai/leaderboard/terminal-bench/2.0)
+for current rankings.
 
 ### `concepts/`
 Deep-dive concept notes organized into topic folders:
