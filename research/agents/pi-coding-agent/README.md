@@ -11,7 +11,7 @@ status: complete
 
 Pi (`@mariozechner/pi-coding-agent`) is a terminal-based coding agent created by **Mario Zechner** (@badlogic), the well-known open-source developer behind the libGDX game framework. Pi was born from frustration with Claude Code's growing complexity — Mario described it as a tool that "turned into a spaceship with 80% of functionality I have no use for." Pi takes the opposite approach: an aggressively minimal core with a powerful extension system that lets users build exactly the features they need.
 
-The project lives in a monorepo (`pi-mono`) organized as seven packages, each independently publishable to npm. The coding agent itself is just one package that composes the others. The website URL — shittycodingagent.ai — captures the tongue-in-cheek philosophy: this is intentionally not a polished product, it's a set of primitives for people who want control.
+The project lives in a monorepo (`pi-mono`) organized as seven packages, each independently publishable to npm. The coding agent itself is just one package that composes the others. The project's official site is now **pi.dev** (the original tongue-in-cheek shittycodingagent.ai redirects there) — the philosophy hasn't changed: Pi is intentionally not a polished product, it's a set of primitives for people who want control.
 
 Pi's core philosophy is **primitives over features**. Where other agents build in MCP support, sub-agents, plan modes, permission systems, and background tasks, Pi deliberately omits all of these from the core. Instead, it provides an extension API powerful enough that each of these can be (and has been) implemented as a community package. This keeps the core simple, the prompt cache stable, and the behavior predictable.
 
@@ -31,7 +31,7 @@ Pi's core philosophy is **primitives over features**. Where other agents build i
 - **License**: MIT
 - **Creator**: Mario Zechner (@badlogic)
 - **Repository**: github.com/badlogic/pi-mono
-- **Website**: shittycodingagent.ai
+- **Website**: pi.dev (shittycodingagent.ai redirects here)
 - **Default tools**: 4 (read, write, edit, bash)
 - **LLM providers**: 15+ via pi-ai
 - **Modes**: 4 (Interactive, Print/JSON, RPC, SDK)

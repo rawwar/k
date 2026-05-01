@@ -44,8 +44,16 @@ Podman, gVisor, and LXC.
 | **Models** | Gemini 3 Flash, Gemini 2.5 Pro/Flash |
 | **Context** | 1M tokens |
 | **Auth** | Google OAuth (free), API Key, Vertex AI |
-| **Release** | Weekly: nightly → preview (Tue) → stable (Tue) |
+| **Release** | Weekly: nightly → preview (Tue) → stable (Tue); v0.40.x stable / v0.41–0.42 nightlies as of late Apr 2026 |
 | **Terminal-Bench** | #57 (Gemini 3 Flash, 47.4%) |
+
+> **Recent (Mar–Apr 2026):** continued hardening of the **ACP (Agent Communication
+> Protocol)** integration including SessionEnd hooks and extension-backed MCP client
+> lifecycle; workspace-trust enforcement in headless mode and secure `.env` loading;
+> a configurable **core-tools allowlist** for shell-command validation; OAuth field
+> support inside subagent definitions; and `settings.json` env-var casting for
+> booleans/numbers. No new headline architecture — the core loop, sub-agents, plan
+> mode, and skills system from earlier releases are unchanged.
 
 ## Architecture at a Glance
 

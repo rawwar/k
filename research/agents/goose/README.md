@@ -26,8 +26,8 @@ The project is written primarily in **Rust** (core agent, server, CLI) with a **
 - **URL**: https://github.com/block/goose
 - **Language**: Rust (core), TypeScript (desktop UI)
 - **License**: Apache 2.0
-- **Current version**: 1.28.0 (as of research date)
-- **Stars**: ~15k+
+- **Current version**: 1.33.x (April 2026); **goose2** (v2.0) is in active RC as of v2.0.0-rc-04-27-0
+- **Stars**: ~43k+ (Apr 2026)
 - **Organization**: Block, Inc.
 
 ## Architecture Summary
@@ -109,6 +109,11 @@ Automatic compaction at 80% of context window, background tool-pair summarizatio
 5. **Recipe system**: Automated task execution with success criteria, retry logic, and conversation reset
 6. **Subagent delegation**: The "Summon" extension can delegate tasks to subagents with isolated contexts
 7. **Enterprise permission modes**: Autonomous, Manual Approval, Smart Approval, and Chat-only modes
+
+## Recent Updates (Mar–Apr 2026)
+
+- **v1.32.0 (April 2026)** added: Exa AI-powered search tool, `/skills` command, `/edit` for on-demand prompt editing, `@agent` mentions in chat, desktop notifications on task completion, project-thread association, Kimi Code provider with OAuth device flow, Novita AI provider, Client ID Metadata Document (CIMD) OAuth, and Unix-domain-socket transport for StreamableHttp MCP.
+- **goose2 (v2.0 RC, late April 2026)** is the in-progress next-generation UI: redesigned message bubbles + action tray, inline auto-compaction UX, voice dictation via the direct-ACP pattern, context-window usage in the chat input, and chat attachments. Tracked under the `v2.0.0-rc-*` pre-release tags.
 
 ## References
 

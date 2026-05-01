@@ -19,6 +19,13 @@ Junie reached general availability in **April 2025**, with CLI mode added in **J
 It represents JetBrains' strategy of bringing two decades of IDE intelligence — language
 analysis, refactoring engines, project understanding — into the agentic AI era.
 
+**Update — March 2026:** JetBrains relaunched the terminal experience as **Junie CLI Beta**,
+positioned as a **fully standalone, LLM-agnostic** coding agent that runs in any terminal,
+inside any IDE, in CI/CD, and on GitHub or GitLab — no longer a thin extension of the IDE
+plugin. The Beta added one-click migration from Claude Code, Codex, and other agents;
+BYOK pricing alongside JetBrains AI subscriptions; built-in MCP install and recommendation;
+and free access to Gemini 3 Flash for the first week. ([Launch post](https://blog.jetbrains.com/junie/2026/03/junie-cli-the-llm-agnostic-coding-agent-is-now-in-beta/))
+
 ### What Sets Junie Apart
 
 1. **IDE Heritage**: Unlike agents born in the terminal (Claude Code, Aider, Codex CLI),
@@ -44,9 +51,9 @@ analysis, refactoring engines, project understanding — into the agentic AI era
 | Metric | Value |
 |---|---|
 | Developer | JetBrains (Prague, Czech Republic) |
-| First Release | April 2025 (GA); CLI mode June 2025 |
+| First Release | April 2025 (GA); CLI mode June 2025; **Junie CLI Beta** (standalone, LLM-agnostic) March 2026 |
 | License | Proprietary / Commercial |
-| Pricing | AI Pro $100/yr; AI Ultimate $300/yr |
+| Pricing | AI Pro $100/yr; AI Ultimate $300/yr; **BYOK** option in CLI Beta (Mar 2026) |
 | Terminal-Bench 2.0 (Multi-Model) | Rank #15 — 71.0% |
 | Terminal-Bench 2.0 (Gemini 3 Flash) | Rank #26 — 64.3% |
 | Primary Language | Kotlin/JVM (IDE plugin); CLI details undisclosed |

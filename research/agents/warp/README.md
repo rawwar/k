@@ -56,6 +56,15 @@ The company has raised $170M+ in funding, reflecting the scale of ambition: repl
    parameter support, plus hierarchical project rules via AGENTS.md files — giving teams
    fine-grained control over agent behavior per directory.
 
+> **Recent (Mar–Apr 2026):** the [2026.04.22 release](https://docs.warp.dev/getting-started/changelog)
+> reorganized Settings into Agents / Code / Cloud subpages, raised image limits to
+> 20 per query and 200 per conversation, added Mermaid rendering in markdown notebooks,
+> file artifacts in agent conversations with download/filter, image paste into wrapped
+> CLI agents (Claude Code, Codex, OpenCode), and fixes to Oz CLI shutdown and
+> orchestration-event ordering when a CLI subagent is active. Agents 3.0 capabilities
+> from the November 2025 launch — Full Terminal Use, `/plan`, Interactive Code Review,
+> and Slack/Linear/GitHub Actions integrations — remain the headline architecture.
+
 ### Key Stats
 
 | Metric | Value |

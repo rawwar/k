@@ -39,6 +39,17 @@ Despite this, Aider has been profoundly influential on the entire category. Its 
 | o3 (high) | 81.3% | $21.23 | diff |
 | Grok-4 (high) | 79.6% | $59.62 | diff |
 
+> **Update — April 2026 (post-v0.86.1 main):** Aider's `main` branch (last commit
+> 2026-04-25) adds settings for the **GPT-5.1 / 5.2 / 5.3 / 5.4** and **GPT-5-pro**
+> families across OpenAI, Azure, and OpenRouter; **Claude Sonnet/Opus 4.5 and 4.6**
+> with updated `sonnet`/`haiku`/`opus` aliases; the **Gemini 3 Pro preview** (now the
+> default `gemini` alias); **DeepSeek Reasoner**; and **GPT-4.1-nano**. New UX:
+> the `/ok` shortcut to greenlight a proposed change with optional extra instructions,
+> and the ability to add files outside the git repo or promote read-only files to
+> editable when auto-commits are disabled. The repo-map gained tree-sitter tags for
+> **Fortran, Haskell, Julia, and Zig** and is compatible with newer tree-sitter
+> Python APIs. The deprecated `google-generativeai` dependency was removed.
+
 ## Key Stats
 
 - **Language**: Python (~88% self-written by aider itself in recent releases)

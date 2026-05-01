@@ -37,6 +37,7 @@ documentation and marketing. Last verified: July 2025.
 |---|---|---|
 | Junie GA Announcement | https://blog.jetbrains.com/blog/2025/04/junie-ga/ | General availability announcement (April 2025) |
 | Junie CLI Launch | https://blog.jetbrains.com/blog/2025/06/junie-cli/ | CLI mode announcement (June 2025) |
+| Junie CLI Beta (LLM-agnostic) | https://blog.jetbrains.com/junie/2026/03/junie-cli-the-llm-agnostic-coding-agent-is-now-in-beta/ | March 2026 — standalone Junie CLI, BYOK, one-click migration from Claude Code/Codex, MCP install, free Gemini 3 Flash week |
 | JetBrains AI Vision | https://blog.jetbrains.com/blog/2025/jetbrains-ai/ | JetBrains' AI strategy and vision |
 | Junie Architecture | https://blog.jetbrains.com/blog/2025/junie-architecture/ | Technical overview of Junie's design |
 
